@@ -34,7 +34,7 @@ button{cursor:pointer;border:0;border-radius:11px;padding:11px 15px;font-weight:
 .service{min-height:120px;cursor:pointer}
 .ico{font-size:28px}.service h3{margin:8px 0 4px}
 .pill{display:inline-block;padding:6px 10px;border-radius:99px;font-size:11px;font-weight:900;background:#eef2ff;color:#171b2b;margin:3px;border:1px solid #dbe3f2}
-.available{background:#ecfdf3;color:#067647}.verified{background:#eff8ff;color:#175cd3}.pending{background:#fffaeb;color:#b54708}
+.available{background:#ecfdf3;color:#067647}.verified{background:#eff8ff;color:#175cd3}
 .partners{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .partner{display:flex;gap:12px;align-items:center}
 .avatar{width:52px;height:52px;border-radius:50%;background:#e9edf3;display:grid;place-items:center;font-size:20px;font-weight:900;flex-shrink:0}
@@ -63,13 +63,11 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
 </header>
 
 <div id="overlay" class="overlay" onclick="closeMenu()"></div>
-
 <aside id="drawer" class="drawer">
   <div class="drawerHead">
     <img class="drawerLogo" src="logo.png" alt="Book A Partner">
     <button class="close" onclick="closeMenu()">×</button>
   </div>
-
   <button class="menuItem" onclick="go('home')">🏠 Home</button>
   <button class="menuItem" onclick="go('book')">📋 Book a Partner</button>
   <button class="menuItem" onclick="go('join')">🤝 Become a Partner</button>
@@ -80,16 +78,13 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
 </aside>
 
 <main>
-
 <section id="home" class="screen active">
   <div class="hero">
     <img class="heroLogo" src="logo.png" alt="Book A Partner">
     <h1>Need someone to be there?</h1>
     <p>Book a verified partner for social companionship and everyday assistance — by the hour, when you need it.</p>
-
     <button class="primary" onclick="go('book')">Book a Partner</button>
     <button class="pink" onclick="go('join')">Become a Partner</button>
-
     <div style="margin-top:10px">
       <span class="pill">✓ Verified Profiles</span>
       <span class="pill">✓ Clear Pricing</span>
@@ -100,80 +95,27 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
   <div class="section">
     <h2>What do you need?</h2>
     <p class="muted">Choose a service and find available partners.</p>
-
     <div class="grid">
-      <div class="card service" onclick="startBooking('Movie Partner')">
-        <div class="ico">🎬</div>
-        <h3>Movie Partner</h3>
-        <div class="muted">Cinema, OTT & movie outings</div>
-      </div>
-
-      <div class="card service" onclick="startBooking('Shopping Partner')">
-        <div class="ico">🛍️</div>
-        <h3>Shopping Partner</h3>
-        <div class="muted">Mall, market & gift shopping</div>
-      </div>
-
-      <div class="card service" onclick="startBooking('Coffee & Conversation')">
-        <div class="ico">☕</div>
-        <h3>Coffee & Conversation</h3>
-        <div class="muted">Coffee, walk & conversation</div>
-      </div>
-
-      <div class="card service" onclick="startBooking('Event Partner')">
-        <div class="ico">🎉</div>
-        <h3>Event Partner</h3>
-        <div class="muted">Social & public events</div>
-      </div>
-
-      <div class="card service" onclick="startBooking('Travel Partner')">
-        <div class="ico">✈️</div>
-        <h3>Travel Partner</h3>
-        <div class="muted">Sightseeing & travel company</div>
-      </div>
-
-      <div class="card service" onclick="startBooking('Assistance Partner')">
-        <div class="ico">🤝</div>
-        <h3>Assistance Partner</h3>
-        <div class="muted">Everyday non-professional assistance</div>
-      </div>
+      <div class="card service" onclick="startBooking('Movie Partner')"><div class="ico">🎬</div><h3>Movie Partner</h3><div class="muted">Cinema, OTT & movie outings</div></div>
+      <div class="card service" onclick="startBooking('Shopping Partner')"><div class="ico">🛍️</div><h3>Shopping Partner</h3><div class="muted">Mall, market & gift shopping</div></div>
+      <div class="card service" onclick="startBooking('Coffee & Conversation')"><div class="ico">☕</div><h3>Coffee & Conversation</h3><div class="muted">Coffee, walk & conversation</div></div>
+      <div class="card service" onclick="startBooking('Event Partner')"><div class="ico">🎉</div><h3>Event Partner</h3><div class="muted">Social & public events</div></div>
+      <div class="card service" onclick="startBooking('Travel Partner')"><div class="ico">✈️</div><h3>Travel Partner</h3><div class="muted">Sightseeing & travel company</div></div>
+      <div class="card service" onclick="startBooking('Assistance Partner')"><div class="ico">🤝</div><h3>Assistance Partner</h3><div class="muted">Everyday non-professional assistance</div></div>
     </div>
   </div>
 
   <div class="section steps">
-    <div class="card">
-      <b>1. Choose</b>
-      <p class="muted">Service, age preference, area and time.</p>
-    </div>
-
-    <div class="card">
-      <b>2. Match</b>
-      <p class="muted">Only verified & available partners appear.</p>
-    </div>
-
-    <div class="card">
-      <b>3. Book & Chat</b>
-      <p class="muted">After confirmation, chat with your partner.</p>
-    </div>
+    <div class="card"><b>1. Choose</b><p class="muted">Service, age preference, area and time.</p></div>
+    <div class="card"><b>2. Match</b><p class="muted">Only verified & available partners appear.</p></div>
+    <div class="card"><b>3. Book & Chat</b><p class="muted">After confirmation, chat with your partner.</p></div>
   </div>
 
   <div class="section">
     <h2>Safety & Trust</h2>
-
-    <div class="alert sos">
-      <b>🚨 SOS / Emergency</b><br>
-      In an emergency, contact local emergency services first.
-    </div>
-
-    <div class="alert rules">
-      <b>🛡️ Zero Tolerance for Misconduct</b><br>
-      Misbehavior, harassment and abusive behaviour are not permitted.
-    </div>
-
-    <div class="alert rules">
-      <b>🚫 Service Policy</b><br>
-      Professional companionship and assistance only. Escort, sexual or adult services are not available.
-    </div>
+    <div class="alert sos"><b>🚨 SOS / Emergency</b><br>In an emergency, contact local emergency services first.</div>
+    <div class="alert rules"><b>🛡️ Zero Tolerance for Misconduct</b><br>Misbehavior, harassment and abusive behaviour are not permitted.</div>
+    <div class="alert rules"><b>🚫 Service Policy</b><br>Professional companionship and assistance only. Escort, sexual or adult services are not available.</div>
   </div>
 </section>
 
@@ -181,7 +123,6 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
   <div class="card">
     <h2>Book a Partner</h2>
     <p class="muted">Tell us what you need. We'll show matching verified partners.</p>
-
     <div class="form">
       <label>Service</label>
       <select id="service">
@@ -205,7 +146,6 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
             <option>46+</option>
           </select>
         </div>
-
         <div>
           <label>Area / City</label>
           <input id="area" value="Gurgaon NCR" placeholder="e.g. Gurgaon">
@@ -213,37 +153,23 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
       </div>
 
       <div class="row">
-        <div>
-          <label>Date</label>
-          <input id="date" type="date">
-        </div>
-
-        <div>
-          <label>Time</label>
-          <input id="time" type="time">
-        </div>
+        <div><label>Date</label><input id="date" type="date"></div>
+        <div><label>Time</label><input id="time" type="time"></div>
       </div>
 
       <label>Meeting location</label>
       <input id="location" placeholder="Enter meeting area / public place">
-
       <button class="pink full" onclick="findPartners()">Find Available Partners</button>
     </div>
   </div>
-
   <div id="results" class="section"></div>
 </section>
 
 <section id="details" class="screen">
   <div class="card">
     <h2>Review Booking</h2>
-
     <div id="bookingSummary"></div>
-
-    <div class="notice">
-      🔒 This is currently a prototype flow. Payment gateway and real OTP will be connected in the backend stage.
-    </div>
-
+    <div class="notice">🔒 This is currently a prototype flow. Payment gateway and real OTP will be connected in the backend stage.</div>
     <button class="pink full" onclick="goToPayment()">Continue to Payment</button>
     <button class="light full" onclick="go('book')">← Change Partner</button>
   </div>
@@ -253,13 +179,8 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
   <div class="card">
     <h2>Demo Payment</h2>
     <p class="muted">Test mode only — no real money will be charged.</p>
-
     <div id="paymentSummary" class="summary"></div>
-
-    <div class="notice">
-      🔒 Real payment gateway will be connected during the backend integration stage.
-    </div>
-
+    <div class="notice">🔒 Real payment gateway will be connected during the backend integration stage.</div>
     <button class="pink full" onclick="confirmDemoPayment()">Pay & Confirm Booking</button>
     <button class="light full" onclick="go('details')">← Back to Booking</button>
   </div>
@@ -268,11 +189,9 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
 <section id="success" class="screen">
   <div class="card" style="text-align:center">
     <div style="font-size:48px">✅</div>
-    <h2>Booking Confirmed</h2>
-    <p class="muted">Your booking has been confirmed in demo mode.</p>
-
+    <h2>Booking Request Sent</h2>
+    <p class="muted">Payment recorded in demo mode. The booking will be confirmed after the selected partner accepts.</p>
     <div id="successText" class="summary"></div>
-
     <button class="dark full" onclick="go('bookings')">View My Booking</button>
   </div>
 </section>
@@ -288,12 +207,10 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
   <div class="card">
     <h2>My Chat</h2>
     <p class="muted">Chat opens after a booking is confirmed.</p>
-
     <div class="chat">
       <div class="msg them">Hello! Your booking request has been received.</div>
       <div class="msg me">Thank you. Looking forward to the meeting.</div>
     </div>
-
     <input id="chatInput" placeholder="Type a message">
     <button class="pink full" onclick="sendMessage()">Send Message</button>
   </div>
@@ -313,7 +230,6 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
           <label>Age</label>
           <input id="partnerAge" type="number" min="18" max="80" placeholder="18+">
         </div>
-
         <div>
           <label>Mobile number</label>
           <input id="partnerMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10 digit mobile">
@@ -341,7 +257,6 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
           <label>Hourly price (₹)</label>
           <input id="partnerRate" type="number" min="1" placeholder="e.g. 899">
         </div>
-
         <div>
           <label>Availability</label>
           <select id="partnerAvailability">
@@ -354,9 +269,7 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
       <label>Selfie for verification</label>
       <input id="partnerSelfie" type="file" accept="image/*">
 
-      <div class="notice">
-        🛡️ Verification checklist: profile photo + selfie + age + mobile + service details.
-      </div>
+      <div class="notice">🛡️ Verification checklist: profile photo + selfie + age + mobile + service details.</div>
 
       <button class="pink full" onclick="partnerApply()">Create Partner Profile</button>
     </div>
@@ -367,9 +280,7 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
   <div class="card">
     <h2>Partner Dashboard</h2>
     <p class="muted">Manage your profile, availability and booking requests.</p>
-
     <div id="partnerProfileCard" class="summary"></div>
-
     <div class="section">
       <h3>Booking Requests</h3>
       <div id="partnerRequests"></div>
@@ -381,19 +292,14 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
   <div class="card">
     <h2>Meeting OTP</h2>
     <p class="muted">For safety, the customer shares the OTP when meeting the verified partner.</p>
-
     <div id="meetingOtpBox" class="summary"></div>
-
-    <div class="notice">
-      Demo only: real OTP will be generated and verified by the backend before launch.
-    </div>
+    <div class="notice">Demo only: real OTP will be generated and verified by the backend before launch.</div>
 
     <div class="row">
       <div>
         <label>Enter OTP</label>
         <input id="otpInput" inputmode="numeric" maxlength="6" placeholder="6-digit OTP">
       </div>
-
       <div>
         <label>&nbsp;</label>
         <button class="green full" onclick="verifyMeetingOtp()">Verify Meeting</button>
@@ -405,25 +311,10 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
 <section id="safety" class="screen">
   <div class="card">
     <h2>Safety & Trust</h2>
-
-    <div class="alert sos">
-      <b>🚨 Emergency</b><br>
-      For an immediate emergency, contact local emergency services first.
-    </div>
-
-    <div class="alert rules">
-      <b>🛡️ Zero Tolerance</b><br>
-      Harassment, abuse, threats or unsafe behaviour are not permitted.
-    </div>
-
-    <div class="alert rules">
-      <b>🚫 Service Policy</b><br>
-      Professional companionship and everyday non-professional assistance only. No escort or adult services.
-    </div>
-
-    <div class="notice">
-      Meeting OTP will be added after backend/OTP integration. Never share sensitive payment or account information in chat.
-    </div>
+    <div class="alert sos"><b>🚨 Emergency</b><br>For an immediate emergency, contact local emergency services first.</div>
+    <div class="alert rules"><b>🛡️ Zero Tolerance</b><br>Harassment, abuse, threats or unsafe behaviour are not permitted.</div>
+    <div class="alert rules"><b>🚫 Service Policy</b><br>Professional companionship and everyday non-professional assistance only. No escort or adult services.</div>
+    <div class="notice">Meeting OTP will be added after backend/OTP integration. Never share sensitive payment or account information in chat.</div>
   </div>
 </section>
 
@@ -431,7 +322,6 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
   Book A Partner • Real People. Meaningful Moments.<br>
   Prototype — booking, OTP and payment backend to be connected before launch.
 </div>
-
 </main>
 
 <script>
@@ -572,8 +462,7 @@ function goToPayment(){
   }
 
   document.getElementById('paymentSummary').innerHTML=
-    `<b>${selected.name}</b>
-     <span class="pill verified">✓ VERIFIED</span>
+    `<b>${selected.name}</b> <span class="pill verified">✓ VERIFIED</span>
      <p>${selected.service}</p>
      <p>📅 ${selected.date} &nbsp; 🕐 ${selected.time}</p>
      <p>📍 ${selected.location}</p>
@@ -594,7 +483,8 @@ function confirmDemoPayment(){
   const b={
     id,
     ...selected,
-    status:'Confirmed',
+    status:'Awaiting Partner',
+    partnerStatus:'Pending',
     paymentStatus:'Demo Payment Successful'
   };
 
@@ -603,7 +493,7 @@ function confirmDemoPayment(){
 
   document.getElementById('successText').innerHTML=
     `<b>Booking #${id}</b><br><br>
-     <span class="pill available">✓ CONFIRMED</span><br><br>
+     <span class="pill">✓ REQUEST SENT • AWAITING PARTNER</span><br><br>
      ${selected.service}<br>
      ${selected.date} • ${selected.time}<br>
      ${selected.location}<br><br>
@@ -624,13 +514,22 @@ function renderBookings(){
   }
 
   el.innerHTML=list.map(b=>{
-    const actions=b.status==='Confirmed'
-      ? "<button class='dark' onclick=\"go('chat')\">Open Chat</button> <button class='pink' onclick=\"go('meetingOtp')\">Meeting OTP</button>"
-      : "<button class='light' disabled title='Chat opens after confirmation'>Chat locked</button>";
+    let badgeClass='';
+    if(b.status==='Confirmed') badgeClass='available';
+
+    let actions='';
+    if(b.status==='Confirmed'){
+      actions="<button class='dark' onclick=\"go('chat')\">Open Chat</button> <button class='pink' onclick=\"go('meetingOtp')\">Meeting OTP</button>";
+    }else{
+      actions="<button class='light' disabled>Chat locked</button>";
+    }
+
+    const paymentLine=b.paymentStatus ? `<span class="pill">${b.paymentStatus}</span>` : '';
 
     return `<div class="card" style="margin-top:10px">
       <b>Booking #${b.id}</b>
-      <span class="pill ${b.status==='Confirmed'?'available':''}">${b.status}</span>
+      <span class="pill ${badgeClass}">${b.status}</span>
+      ${paymentLine}
       <p>${b.service} • ${b.name}</p>
       <p class="muted">
         📅 ${b.date||'Pending'} • 🕐 ${b.time||'Pending'}<br>
@@ -682,6 +581,7 @@ function partnerApply(){
     rate,
     availability,
     verification:'Pending Review',
+    verificationNote:'Photo + selfie submitted for admin review',
     photoName:photo.name,
     selfieName:selfie.name
   };
@@ -695,7 +595,6 @@ function partnerApply(){
 
 function renderPartnerDashboard(){
   const p=JSON.parse(localStorage.getItem('bap_partner_profile')||'null');
-
   const profile=document.getElementById('partnerProfileCard');
   const req=document.getElementById('partnerRequests');
 
@@ -713,20 +612,41 @@ function renderPartnerDashboard(){
 
   const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
 
-  if(!bookings.length){
-    req.innerHTML='<p class="muted">No customer booking requests yet.</p>';
+  const normalizedPartnerArea=(p.area||'').toLowerCase().trim();
+
+  const matching=bookings.filter(b=>{
+    if(b.status!=='Awaiting Partner' && b.status!=='Confirmed') return false;
+    if(b.partnerStatus==='Rejected') return false;
+    if(b.service!==p.service) return false;
+    if(p.availability!=='Available') return false;
+
+    const customerArea=(b.area||'').toLowerCase().trim();
+    if(!normalizedPartnerArea || !customerArea) return true;
+
+    return normalizedPartnerArea.includes(customerArea) ||
+           customerArea.includes(normalizedPartnerArea) ||
+           normalizedPartnerArea.split(/\s+/)[0]===customerArea.split(/\s+/)[0];
+  });
+
+  if(!matching.length){
+    req.innerHTML='<p class="muted">No matching booking requests are waiting right now.</p>';
     return;
   }
 
-  req.innerHTML=bookings.map(b=>`
-    <div class="card" style="margin-top:10px">
+  req.innerHTML=matching.map(b=>{
+    const statusText=b.status==='Confirmed'?'Accepted / Confirmed':'Waiting for your response';
+
+    const actions=b.status==='Confirmed'
+      ? "<span class='pill available'>✓ CONFIRMED</span>"
+      : "<button class='green' onclick=\"partnerAccept('${b.id}')\">Accept</button> <button class='light' onclick=\"partnerReject('${b.id}')\">Reject</button>";
+
+    return `<div class="card" style="margin-top:10px">
       <b>${b.service}</b>
-      <p>${b.date} • ${b.time}<br>📍 ${b.location}</p>
-      <span class="pill">${b.status}</span><br>
-      <button class="green" onclick="partnerAccept('${b.id}')">Accept</button>
-      <button class="light" onclick="partnerReject('${b.id}')">Reject</button>
-    </div>
-  `).join('');
+      <p>${b.date} • ${b.time}<br>📍 ${b.location}<br>Area: ${b.area}</p>
+      <span class="pill">${statusText}</span><br>
+      ${actions}
+    </div>`;
+  }).join('');
 }
 
 function partnerAccept(id){
@@ -736,10 +656,12 @@ function partnerAccept(id){
   if(i<0)return;
 
   bookings[i].partnerStatus='Accepted';
+  bookings[i].status='Confirmed';
+  bookings[i].confirmedAt=new Date().toISOString();
 
   localStorage.setItem('bap_bookings',JSON.stringify(bookings));
 
-  alert('Demo: booking accepted. Customer notification will be connected by the backend.');
+  alert('Demo: booking accepted. The customer can now chat and use the meeting OTP flow.');
 
   renderPartnerDashboard();
 }
@@ -751,6 +673,7 @@ function partnerReject(id){
   if(i<0)return;
 
   bookings[i].partnerStatus='Rejected';
+  bookings[i].status='Rejected';
 
   localStorage.setItem('bap_bookings',JSON.stringify(bookings));
 
@@ -766,7 +689,7 @@ function renderMeetingOtp(){
        <p>${confirmed.service} • ${confirmed.name}</p>
        <p>📅 ${confirmed.date} • ${confirmed.time}<br>
        📍 ${confirmed.location}</p>`
-    : '<b>No confirmed booking found.</b>';
+    : '<b>No confirmed booking found. Meeting OTP unlocks after partner acceptance.</b>';
 }
 
 function verifyMeetingOtp(){
