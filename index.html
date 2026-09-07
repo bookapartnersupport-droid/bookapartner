@@ -149,8 +149,20 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
     <h2>Review Booking</h2>
     <div id="bookingSummary"></div>
     <div class="notice">🔒 This is currently a prototype flow. Payment gateway and real OTP will be connected in the backend stage.</div>
-    <button class="pink full" onclick="placeBooking()">Continue to Payment</button>
+    <button class="pink full" onclick="goToPayment()">Continue to Payment</button>
     <button class="light full" onclick="go('book')">← Change Partner</button>
+  </div>
+</section>
+
+
+<section id="payment" class="screen">
+  <div class="card">
+    <h2>Demo Payment</h2>
+    <p class="muted">Test mode only — no real money will be charged.</p>
+    <div id="paymentSummary" class="summary"></div>
+    <div class="notice">🔒 Real payment gateway will be connected during the backend integration stage.</div>
+    <button class="pink full" onclick="confirmDemoPayment()">Pay & Confirm Booking</button>
+    <button class="light full" onclick="go('details')">← Back to Booking</button>
   </div>
 </section>
 
@@ -224,7 +236,21 @@ let selected=null;
 
 function openMenu(){document.getElementById('drawer').classList.add('open');document.getElementById('overlay').classList.add('show')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
-function go(id){closeMenu();document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='bookings')renderBookings();scrollTo(0,0)}
+function go(id){
+  closeMenu();
+  if(id==='chat'){
+    const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
+    const confirmed=list.some(b=>b.status==='Confirmed');
+    if(!confirmed){
+      alert('Chat opens only after a booking is confirmed.');
+      return;
+    }
+  }
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='bookings')renderBookings();
+  scrollTo(0,0);
+}
 function startBooking(service){go('book');document.getElementById('service').value=service;findPartners()}
 function ageOK(a,p){if(a==='Any age')return true;if(a==='21–25')return p.age>=21&&p.age<=25;if(a==='26–30')return p.age>=26&&p.age<=30;if(a==='31–35')return p.age>=31&&p.age<=35;if(a==='36–45')return p.age>=36&&p.age<=45;return p.age>=46}
 
@@ -245,19 +271,65 @@ function selectPartner(name){
  document.getElementById('bookingSummary').innerHTML=`<div class="summary"><b>${p.name}</b> <span class="pill verified">✓ VERIFIED</span><p>${selected.service}</p><p>📅 ${selected.date||'Date to be selected'} &nbsp; 🕐 ${selected.time||'Time to be selected'}</p><p>📍 ${selected.location}</p><p>Area: ${selected.area}</p><strong>₹${p.rate} / hour</strong></div>`;
  go('details');
 }
-function placeBooking(){
- if(!selected){go('book');return}
- const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
- const id='BAP'+Date.now().toString().slice(-7);
- const b={id,...selected,status:'Payment Pending'};
- bookings.unshift(b);localStorage.setItem('bap_bookings',JSON.stringify(bookings));
- document.getElementById('successText').innerHTML=`<b>Booking #${id}</b><br><br>${selected.service}<br>${selected.date||'Date pending'} • ${selected.time||'Time pending'}<br>${selected.location}<br><br>Partner: ${selected.name}<br>₹${selected.rate} / hour`;
- go('success');
+function goToPayment(){
+  if(!selected){ go('book'); return; }
+
+  if(!selected.date || !selected.time || !selected.location || selected.location.trim()===''){
+    alert('Please select date, time and meeting location before continuing.');
+    go('book');
+    return;
+  }
+
+  document.getElementById('paymentSummary').innerHTML=
+    `<b>${selected.name}</b> <span class="pill verified">✓ VERIFIED</span>
+     <p>${selected.service}</p>
+     <p>📅 ${selected.date} &nbsp; 🕐 ${selected.time}</p>
+     <p>📍 ${selected.location}</p>
+     <p><strong>₹${selected.rate} / hour</strong></p>`;
+
+  go('payment');
 }
+
+function confirmDemoPayment(){
+  if(!selected){ go('book'); return; }
+
+  const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
+  const id='BAP'+Date.now().toString().slice(-7);
+  const b={id,...selected,status:'Confirmed',paymentStatus:'Demo Payment Successful'};
+  bookings.unshift(b);
+  localStorage.setItem('bap_bookings',JSON.stringify(bookings));
+
+  document.getElementById('successText').innerHTML=
+    `<b>Booking #${id}</b><br><br>
+     <span class="pill available">✓ CONFIRMED</span><br><br>
+     ${selected.service}<br>
+     ${selected.date} • ${selected.time}<br>
+     ${selected.location}<br><br>
+     Partner: ${selected.name}<br>
+     ₹${selected.rate} / hour<br><br>
+     <small>Demo payment successful</small>`;
+
+  go('success');
+}
+
 function renderBookings(){
  const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]'),el=document.getElementById('bookingList');
- if(!list.length){el.innerHTML='<p class="muted">No bookings yet. Start by choosing a service.</p><button class="pink" onclick="go(\'book\')">Book a Partner</button>';return}
- el.innerHTML=list.map(b=>`<div class="card" style="margin-top:10px"><b>Booking #${b.id}</b><span class="pill">${b.status}</span><p>${b.service} • ${b.name}</p><p class="muted">📅 ${b.date||'Pending'} • 🕐 ${b.time||'Pending'}<br>📍 ${b.location}</p><button class="dark" onclick="go('chat')">Open Chat</button></div>`).join('');
+ if(!list.length){
+   el.innerHTML="<p class='muted'>No bookings yet. Start by choosing a service.</p><button class='pink' onclick=\"go('book')\">Book a Partner</button>";
+   return;
+ }
+ el.innerHTML=list.map(b=>{
+   const chat = b.status==='Confirmed'
+      ? "<button class='dark' onclick=\"go('chat')\">Open Chat</button>"
+      : "<button class='light' disabled title='Chat opens after confirmation'>Chat locked</button>";
+   return `<div class="card" style="margin-top:10px">
+     <b>Booking #${b.id}</b>
+     <span class="pill ${b.status==='Confirmed'?'available':''}">${b.status}</span>
+     <p>${b.service} • ${b.name}</p>
+     <p class="muted">📅 ${b.date||'Pending'} • 🕐 ${b.time||'Pending'}<br>📍 ${b.location}</p>
+     ${chat}
+   </div>`;
+ }).join('');
 }
 function sendMessage(){const i=document.getElementById('chatInput');if(i.value.trim()){const box=document.querySelector('.chat');const d=document.createElement('div');d.className='msg me';d.textContent=i.value.trim();box.appendChild(d);i.value='';box.scrollTop=box.scrollHeight}}
 function partnerApply(){const n=document.getElementById('partnerName').value.trim();const m=document.getElementById('partnerMobile').value.trim();if(!n||m.length<10){alert('Please enter your name and a valid 10-digit mobile number.');return}alert('Application saved for testing. OTP verification will be connected in the backend stage.');}
