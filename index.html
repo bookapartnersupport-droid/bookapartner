@@ -33,7 +33,7 @@ button{cursor:pointer;border:0;border-radius:11px;padding:11px 15px;font-weight:
 .card{background:#fff;border:1px solid #e2e5eb;border-radius:16px;padding:15px}
 .service{min-height:120px;cursor:pointer}
 .ico{font-size:28px}.service h3{margin:8px 0 4px}
-.pill{display:inline-block;padding:5px 8px;border-radius:99px;font-size:10px;font-weight:900;background:#eef2ff;margin:2px}
+.pill{display:inline-block;padding:6px 10px;border-radius:99px;font-size:11px;font-weight:900;background:#eef2ff;color:#171b2b;margin:3px;border:1px solid #dbe3f2}
 .available{background:#ecfdf3;color:#067647}.verified{background:#eff8ff;color:#175cd3}
 .partners{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .partner{display:flex;gap:12px;align-items:center}
@@ -256,7 +256,7 @@ function placeBooking(){
 }
 function renderBookings(){
  const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]'),el=document.getElementById('bookingList');
- if(!list.length){el.innerHTML='<p class="muted">No bookings yet. Start by choosing a service.</p><button class="pink" onclick="go(\\'book\\')">Book a Partner</button>';return}
+ if(!list.length){el.innerHTML='<p class="muted">No bookings yet. Start by choosing a service.</p><button class="pink" onclick="go(\'book\')">Book a Partner</button>';return}
  el.innerHTML=list.map(b=>`<div class="card" style="margin-top:10px"><b>Booking #${b.id}</b><span class="pill">${b.status}</span><p>${b.service} • ${b.name}</p><p class="muted">📅 ${b.date||'Pending'} • 🕐 ${b.time||'Pending'}<br>📍 ${b.location}</p><button class="dark" onclick="go('chat')">Open Chat</button></div>`).join('');
 }
 function sendMessage(){const i=document.getElementById('chatInput');if(i.value.trim()){const box=document.querySelector('.chat');const d=document.createElement('div');d.className='msg me';d.textContent=i.value.trim();box.appendChild(d);i.value='';box.scrollTop=box.scrollHeight}}
