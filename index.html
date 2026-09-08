@@ -6,11 +6,15 @@
 <title>Book A Partner</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#f6f7fb;color:#171b2b;font-family:Arial,sans-serif}
-header{height:70px;background:#fff;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between;padding:6px 12px;position:sticky;top:0;z-index:30}
+body{margin:0;background:
+radial-gradient(circle at 8% 8%,rgba(217,191,255,.38),transparent 26%),
+radial-gradient(circle at 92% 12%,rgba(255,197,220,.34),transparent 25%),
+radial-gradient(circle at 85% 82%,rgba(186,215,255,.36),transparent 28%),
+linear-gradient(135deg,#f8fbff 0%,#f6f0ff 46%,#fff7fb 100%);color:#171b2b;font-family:Arial,sans-serif;min-height:100vh;background-attachment:fixed}
+header{height:70px;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid rgba(229,231,235,.8);display:flex;align-items:center;justify-content:space-between;padding:6px 12px;position:sticky;top:0;z-index:30}
 .logo{width:190px;height:56px;object-fit:contain;object-position:left center}
 .menu{width:46px;height:46px;border:1px solid #ddd;background:#fff;border-radius:12px;font-size:22px;cursor:pointer}
-.drawer{position:fixed;right:0;top:0;width:min(90vw,350px);height:100vh;background:#fff;z-index:50;box-shadow:-8px 0 25px #0002;transform:translateX(105%);transition:.25s;padding:18px;overflow:auto}
+.drawer{position:fixed;right:0;top:0;width:min(90vw,350px);height:100vh;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);z-index:50;box-shadow:-8px 0 25px #0002;transform:translateX(105%);transition:.25s;padding:18px;overflow:auto}
 .drawer.open{transform:translateX(0)}
 .overlay{display:none;position:fixed;inset:0;background:#0007;z-index:40}
 .overlay.show{display:block}
@@ -30,7 +34,7 @@ button{cursor:pointer;border:0;border-radius:11px;padding:11px 15px;font-weight:
 .section{margin-top:20px}
 .muted{color:#697386}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
-.card{background:#fff;border:1px solid #e2e5eb;border-radius:16px;padding:15px}
+.card{background:rgba(255,255,255,.92);border:1px solid rgba(226,229,235,.9);border-radius:16px;padding:15px;box-shadow:0 8px 24px rgba(75,56,130,.06)}
 .service{min-height:120px;cursor:pointer}
 .ico{font-size:28px}.service h3{margin:8px 0 4px}
 .pill{display:inline-block;padding:6px 10px;border-radius:99px;font-size:11px;font-weight:900;background:#eef2ff;color:#171b2b;margin:3px;border:1px solid #dbe3f2}
@@ -44,7 +48,7 @@ button{cursor:pointer;border:0;border-radius:11px;padding:11px 15px;font-weight:
 input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d5d9e2;border-radius:9px;background:#fff;font:inherit}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .screen{display:none}.screen.active{display:block}
-.notice{padding:12px;border-radius:10px;background:#eef2ff;margin-top:10px;line-height:1.5;font-size:13px}
+.notice{padding:12px;border-radius:10px;background:rgba(238,242,255,.9);margin-top:10px;line-height:1.5;font-size:13px}
 .alert{padding:12px;border-radius:11px;margin-top:9px;font-size:13px;line-height:1.5}.sos{background:#fff1f2;border:1px solid #fecdd3}.rules{background:#fffbeb;border:1px solid #fde68a}
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
 .summary{background:#111827;color:#fff;border-radius:16px;padding:16px}
@@ -250,20 +254,8 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
 <p class="muted">Review bookings, customer objections and partner payout decisions.</p>
 <div class="notice"><b>Admin only:</b> In the live system, payout decisions will require authorized admin access and a secure backend.</div>
 <div class="row">
-<div>
-<label>Filter</label>
-<select id="adminFilter" onchange="renderAdmin()">
-<option value="all">All Bookings</option>
-<option value="issue">Issues / Holds</option>
-<option value="payout">Payout Eligible</option>
-<option value="pending">Awaiting Partner</option>
-<option value="confirmed">Confirmed</option>
-</select>
-</div>
-<div>
-<label>Summary</label>
-<div id="adminSummary" class="summary" style="padding:10px"></div>
-</div>
+<div><label>Filter</label><select id="adminFilter" onchange="renderAdmin()"><option value="all">All Bookings</option><option value="issue">Issues / Holds</option><option value="payout">Payout Eligible</option><option value="pending">Awaiting Partner</option><option value="confirmed">Confirmed</option></select></div>
+<div><label>Summary</label><div id="adminSummary" class="summary" style="padding:10px"></div></div>
 </div>
 <div class="section"><h3>Bookings & Disputes</h3><div id="adminList"></div></div>
 </div>
@@ -289,152 +281,93 @@ const partners=[
  {name:'Aarav',age:31,area:'DLF Phase 4',rate:999,rating:4.9,reviews:128,services:['Movie Partner','Shopping Partner','Coffee & Conversation']},
  {name:'Vikram',age:34,area:'Cyber City',rate:799,rating:4.7,reviews:51,services:['Coffee & Conversation','Assistance Partner']}
 ];
-
 let selected=null;
 
-function openMenu(){
-  document.getElementById('drawer').classList.add('open');
-  document.getElementById('overlay').classList.add('show');
-}
-
-function closeMenu(){
-  document.getElementById('drawer').classList.remove('open');
-  document.getElementById('overlay').classList.remove('show');
-}
-
+function openMenu(){document.getElementById('drawer').classList.add('open');document.getElementById('overlay').classList.add('show')}
+function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
 function go(id){
   closeMenu();
-
   if(id==='chat'){
     const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
     const confirmed=list.some(b=>b.status==='Confirmed');
-    if(!confirmed){
-      alert('Chat opens only after a booking is confirmed.');
-      return;
-    }
+    if(!confirmed){alert('Chat opens only after a booking is confirmed.');return;}
   }
-
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-
   if(id==='bookings')renderBookings();
   if(id==='partnerDashboard')renderPartnerDashboard();
   if(id==='meetingOtp')renderMeetingOtp();
   if(id==='admin')renderAdmin();
-
   scrollTo(0,0);
 }
-
-function startBooking(service){
-  go('book');
-  document.getElementById('service').value=service;
-  findPartners();
-}
-
-function ageOK(a,p){
-  if(a==='Any age')return true;
-  if(a==='21–25')return p.age>=21&&p.age<=25;
-  if(a==='26–30')return p.age>=26&&p.age<=30;
-  if(a==='31–35')return p.age>=31&&p.age<=35;
-  if(a==='36–45')return p.age>=36&&p.age<=45;
-  return p.age>=46;
-}
+function startBooking(service){go('book');document.getElementById('service').value=service;findPartners()}
+function ageOK(a,p){if(a==='Any age')return true;if(a==='21–25')return p.age>=21&&p.age<=25;if(a==='26–30')return p.age>=26&&p.age<=30;if(a==='31–35')return p.age>=31&&p.age<=35;if(a==='36–45')return p.age>=36&&p.age<=45;return p.age>=46}
 
 function findPartners(){
-  const s=document.getElementById('service').value;
-  const a=document.getElementById('age').value;
-  const area=document.getElementById('area').value||'Gurgaon NCR';
-
-  let list=partners.filter(p=>p.services.includes(s)&&ageOK(a,p));
-
-  let html='<h2>Available Partners</h2><p class="muted">'+s+' • '+area+' • Preferred age: '+a+'</p><div class="partners">';
-
-  list.forEach(p=>{
-    html+=`<div class="card">
-      <div class="partner">
-        <div class="avatar">${p.name[0]}</div>
-        <div>
-          <b>${p.name}</b>
-          <span class="pill verified">✓ VERIFIED</span>
-          <div class="muted">Age ${p.age} • ${p.area}</div>
-          <div><span class="stars">★★★★★</span> <b>${p.rating}</b> (${p.reviews})</div>
-          <span class="pill available">● AVAILABLE</span>
-        </div>
-      </div>
-      <div class="price">₹${p.rate} <small>/ hour</small></div>
-      <div>${p.services.map(x=>'<span class="pill">'+x+'</span>').join('')}</div>
-      <button class="pink full" onclick="selectPartner('${p.name}')">Request Booking</button>
-    </div>`;
-  });
-
-  if(!list.length){
-    html+='<div class="card">No matching partners found. Try another service or age preference.</div>';
-  }
-
-  html+='</div><div class="notice"><b>Next:</b> Select a partner → review booking → continue to payment.</div>';
-
-  document.getElementById('results').innerHTML=html;
+ const s=document.getElementById('service').value;
+ const a=document.getElementById('age').value;
+ const area=document.getElementById('area').value||'Gurgaon NCR';
+ let list=partners.filter(p=>p.services.includes(s)&&ageOK(a,p));
+ let html='<h2>Available Partners</h2><p class="muted">'+s+' • '+area+' • Preferred age: '+a+'</p><div class="partners">';
+ list.forEach(p=>{
+   html+=`<div class="card">
+   <div class="partner">
+   <div class="avatar">${p.name[0]}</div>
+   <div><b>${p.name}</b> <span class="pill verified">✓ VERIFIED</span>
+   <div class="muted">Age ${p.age} • ${p.area}</div>
+   <div><span class="stars">★★★★★</span> <b>${p.rating}</b> (${p.reviews})</div>
+   <span class="pill available">● AVAILABLE</span></div>
+   </div>
+   <div class="price">₹${p.rate} <small>/ hour</small></div>
+   <div>${p.services.map(x=>'<span class="pill">'+x+'</span>').join('')}</div>
+   <button class="pink full" onclick="selectPartner('${p.name}')">Request Booking</button>
+   </div>`;
+ });
+ if(!list.length)html+='<div class="card">No matching partners found. Try another service or age preference.</div>';
+ html+='</div><div class="notice"><b>Next:</b> Select a partner → review booking → continue to payment.</div>';
+ document.getElementById('results').innerHTML=html;
 }
 
 function selectPartner(name){
-  const p=partners.find(x=>x.name===name);
-
-  selected={
-    ...p,
-    service:document.getElementById('service').value,
-    age:document.getElementById('age').value,
-    area:document.getElementById('area').value||'Gurgaon NCR',
-    date:document.getElementById('date').value,
-    time:document.getElementById('time').value,
-    location:document.getElementById('location').value||'To be confirmed'
-  };
-
-  document.getElementById('bookingSummary').innerHTML=`
-    <div class="summary">
-      <b>${p.name}</b>
-      <span class="pill verified">✓ VERIFIED</span>
-      <p>${selected.service}</p>
-      <p>📅 ${selected.date||'Date to be selected'} &nbsp; 🕐 ${selected.time||'Time to be selected'}</p>
-      <p>📍 ${selected.location}</p>
-      <p>Area: ${selected.area}</p>
-      <strong>₹${p.rate} / hour</strong>
-    </div>`;
-
-  go('details');
+ const p=partners.find(x=>x.name===name);
+ selected={
+   ...p,
+   service:document.getElementById('service').value,
+   age:document.getElementById('age').value,
+   area:document.getElementById('area').value||'Gurgaon NCR',
+   date:document.getElementById('date').value,
+   time:document.getElementById('time').value,
+   location:document.getElementById('location').value||'To be confirmed'
+ };
+ document.getElementById('bookingSummary').innerHTML=
+ `<div class="summary"><b>${p.name}</b> <span class="pill verified">✓ VERIFIED</span>
+ <p>${selected.service}</p>
+ <p>📅 ${selected.date||'Date to be selected'} &nbsp; 🕐 ${selected.time||'Time to be selected'}</p>
+ <p>📍 ${selected.location}</p><p>Area: ${selected.area}</p>
+ <strong>₹${p.rate} / hour</strong></div>`;
+ go('details');
 }
 
 function goToPayment(){
-  if(!selected){
-    go('book');
-    return;
-  }
-
-  if(!selected.date || !selected.time || !selected.location || selected.location.trim()===''){
+  if(!selected){go('book');return;}
+  if(!selected.date||!selected.time||!selected.location||selected.location.trim()===''){
     alert('Please select date, time and meeting location before continuing.');
     go('book');
     return;
   }
-
   document.getElementById('paymentSummary').innerHTML=
-    `<b>${selected.name}</b>
-     <span class="pill verified">✓ VERIFIED</span>
+    `<b>${selected.name}</b> <span class="pill verified">✓ VERIFIED</span>
      <p>${selected.service}</p>
      <p>📅 ${selected.date} &nbsp; 🕐 ${selected.time}</p>
      <p>📍 ${selected.location}</p>
      <p><strong>₹${selected.rate} / hour</strong></p>`;
-
   go('payment');
 }
 
 function confirmDemoPayment(){
-  if(!selected){
-    go('book');
-    return;
-  }
-
+  if(!selected){go('book');return;}
   const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
   const id='BAP'+Date.now().toString().slice(-7);
-
   const b={
     id,
     ...selected,
@@ -444,10 +377,8 @@ function confirmDemoPayment(){
     payoutStatus:'Partner payout locked until customer approval',
     customerDecision:'Pending'
   };
-
   bookings.unshift(b);
   localStorage.setItem('bap_bookings',JSON.stringify(bookings));
-
   document.getElementById('successText').innerHTML=
     `<b>Booking #${id}</b><br><br>
      <span class="pill">✓ REQUEST SENT</span><br><br>
@@ -457,23 +388,19 @@ function confirmDemoPayment(){
      Partner: ${selected.name}<br>
      ₹${selected.rate} / hour<br><br>
      <small>Payment received and held until booking completion.</small>`;
-
   go('success');
 }
 
 function renderBookings(){
   const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
   const el=document.getElementById('bookingList');
-
   if(!list.length){
     el.innerHTML="<p class='muted'>No bookings yet. Start by choosing a service.</p><button class='pink' onclick=\"go('book')\">Find a Partner</button>";
     return;
   }
-
   el.innerHTML=list.map(b=>{
     let badgeClass=b.status==='Confirmed'?'available':'';
     let actions='';
-
     if(b.status==='Confirmed'){
       if(b.customerDecision==='OK'){
         actions="<span class='pill available'>✓ CUSTOMER APPROVED</span> <button class='dark' onclick=\"go('chat')\">Open Chat</button> <button class='pink' onclick=\"go('meetingOtp')\">Meeting OTP</button>";
@@ -485,10 +412,8 @@ function renderBookings(){
     }else{
       actions="<button class='light' disabled>Chat locked</button>";
     }
-
     const paymentLine=b.paymentStatus?`<span class="pill">${b.paymentStatus}</span>`:'';
     const payoutLine=b.payoutStatus?`<span class="pill">${b.payoutStatus}</span>`:'';
-
     return `<div class="card" style="margin-top:10px">
       <b>Booking #${b.id}</b>
       <span class="pill ${badgeClass}">${b.status}</span>
@@ -502,14 +427,11 @@ function renderBookings(){
 
 function sendMessage(){
   const i=document.getElementById('chatInput');
-
   if(i.value.trim()){
     const box=document.querySelector('.chat');
     const d=document.createElement('div');
-
     d.className='msg me';
     d.textContent=i.value.trim();
-
     box.appendChild(d);
     i.value='';
     box.scrollTop=box.scrollHeight;
@@ -547,53 +469,38 @@ function partnerApply(){
   };
 
   localStorage.setItem('bap_partner_profile',JSON.stringify(partner));
-
   alert('Partner application saved for demo. Real mobile OTP, ID verification and admin approval will be connected in the backend stage.');
-
   go('partnerDashboard');
 }
 
 function customerApprove(id){
   const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
   const i=bookings.findIndex(b=>b.id===id);
-
   if(i<0)return;
-
   if(bookings[i].status!=='Confirmed'){
     alert('The booking must be confirmed by the partner before customer approval.');
     return;
   }
-
   bookings[i].customerDecision='OK';
   bookings[i].payoutStatus='Payout eligible — release to partner';
   bookings[i].paymentStatus='Payment held → customer approved';
-
   localStorage.setItem('bap_bookings',JSON.stringify(bookings));
-
   alert('Customer marked the meeting as OK. The partner payout is now eligible for release in the live backend.');
-
   renderBookings();
 }
 
 function customerReportIssue(id){
   const reason=prompt('Please briefly describe the issue or objection. Leave blank to cancel.');
-
   if(reason===null)return;
-
   const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
   const i=bookings.findIndex(b=>b.id===id);
-
   if(i<0)return;
-
   bookings[i].customerDecision='Issue';
   bookings[i].issueReason=reason.trim()||'Customer reported an issue';
   bookings[i].payoutStatus='Payment on hold — dispute review required';
   bookings[i].paymentStatus='Payment held — objection reported';
-
   localStorage.setItem('bap_bookings',JSON.stringify(bookings));
-
   alert('Issue reported. Partner payout remains on hold until the dispute is reviewed.');
-
   renderBookings();
 }
 
@@ -608,8 +515,7 @@ function renderPartnerDashboard(){
     return;
   }
 
-  profile.innerHTML=`
-    <b>${p.name}</b>
+  profile.innerHTML=`<b>${p.name}</b>
     <span class="pill pending">${p.verification}</span>
     <p>Age ${p.age} • ${p.area}</p>
     <p>${p.service} • ₹${p.rate}/hour • ${p.availability}</p>
@@ -651,7 +557,6 @@ function renderPartnerDashboard(){
 
   req.innerHTML=matching.map(b=>{
     const statusText=b.status==='Confirmed'?'Accepted / Confirmed':'Waiting for your response';
-
     let payoutText='';
 
     if(b.customerDecision==='OK'){
@@ -664,7 +569,7 @@ function renderPartnerDashboard(){
 
     const actions=b.status==='Confirmed'
       ?payoutText
-      :" <button class='green' onclick=\"partnerAccept('"+b.id+"')\">Accept</button> <button class='light' onclick=\"partnerReject('"+b.id+"')\">Reject</button>";
+      :"<button class='green' onclick=\"partnerAccept('"+b.id+"')\">Accept</button> <button class='light' onclick=\"partnerReject('"+b.id+"')\">Reject</button>";
 
     return `<div class="card" style="margin-top:10px">
       <b>${b.service}</b>
@@ -678,7 +583,6 @@ function renderPartnerDashboard(){
 function partnerAccept(id){
   const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
   const i=bookings.findIndex(b=>b.id===id);
-
   if(i<0)return;
 
   bookings[i].partnerStatus='Accepted';
@@ -688,160 +592,132 @@ function partnerAccept(id){
   localStorage.setItem('bap_bookings',JSON.stringify(bookings));
 
   alert('Demo: booking accepted. The customer can now chat and use the meeting OTP flow.');
-
   renderPartnerDashboard();
 }
 
 function partnerReject(id){
   const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
   const i=bookings.findIndex(b=>b.id===id);
-
   if(i<0)return;
 
   bookings[i].partnerStatus='Rejected';
   bookings[i].status='Rejected';
 
   localStorage.setItem('bap_bookings',JSON.stringify(bookings));
-
   renderPartnerDashboard();
 }
 
 function renderAdmin(){
-  const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const filter=document.getElementById('adminFilter').value;
-  const summary=document.getElementById('adminSummary');
-  const container=document.getElementById('adminList');
+ const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
+ const filter=document.getElementById('adminFilter').value;
+ const summary=document.getElementById('adminSummary');
+ const container=document.getElementById('adminList');
 
-  const issues=list.filter(b=>b.customerDecision==='Issue').length;
-  const eligible=list.filter(b=>b.customerDecision==='OK').length;
-  const awaiting=list.filter(b=>b.status==='Awaiting Partner').length;
-  const confirmed=list.filter(b=>b.status==='Confirmed').length;
+ const issues=list.filter(b=>b.customerDecision==='Issue').length;
+ const eligible=list.filter(b=>b.customerDecision==='OK').length;
+ const awaiting=list.filter(b=>b.status==='Awaiting Partner').length;
+ const confirmed=list.filter(b=>b.status==='Confirmed').length;
 
-  summary.innerHTML=
-    `Total ${list.length}<br>
-     Issues ${issues} • Payout Eligible ${eligible}<br>
-     Awaiting Partner ${awaiting} • Confirmed ${confirmed}`;
+ summary.innerHTML=`Total ${list.length}<br>Issues ${issues} • Payout Eligible ${eligible}<br>Awaiting Partner ${awaiting} • Confirmed ${confirmed}`;
 
-  let filtered=list;
+ let filtered=list;
 
-  if(filter==='issue')filtered=list.filter(b=>b.customerDecision==='Issue');
-  if(filter==='payout')filtered=list.filter(b=>b.customerDecision==='OK');
-  if(filter==='pending')filtered=list.filter(b=>b.status==='Awaiting Partner');
-  if(filter==='confirmed')filtered=list.filter(b=>b.status==='Confirmed');
+ if(filter==='issue')filtered=list.filter(b=>b.customerDecision==='Issue');
+ if(filter==='payout')filtered=list.filter(b=>b.customerDecision==='OK');
+ if(filter==='pending')filtered=list.filter(b=>b.status==='Awaiting Partner');
+ if(filter==='confirmed')filtered=list.filter(b=>b.status==='Confirmed');
 
-  if(!filtered.length){
-    container.innerHTML='<div class="card">No bookings in this filter.</div>';
-    return;
-  }
+ if(!filtered.length){
+   container.innerHTML='<div class="card">No bookings in this filter.</div>';
+   return;
+ }
 
-  container.innerHTML=filtered.map(b=>{
-    const issue=b.customerDecision==='Issue';
-    const approved=b.customerDecision==='OK';
+ container.innerHTML=filtered.map(b=>{
+   const issue=b.customerDecision==='Issue';
+   const approved=b.customerDecision==='OK';
 
-    let decision='Waiting';
+   let decision='Waiting';
 
-    if(issue)decision='Dispute / Payout Hold';
-    else if(approved)decision='Customer Approved / Payout Eligible';
-    else if(b.status==='Awaiting Partner')decision='Awaiting Partner';
-    else if(b.status==='Confirmed')decision='Awaiting Customer Approval';
+   if(issue)decision='Dispute / Payout Hold';
+   else if(approved)decision='Customer Approved / Payout Eligible';
+   else if(b.status==='Awaiting Partner')decision='Awaiting Partner';
+   else if(b.status==='Confirmed')decision='Awaiting Customer Approval';
 
-    let actions='';
+   let actions='';
 
-    if(issue){
-      actions=
-        `<button class="green" onclick="adminResolveIssue('${b.id}')">Resolve & Approve Payout</button>
-         <button class="light" onclick="adminKeepHold('${b.id}')">Keep On Hold</button>`;
-    }else if(approved){
-      actions=
-        `<span class="pill available">✓ PAYOUT ELIGIBLE</span>
-         <button class="green" onclick="adminReleasePayout('${b.id}')">Release Payout</button>`;
-    }else if(b.status==='Confirmed'){
-      actions=
-        `<span class="pill">WAITING FOR CUSTOMER OK</span>
-         <button class="light" onclick="adminKeepHold('${b.id}')">Keep On Hold</button>`;
-    }else{
-      actions='<span class="pill">NO PAYOUT ACTION YET</span>';
-    }
+   if(issue){
+     actions=`<button class="green" onclick="adminResolveIssue('${b.id}')">Resolve & Approve Payout</button>
+     <button class="light" onclick="adminKeepHold('${b.id}')">Keep On Hold</button>`;
+   }else if(approved){
+     actions=`<span class="pill available">✓ PAYOUT ELIGIBLE</span>
+     <button class="green" onclick="adminReleasePayout('${b.id}')">Release Payout</button>`;
+   }else if(b.status==='Confirmed'){
+     actions=`<span class="pill">WAITING FOR CUSTOMER OK</span>
+     <button class="light" onclick="adminKeepHold('${b.id}')">Keep On Hold</button>`;
+   }else{
+     actions='<span class="pill">NO PAYOUT ACTION YET</span>';
+   }
 
-    return `<div class="card" style="margin-top:10px">
-      <b>Booking #${b.id}</b>
-      <span class="pill">${b.status}</span>
-      ${issue?'<span class="pill" style="background:#fff1f2;color:#b42318">⚠ ISSUE</span>':''}
-      ${approved?'<span class="pill available">✓ CUSTOMER OK</span>':''}
-      <p>
-        <b>Partner:</b> ${b.name}<br>
-        <b>Service:</b> ${b.service}<br>
-        <b>Amount:</b> ₹${b.rate}/hour
-      </p>
-      <p class="muted">
-        📅 ${b.date} • 🕐 ${b.time}<br>
-        📍 ${b.location}
-      </p>
-      <p>
-        <b>Payment:</b> ${b.paymentStatus||'—'}<br>
-        <b>Payout:</b> ${b.payoutStatus||'—'}<br>
-        <b>Decision:</b> ${decision}
-      </p>
-      ${issue?`<div class="alert sos"><b>Customer objection:</b><br>${b.issueReason||'Customer reported an issue.'}</div>`:''}
-      <div style="margin-top:8px">${actions}</div>
-    </div>`;
-  }).join('');
+   return `<div class="card" style="margin-top:10px">
+   <b>Booking #${b.id}</b>
+   <span class="pill">${b.status}</span>
+   ${issue?'<span class="pill" style="background:#fff1f2;color:#b42318">⚠ ISSUE</span>':''}
+   ${approved?'<span class="pill available">✓ CUSTOMER OK</span>':''}
+   <p><b>Partner:</b> ${b.name}<br><b>Service:</b> ${b.service}<br><b>Amount:</b> ₹${b.rate}/hour</p>
+   <p class="muted">📅 ${b.date} • 🕐 ${b.time}<br>📍 ${b.location}</p>
+   <p><b>Payment:</b> ${b.paymentStatus||'—'}<br><b>Payout:</b> ${b.payoutStatus||'—'}<br><b>Decision:</b> ${decision}</p>
+   ${issue?`<div class="alert sos"><b>Customer objection:</b><br>${b.issueReason||'Customer reported an issue.'}</div>`:''}
+   <div style="margin-top:8px">${actions}</div>
+   </div>`;
+ }).join('');
 }
 
 function adminReleasePayout(id){
-  const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const i=list.findIndex(b=>b.id===id);
+ const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
+ const i=list.findIndex(b=>b.id===id);
+ if(i<0)return;
 
-  if(i<0)return;
+ if(list[i].customerDecision!=='OK'&&list[i].adminDecision!=='Dispute Resolved'){
+   alert('Payout cannot be released until the customer approves or the admin resolves the dispute.');
+   return;
+ }
 
-  if(list[i].customerDecision!=='OK'&&list[i].adminDecision!=='Dispute Resolved'){
-    alert('Payout cannot be released until the customer approves or the admin resolves the dispute.');
-    return;
-  }
+ list[i].adminDecision='Payout Approved';
+ list[i].payoutStatus='Payout Approved by Admin — ready for partner settlement';
+ list[i].paymentStatus='Payment held → payout approved';
 
-  list[i].adminDecision='Payout Approved';
-  list[i].payoutStatus='Payout Approved by Admin — ready for partner settlement';
-  list[i].paymentStatus='Payment held → payout approved';
+ localStorage.setItem('bap_bookings',JSON.stringify(list));
 
-  localStorage.setItem('bap_bookings',JSON.stringify(list));
-
-  alert('Demo: payout approved. Real settlement will happen through the secure backend/payment system.');
-
-  renderAdmin();
+ alert('Demo: payout approved. Real settlement will happen through the secure backend/payment system.');
+ renderAdmin();
 }
 
 function adminKeepHold(id){
-  const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const i=list.findIndex(b=>b.id===id);
+ const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
+ const i=list.findIndex(b=>b.id===id);
+ if(i<0)return;
 
-  if(i<0)return;
+ list[i].adminDecision='Keep On Hold';
+ list[i].payoutStatus='Payment on hold — admin review required';
 
-  list[i].adminDecision='Keep On Hold';
-  list[i].payoutStatus='Payment on hold — admin review required';
-
-  localStorage.setItem('bap_bookings',JSON.stringify(list));
-
-  alert('Demo: payout remains on hold.');
-
-  renderAdmin();
+ localStorage.setItem('bap_bookings',JSON.stringify(list));
+ alert('Demo: payout remains on hold.');
+ renderAdmin();
 }
 
 function adminResolveIssue(id){
-  const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const i=list.findIndex(b=>b.id===id);
+ const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
+ const i=list.findIndex(b=>b.id===id);
+ if(i<0)return;
 
-  if(i<0)return;
+ list[i].adminDecision='Dispute Resolved';
+ list[i].customerDecision='OK';
+ list[i].payoutStatus='Payout eligible — dispute resolved by Admin';
+ list[i].paymentStatus='Payment held → dispute resolved';
 
-  list[i].adminDecision='Dispute Resolved';
-  list[i].customerDecision='OK';
-  list[i].payoutStatus='Payout eligible — dispute resolved by Admin';
-  list[i].paymentStatus='Payment held → dispute resolved';
-
-  localStorage.setItem('bap_bookings',JSON.stringify(list));
-
-  alert('Demo: dispute resolved. The payout is now eligible for final release.');
-
-  renderAdmin();
+ localStorage.setItem('bap_bookings',JSON.stringify(list));
+ alert('Demo: dispute resolved. The payout is now eligible for final release.');
+ renderAdmin();
 }
 
 function renderMeetingOtp(){
@@ -857,14 +733,14 @@ function renderMeetingOtp(){
 }
 
 function verifyMeetingOtp(){
-  const value=document.getElementById('otpInput').value.trim();
+ const value=document.getElementById('otpInput').value.trim();
 
-  if(!/^\d{6}$/.test(value)){
-    alert('Enter the 6-digit demo OTP.');
-    return;
-  }
+ if(!/^\d{6}$/.test(value)){
+   alert('Enter the 6-digit demo OTP.');
+   return;
+ }
 
-  alert('Demo: meeting OTP accepted. Real OTP verification will be connected to the backend.');
+ alert('Demo: meeting OTP accepted. Real OTP verification will be connected to the backend.');
 }
 
 const today=new Date();
