@@ -4968,7 +4968,10 @@ function confirmDemoPayment(){
     id,
 
     ...selected,
-
+customerPhone:
+  JSON.parse(
+    localStorage.getItem('bap_current_user') || 'null'
+  )?.phone || '',
     status:
       'Awaiting Partner',
 
@@ -5065,16 +5068,45 @@ function renderBookings(){
 
   const list =
     JSON.parse(
+      localStorage.getItefunction renderBookings(){
+
+  const allBookings =
+    JSON.parse(
       localStorage.getItem(
         'bap_bookings'
       ) ||
       '[]'
     );
 
+  let currentUser = null;
+
+  try{
+    currentUser =
+      JSON.parse(
+        localStorage.getItem(
+          'bap_current_user'
+        ) ||
+        'null'
+      );
+  }catch(e){
+    currentUser = null;
+  }
+
+  const list =
+    currentUser &&
+    currentUser.phone
+      ? allBookings.filter(
+          b =>
+            b.customerPhone ===
+            currentUser.phone
+        )
+      : [];
+
   const el =
     document.getElementById(
       'bookingList'
     );
+
 
   if(!list.length){
 
