@@ -3,77 +3,1345 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="description" content="Book A Partner - Find verified partners for movies, shopping, coffee, events, travel and everyday assistance.">
 <title>Book A Partner</title>
+
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:
-radial-gradient(circle at 8% 8%,rgba(217,191,255,.38),transparent 26%),
-radial-gradient(circle at 92% 12%,rgba(255,197,220,.34),transparent 25%),
-radial-gradient(circle at 85% 82%,rgba(186,215,255,.36),transparent 28%),
-linear-gradient(135deg,#f8fbff 0%,#f6f0ff 46%,#fff7fb 100%);color:#171b2b;font-family:Arial,sans-serif;min-height:100vh;background-attachment:fixed}
-header{height:70px;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);border-bottom:1px solid rgba(229,231,235,.8);display:flex;align-items:center;justify-content:space-between;padding:6px 12px;position:sticky;top:0;z-index:30}
-.logo{width:190px;height:56px;object-fit:contain;object-position:left center}
-.menu{width:46px;height:46px;border:1px solid #ddd;background:#fff;border-radius:12px;font-size:22px;cursor:pointer}
-.drawer{position:fixed;right:0;top:0;width:min(90vw,350px);height:100vh;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);z-index:50;box-shadow:-8px 0 25px #0002;transform:translateX(105%);transition:.25s;padding:18px;overflow:auto}
-.drawer.open{transform:translateX(0)}
-.overlay{display:none;position:fixed;inset:0;background:#0007;z-index:40}
-.overlay.show{display:block}
-.drawerHead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.drawerLogo{width:165px;height:auto}
-.close{background:#f1f3f7;border:0;border-radius:10px;padding:8px 12px;font-size:20px;cursor:pointer}
-.menuItem{display:block;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid #eee;padding:15px 4px;font-weight:800;cursor:pointer}
-main{max-width:1000px;margin:auto;padding:14px}
-.hero{background:#111827;color:#fff;border-radius:24px;padding:22px;text-align:center}
-.heroLogo{width:220px;max-width:94%;background:#fff;border-radius:18px;padding:8px}
-h1{font-size:28px;margin:16px 0 8px}
-h2{margin:0 0 7px}
-h3{margin-top:0}
-.hero p{line-height:1.5;color:#dbe2ed;max-width:650px;margin:0 auto 18px}
-button{cursor:pointer;border:0;border-radius:11px;padding:11px 15px;font-weight:800;font-size:14px}
-.primary{background:#fff;color:#111827}.pink{background:#ed176f;color:#fff}.dark{background:#111827;color:#fff}.light{background:#f1f3f7;color:#171b2b}.green{background:#067647;color:#fff}
-.section{margin-top:20px}
-.muted{color:#697386}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
-.card{background:rgba(255,255,255,.92);border:1px solid rgba(226,229,235,.9);border-radius:16px;padding:15px;box-shadow:0 8px 24px rgba(75,56,130,.06)}
-.service{min-height:120px;cursor:pointer}
-.ico{font-size:28px}.service h3{margin:8px 0 4px}
-.pill{display:inline-block;padding:6px 10px;border-radius:99px;font-size:11px;font-weight:900;background:#eef2ff;color:#171b2b;margin:3px;border:1px solid #dbe3f2}
-.available{background:#ecfdf3;color:#067647}.verified{background:#eff8ff;color:#175cd3}
-.partners{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.partner{display:flex;gap:12px;align-items:center}
-.avatar{width:52px;height:52px;border-radius:50%;background:#e9edf3;display:grid;place-items:center;font-size:20px;font-weight:900;flex-shrink:0}
-.price{font-size:19px;font-weight:900;margin:11px 0}
-.full{width:100%;margin-top:10px}
-.form label{display:block;font-size:12px;font-weight:800;margin-top:10px}
-input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d5d9e2;border-radius:9px;background:#fff;font:inherit}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.screen{display:none}.screen.active{display:block}
-.notice{padding:12px;border-radius:10px;background:rgba(238,242,255,.9);margin-top:10px;line-height:1.5;font-size:13px}
-.alert{padding:12px;border-radius:11px;margin-top:9px;font-size:13px;line-height:1.5}.sos{background:#fff1f2;border:1px solid #fecdd3}.rules{background:#fffbeb;border:1px solid #fde68a}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
-.summary{background:#111827;color:#fff;border-radius:16px;padding:16px}
-.chat{height:260px;overflow:auto;background:#f8fafc;border:1px solid #e4e7ec;border-radius:12px;padding:10px}
-.msg{max-width:80%;padding:9px 11px;border-radius:12px;margin:7px 0;font-size:13px}.me{margin-left:auto;background:#ead8ff}.them{background:#e9eef5}
-.footer{text-align:center;color:#7b8495;font-size:12px;padding:25px 0}
-.hidden{display:none}
-@media(max-width:700px){.grid{grid-template-columns:1fr 1fr}.partners,.steps{grid-template-columns:1fr}.row{grid-template-columns:1fr}.hero{padding:18px 12px}h1{font-size:25px}}
-@media(max-width:430px){.logo{width:175px}.grid{grid-template-columns:1fr}}
+
+html{
+  scroll-behavior:smooth;
+}
+
+body{
+  margin:0;
+  color:#171b2b;
+  font-family:Arial,Helvetica,sans-serif;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 5% 5%,rgba(218,194,255,.42),transparent 24%),
+    radial-gradient(circle at 95% 10%,rgba(255,198,221,.38),transparent 24%),
+    radial-gradient(circle at 90% 80%,rgba(188,217,255,.40),transparent 28%),
+    radial-gradient(circle at 30% 90%,rgba(241,209,255,.28),transparent 30%),
+    linear-gradient(135deg,#f9fbff 0%,#f8f2ff 45%,#fff8fb 100%);
+  background-attachment:fixed;
+}
+
+body:before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(120deg,transparent 0%,rgba(255,255,255,.14) 45%,transparent 70%);
+  opacity:.55;
+  z-index:-1;
+}
+
+header{
+  height:70px;
+  background:rgba(255,255,255,.91);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(224,220,235,.9);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:6px 20px;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+.headerInner{
+  width:100%;
+  max-width:1200px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.logo{
+  width:190px;
+  height:56px;
+  object-fit:contain;
+  object-position:left center;
+}
+
+.desktopNav{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+.navBtn{
+  background:transparent;
+  border:0;
+  color:#34304d;
+  font-weight:700;
+  padding:10px 13px;
+  border-radius:10px;
+  font-size:14px;
+}
+
+.navBtn:hover{
+  background:#f4efff;
+}
+
+.navOutline{
+  border:2px solid #7029e8;
+  color:#7029e8;
+  background:#fff;
+  padding:11px 17px;
+  border-radius:11px;
+  font-weight:800;
+  font-size:14px;
+}
+
+.navSolid{
+  background:linear-gradient(135deg,#7029e8,#5220b3);
+  color:#fff;
+  border:0;
+  padding:12px 18px;
+  border-radius:11px;
+  font-weight:800;
+  font-size:14px;
+  box-shadow:0 8px 18px rgba(91,31,194,.22);
+}
+
+.navCoral{
+  background:linear-gradient(135deg,#ff6b66,#ff805f);
+  color:#fff;
+  border:0;
+  padding:12px 18px;
+  border-radius:11px;
+  font-weight:800;
+  font-size:14px;
+  box-shadow:0 8px 18px rgba(255,105,94,.22);
+}
+
+.menu{
+  width:46px;
+  height:46px;
+  border:1px solid #ddd;
+  background:#fff;
+  border-radius:12px;
+  font-size:22px;
+  cursor:pointer;
+}
+
+.drawer{
+  position:fixed;
+  right:0;
+  top:0;
+  width:min(90vw,350px);
+  height:100vh;
+  background:rgba(255,255,255,.98);
+  backdrop-filter:blur(12px);
+  z-index:150;
+  box-shadow:-8px 0 25px #0002;
+  transform:translateX(105%);
+  transition:.25s;
+  padding:18px;
+  overflow:auto;
+}
+
+.drawer.open{
+  transform:translateX(0);
+}
+
+.overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#0007;
+  z-index:140;
+}
+
+.overlay.show{
+  display:block;
+}
+
+.drawerHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:14px;
+}
+
+.drawerLogo{
+  width:165px;
+  height:auto;
+}
+
+.close{
+  background:#f1f3f7;
+  border:0;
+  border-radius:10px;
+  padding:8px 12px;
+  font-size:20px;
+  cursor:pointer;
+}
+
+.menuItem{
+  display:block;
+  width:100%;
+  text-align:left;
+  background:#fff;
+  border:0;
+  border-bottom:1px solid #eee;
+  padding:15px 4px;
+  font-weight:800;
+  cursor:pointer;
+  color:#161928;
+}
+
+main{
+  max-width:1200px;
+  margin:auto;
+  padding:0 16px 25px;
+}
+
+.screen{
+  display:none;
+}
+
+.screen.active{
+  display:block;
+}
+
+.container{
+  max-width:1100px;
+  margin:auto;
+}
+
+.heroWrap{
+  padding:22px 0 8px;
+}
+
+.heroLarge{
+  position:relative;
+  overflow:hidden;
+  min-height:470px;
+  border-radius:30px;
+  padding:54px 52px;
+  color:#fff;
+  background:
+    radial-gradient(circle at 82% 25%,rgba(255,153,198,.20),transparent 24%),
+    radial-gradient(circle at 20% 75%,rgba(106,84,255,.26),transparent 30%),
+    linear-gradient(135deg,#201446 0%,#40208d 48%,#6a2fd0 100%);
+  box-shadow:0 22px 55px rgba(63,33,125,.22);
+}
+
+.heroGlow1{
+  position:absolute;
+  width:230px;
+  height:230px;
+  border-radius:50%;
+  background:rgba(255,255,255,.07);
+  top:-80px;
+  right:130px;
+}
+
+.heroGlow2{
+  position:absolute;
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  background:rgba(255,152,194,.08);
+  bottom:-70px;
+  left:180px;
+}
+
+.heroGrid{
+  position:relative;
+  z-index:2;
+  display:grid;
+  grid-template-columns:1.18fr .82fr;
+  gap:35px;
+  align-items:center;
+}
+
+.heroCopy{
+  max-width:680px;
+}
+
+.kicker{
+  display:inline-block;
+  padding:8px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.24);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.2px;
+  margin-bottom:18px;
+}
+
+.heroTitle{
+  font-size:56px;
+  line-height:1.03;
+  margin:0 0 15px;
+  letter-spacing:-1.8px;
+}
+
+.heroTitle .pinkText{
+  color:#ffb0c7;
+}
+
+.heroLead{
+  max-width:650px;
+  font-size:19px;
+  line-height:1.65;
+  color:#ece8ff;
+  margin:0 0 24px;
+}
+
+.heroActions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.heroPrimary{
+  background:#fff;
+  color:#5720ba;
+  border:0;
+  padding:14px 22px;
+  border-radius:13px;
+  font-size:15px;
+  font-weight:900;
+  box-shadow:0 10px 22px rgba(0,0,0,.15);
+}
+
+.heroSecondary{
+  background:#ff6c78;
+  color:#fff;
+  border:0;
+  padding:14px 22px;
+  border-radius:13px;
+  font-size:15px;
+  font-weight:900;
+  box-shadow:0 10px 22px rgba(255,106,113,.25);
+}
+
+.heroStats{
+  display:flex;
+  gap:28px;
+  margin-top:28px;
+  flex-wrap:wrap;
+}
+
+.statBox b{
+  display:block;
+  font-size:25px;
+  color:#fff;
+}
+
+.statBox span{
+  font-size:12px;
+  color:#d8d2f6;
+}
+
+.heroPartners{
+  position:relative;
+  min-height:380px;
+}
+
+.floatingPartner{
+  position:absolute;
+  width:270px;
+  background:#fff;
+  color:#171b2b;
+  border-radius:17px;
+  padding:15px;
+  box-shadow:0 16px 34px rgba(0,0,0,.22);
+}
+
+.floatingPartner:nth-child(1){
+  top:8px;
+  right:0;
+  transform:rotate(2deg);
+}
+
+.floatingPartner:nth-child(2){
+  top:145px;
+  left:5px;
+  transform:rotate(-3deg);
+}
+
+.floatingPartner:nth-child(3){
+  bottom:5px;
+  right:10px;
+  transform:rotate(2deg);
+}
+
+.fpTop{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.fpAvatar{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#e8d8ff,#cbdfff);
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  flex-shrink:0;
+}
+
+.fpInfo b{
+  display:block;
+}
+
+.fpInfo span{
+  display:block;
+  color:#8d789b;
+  font-size:11px;
+  margin-top:3px;
+}
+
+.fpBottom{
+  border-top:1px solid #eee;
+  margin-top:10px;
+  padding-top:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.rating{
+  color:#f59e0b;
+  font-size:12px;
+}
+
+.fpPrice{
+  font-size:15px;
+  font-weight:900;
+  color:#7029e8;
+}
+
+.trustBar{
+  margin:22px 0;
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(225,221,237,.95);
+  border-radius:18px;
+  box-shadow:0 8px 25px rgba(66,45,110,.05);
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:8px;
+  padding:13px;
+}
+
+.trustItem{
+  text-align:center;
+  padding:10px 6px;
+  font-size:12px;
+  font-weight:800;
+  color:#3c3556;
+}
+
+.trustIcon{
+  display:block;
+  font-size:20px;
+  margin-bottom:6px;
+}
+
+.sectionBlock{
+  margin-top:44px;
+}
+
+.sectionIntro{
+  text-align:center;
+  max-width:770px;
+  margin:0 auto 28px;
+}
+
+.sectionTag{
+  display:inline-block;
+  padding:8px 14px;
+  background:#f0e8ff;
+  color:#7029e8;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.8px;
+}
+
+.sectionTitle{
+  font-size:39px;
+  line-height:1.15;
+  margin:14px 0 9px;
+  color:#21184a;
+  letter-spacing:-1px;
+}
+
+.sectionLead{
+  margin:0;
+  color:#65708c;
+  line-height:1.65;
+  font-size:16px;
+}
+
+.servicesGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+}
+
+.serviceCard{
+  background:rgba(255,255,255,.92);
+  border:1px solid #e6ddf2;
+  border-radius:18px;
+  padding:22px;
+  min-height:180px;
+  transition:.2s;
+  box-shadow:0 8px 25px rgba(81,55,125,.04);
+}
+
+.serviceCard:hover{
+  transform:translateY(-3px);
+  box-shadow:0 14px 30px rgba(81,55,125,.10);
+}
+
+.serviceIcon{
+  width:48px;
+  height:48px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#f4eaff,#edf6ff);
+  font-size:25px;
+  margin-bottom:12px;
+}
+
+.serviceCard h3{
+  margin:0 0 6px;
+  color:#21184a;
+}
+
+.serviceCard p{
+  margin:0 0 15px;
+  color:#68728d;
+  line-height:1.5;
+  font-size:13px;
+}
+
+.smallLink{
+  background:none;
+  border:0;
+  color:#7029e8;
+  padding:0;
+  font-weight:900;
+}
+
+.stepsGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+}
+
+.stepCard{
+  position:relative;
+  background:rgba(255,255,255,.93);
+  border:1px solid #e7ddf2;
+  border-radius:18px;
+  padding:22px;
+  min-height:205px;
+}
+
+.stepNumber{
+  width:44px;
+  height:44px;
+  border-radius:13px;
+  background:linear-gradient(135deg,#7029e8,#8f55ed);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:14px;
+}
+
+.stepCard h3{
+  margin:0 0 7px;
+  color:#201742;
+}
+
+.stepCard p{
+  margin:0;
+  color:#69738e;
+  line-height:1.55;
+  font-size:13px;
+}
+
+.partnerGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.partnerCard{
+  background:rgba(255,255,255,.95);
+  border:1px solid #e4daef;
+  border-radius:19px;
+  padding:18px;
+  box-shadow:0 10px 28px rgba(76,50,122,.05);
+}
+
+.partnerHeader{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.bigAvatar{
+  width:61px;
+  height:61px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#efdfff,#d7e8ff);
+  display:grid;
+  place-items:center;
+  font-size:23px;
+  font-weight:900;
+  flex-shrink:0;
+}
+
+.partnerName{
+  font-size:18px;
+  font-weight:900;
+  color:#201642;
+}
+
+.partnerMeta{
+  color:#8991a5;
+  font-size:12px;
+  margin-top:4px;
+}
+
+.verifyChip{
+  display:inline-block;
+  padding:5px 8px;
+  background:#ecfdf3;
+  color:#067647;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:900;
+  margin-left:4px;
+}
+
+.partnerBio{
+  color:#68728e;
+  line-height:1.5;
+  font-size:13px;
+  margin:15px 0 10px;
+}
+
+.tagRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+
+.tag{
+  background:#f2ecff;
+  color:#7029e8;
+  border-radius:999px;
+  padding:6px 8px;
+  font-size:10px;
+  font-weight:800;
+}
+
+.partnerFooter{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:16px;
+  border-top:1px solid #eee;
+  padding-top:14px;
+}
+
+.partnerPrice{
+  color:#7029e8;
+  font-weight:900;
+  font-size:17px;
+}
+
+.partnerActions{
+  display:flex;
+  gap:7px;
+}
+
+.outlineBtn{
+  background:#fff;
+  color:#7029e8;
+  border:2px solid #7029e8;
+  padding:9px 13px;
+  border-radius:10px;
+  font-weight:800;
+  font-size:12px;
+}
+
+.bookBtn{
+  background:linear-gradient(135deg,#7029e8,#5622b8);
+  color:#fff;
+  border:0;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:800;
+  font-size:12px;
+  box-shadow:0 8px 15px rgba(92,38,194,.18);
+}
+
+.centerButton{
+  display:flex;
+  justify-content:center;
+  margin-top:24px;
+}
+
+.bigPurpleBtn{
+  background:linear-gradient(135deg,#7029e8,#5824be);
+  color:#fff;
+  border:0;
+  border-radius:13px;
+  padding:14px 22px;
+  font-size:15px;
+  font-weight:900;
+  box-shadow:0 12px 24px rgba(90,35,189,.2);
+}
+
+.safetyBand{
+  background:linear-gradient(135deg,#211442 0%,#3b2372 55%,#4e2f86 100%);
+  color:#fff;
+  border-radius:26px;
+  padding:38px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:30px;
+  margin-top:20px;
+}
+
+.safetyBand h2{
+  font-size:34px;
+  margin:12px 0;
+}
+
+.safetyBand p{
+  color:#d9d3f0;
+  line-height:1.65;
+}
+
+.safetyItems{
+  display:grid;
+  gap:12px;
+}
+
+.safetyItem{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:15px;
+  padding:17px;
+}
+
+.safetyItem b{
+  display:block;
+  margin-bottom:5px;
+}
+
+.safetyItem span{
+  color:#d8d2ec;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.reviewGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+}
+
+.reviewCard{
+  background:rgba(255,255,255,.94);
+  border:1px solid #e4daef;
+  border-radius:18px;
+  padding:21px;
+}
+
+.reviewStars{
+  color:#f59e0b;
+  letter-spacing:2px;
+}
+
+.reviewText{
+  color:#62708e;
+  line-height:1.65;
+  font-size:14px;
+  margin:12px 0 18px;
+}
+
+.reviewPerson{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.reviewAvatar{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#ffd4e3,#e2d3ff);
+  font-weight:900;
+}
+
+.reviewPerson b{
+  display:block;
+  font-size:13px;
+}
+
+.reviewPerson span{
+  color:#8991a6;
+  font-size:11px;
+}
+
+.faqWrap{
+  max-width:850px;
+  margin:auto;
+}
+
+.faq{
+  background:rgba(255,255,255,.94);
+  border:1px solid #e5dff0;
+  border-radius:16px;
+  margin-top:10px;
+  overflow:hidden;
+}
+
+.faqBtn{
+  width:100%;
+  padding:18px 20px;
+  background:transparent;
+  border:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  text-align:left;
+  font-weight:900;
+  font-size:15px;
+  color:#221845;
+}
+
+.faqIcon{
+  color:#7029e8;
+  font-size:19px;
+}
+
+.faqAnswer{
+  display:none;
+  padding:0 20px 18px;
+  color:#68728d;
+  font-size:13px;
+  line-height:1.6;
+}
+
+.faq.open .faqAnswer{
+  display:block;
+}
+
+.finalCta{
+  margin-top:45px;
+  background:
+    radial-gradient(circle at 10% 20%,rgba(255,194,221,.15),transparent 22%),
+    radial-gradient(circle at 90% 70%,rgba(145,126,255,.17),transparent 28%),
+    linear-gradient(135deg,#ff6a6d,#ff8062);
+  border-radius:28px;
+  padding:42px 25px;
+  text-align:center;
+  color:#fff;
+}
+
+.finalCta h2{
+  font-size:36px;
+  margin:0 0 9px;
+}
+
+.finalCta p{
+  margin:0 auto 20px;
+  max-width:650px;
+  line-height:1.6;
+  color:#fff4f4;
+}
+
+.finalCta .heroPrimary{
+  color:#5720ba;
+}
+
+.footer{
+  margin:28px -16px -25px;
+  padding:40px max(20px,calc((100vw - 1140px)/2));
+  background:#1c1536;
+  color:#fff;
+}
+
+.footerGrid{
+  max-width:1100px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:1.4fr 1fr 1fr 1fr;
+  gap:25px;
+}
+
+.footer h3{
+  margin:0 0 12px;
+}
+
+.footer p{
+  color:#c7bfdc;
+  font-size:13px;
+  line-height:1.6;
+}
+
+.footer a{
+  display:block;
+  color:#c7bfdc;
+  text-decoration:none;
+  margin:8px 0;
+  font-size:13px;
+}
+
+.footerBottom{
+  max-width:1100px;
+  margin:25px auto 0;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.1);
+  color:#a99fbe;
+  font-size:11px;
+  text-align:center;
+}
+
+.form label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  margin-top:10px;
+}
+
+input,select,textarea{
+  width:100%;
+  padding:11px;
+  margin-top:5px;
+  border:1px solid #d5d9e2;
+  border-radius:9px;
+  background:#fff;
+  font:inherit;
+}
+
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:11px;
+}
+
+.card{
+  background:rgba(255,255,255,.94);
+  border:1px solid #e1dcea;
+  border-radius:16px;
+  padding:17px;
+  box-shadow:0 8px 25px rgba(75,56,130,.05);
+}
+
+.formCard{
+  max-width:850px;
+  margin:24px auto;
+}
+
+.muted{
+  color:#697386;
+}
+
+button{
+  cursor:pointer;
+}
+
+.full{
+  width:100%;
+  margin-top:10px;
+}
+
+.primary{
+  background:#fff;
+  color:#111827;
+}
+
+.pink{
+  background:#ed176f;
+  color:#fff;
+}
+
+.dark{
+  background:#111827;
+  color:#fff;
+}
+
+.light{
+  background:#f1f3f7;
+  color:#171b2b;
+}
+
+.green{
+  background:#067647;
+  color:#fff;
+}
+
+.notice{
+  padding:12px;
+  border-radius:10px;
+  background:rgba(238,242,255,.9);
+  margin-top:10px;
+  line-height:1.5;
+  font-size:13px;
+}
+
+.alert{
+  padding:12px;
+  border-radius:11px;
+  margin-top:9px;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.sos{
+  background:#fff1f2;
+  border:1px solid #fecdd3;
+}
+
+.rules{
+  background:#fffbeb;
+  border:1px solid #fde68a;
+}
+
+.summary{
+  background:#111827;
+  color:#fff;
+  border-radius:16px;
+  padding:16px;
+}
+
+.partners{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.partner{
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.avatar{
+  width:52px;
+  height:52px;
+  border-radius:50%;
+  background:#e9edf3;
+  display:grid;
+  place-items:center;
+  font-size:20px;
+  font-weight:900;
+  flex-shrink:0;
+}
+
+.price{
+  font-size:19px;
+  font-weight:900;
+  margin:11px 0;
+}
+
+.pill{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:99px;
+  font-size:11px;
+  font-weight:900;
+  background:#eef2ff;
+  color:#171b2b;
+  margin:3px;
+  border:1px solid #dbe3f2;
+}
+
+.available{
+  background:#ecfdf3;
+  color:#067647;
+}
+
+.verified{
+  background:#eff8ff;
+  color:#175cd3;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:11px;
+}
+
+.service{
+  min-height:120px;
+  cursor:pointer;
+}
+
+.ico{
+  font-size:28px;
+}
+
+.service h3{
+  margin:8px 0 4px;
+}
+
+.steps{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:11px;
+}
+
+.chat{
+  height:260px;
+  overflow:auto;
+  background:#f8fafc;
+  border:1px solid #e4e7ec;
+  border-radius:12px;
+  padding:10px;
+}
+
+.msg{
+  max-width:80%;
+  padding:9px 11px;
+  border-radius:12px;
+  margin:7px 0;
+  font-size:13px;
+}
+
+.me{
+  margin-left:auto;
+  background:#ead8ff;
+}
+
+.them{
+  background:#e9eef5;
+}
+
+.hidden{
+  display:none;
+}
+
+@media(max-width:950px){
+  .desktopNav{
+    display:none;
+  }
+
+  .heroGrid{
+    grid-template-columns:1fr;
+  }
+
+  .heroPartners{
+    min-height:340px;
+  }
+
+  .trustBar{
+    grid-template-columns:repeat(3,1fr);
+  }
+
+  .servicesGrid,
+  .partnerGrid,
+  .reviewGrid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .stepsGrid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .safetyBand{
+    grid-template-columns:1fr;
+  }
+
+  .footerGrid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:700px){
+  header{
+    padding:6px 10px;
+  }
+
+  .logo{
+    width:175px;
+  }
+
+  main{
+    padding:0 10px 18px;
+  }
+
+  .heroWrap{
+    padding-top:12px;
+  }
+
+  .heroLarge{
+    padding:28px 18px;
+    min-height:auto;
+    border-radius:23px;
+  }
+
+  .heroTitle{
+    font-size:37px;
+  }
+
+  .heroLead{
+    font-size:16px;
+  }
+
+  .heroActions{
+    flex-direction:column;
+  }
+
+  .heroPrimary,
+  .heroSecondary{
+    width:100%;
+  }
+
+  .heroPartners{
+    min-height:320px;
+    margin-top:12px;
+  }
+
+  .floatingPartner{
+    width:72%;
+  }
+
+  .floatingPartner:nth-child(1){
+    right:0;
+  }
+
+  .floatingPartner:nth-child(2){
+    left:0;
+  }
+
+  .floatingPartner:nth-child(3){
+    right:0;
+  }
+
+  .trustBar{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .sectionTitle{
+    font-size:31px;
+  }
+
+  .servicesGrid,
+  .partnerGrid,
+  .reviewGrid,
+  .stepsGrid{
+    grid-template-columns:1fr;
+  }
+
+  .safetyBand{
+    padding:25px 18px;
+  }
+
+  .safetyBand h2{
+    font-size:28px;
+  }
+
+  .row{
+    grid-template-columns:1fr;
+  }
+
+  .partners{
+    grid-template-columns:1fr;
+  }
+
+  .footer{
+    margin-left:-10px;
+    margin-right:-10px;
+  }
+
+  .footerGrid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+@media(max-width:430px){
+  .heroTitle{
+    font-size:31px;
+  }
+
+  .heroStats{
+    gap:15px;
+  }
+
+  .trustBar{
+    grid-template-columns:1fr;
+  }
+
+  .floatingPartner{
+    width:80%;
+  }
+
+  .floatingPartner:nth-child(2){
+    top:126px;
+  }
+
+  .floatingPartner:nth-child(3){
+    bottom:0;
+  }
+
+  .footerGrid{
+    grid-template-columns:1fr;
+  }
+}
 </style>
 </head>
+
 <body>
+
 <header>
-  <img class="logo" src="logo.png" alt="Book A Partner">
-  <button class="menu" onclick="openMenu()">☰</button>
+  <div class="headerInner">
+    <img class="logo" src="logo.png" alt="Book A Partner">
+
+    <nav class="desktopNav">
+      <button class="navBtn" onclick="go('home')">Home</button>
+      <button class="navBtn" onclick="go('book')">Find a Partner</button>
+      <button class="navBtn" onclick="scrollHomeTo('servicesSection')">Services</button>
+      <button class="navBtn" onclick="scrollHomeTo('howSection')">How It Works</button>
+      <button class="navBtn" onclick="go('safety')">Safety</button>
+      <button class="navOutline" onclick="go('join')">Start Earning</button>
+      <button class="navSolid" onclick="go('book')">Find a Partner</button>
+    </nav>
+
+    <button class="menu" onclick="openMenu()">☰</button>
+  </div>
 </header>
 
 <div id="overlay" class="overlay" onclick="closeMenu()"></div>
+
 <aside id="drawer" class="drawer">
   <div class="drawerHead">
     <img class="drawerLogo" src="logo.png" alt="Book A Partner">
     <button class="close" onclick="closeMenu()">×</button>
   </div>
+
   <button class="menuItem" onclick="go('home')">🏠 Home</button>
   <button class="menuItem" onclick="go('book')">📋 Find a Partner</button>
+  <button class="menuItem" onclick="scrollHomeTo('servicesSection')">✨ Services</button>
+  <button class="menuItem" onclick="scrollHomeTo('howSection')">⚡ How It Works</button>
   <button class="menuItem" onclick="go('join')">🤝 Start Earning</button>
   <button class="menuItem" onclick="go('partnerDashboard')">🧑‍💼 Partner Dashboard</button>
   <button class="menuItem" onclick="go('admin')">🛡️ Admin / Support Panel</button>
@@ -83,668 +1351,2819 @@ input,select,textarea{width:100%;padding:11px;margin-top:5px;border:1px solid #d
 </aside>
 
 <main>
+
 <section id="home" class="screen active">
-  <div class="hero">
-    <img class="heroLogo" src="logo.png" alt="Book A Partner">
-    <h1>Need someone to be there?</h1>
-    <p>Book a verified partner for social companionship and everyday assistance — by the hour, when you need it.</p>
-    <button class="primary" onclick="go('book')">Find a Partner</button>
-    <button class="pink" onclick="go('join')">Start Earning</button>
-    <div style="margin-top:10px">
-      <span class="pill">✓ Verified Profiles</span>
-      <span class="pill">✓ Clear Pricing</span>
-      <span class="pill">✓ Support</span>
+
+<div class="heroWrap">
+  <div class="heroLarge">
+    <div class="heroGlow1"></div>
+    <div class="heroGlow2"></div>
+
+    <div class="heroGrid">
+
+      <div class="heroCopy">
+
+        <span class="kicker">✨ Real people. Meaningful moments.</span>
+
+        <h1 class="heroTitle">
+          Never feel alone again.<br>
+          <span class="pinkText">Find the right partner.</span>
+        </h1>
+
+        <p class="heroLead">
+          Find a verified partner for movies, shopping, coffee, events,
+          travel and everyday assistance — with clear hourly pricing and
+          a booking experience designed around trust.
+        </p>
+
+        <div class="heroActions">
+          <button class="heroPrimary" onclick="go('book')">
+            Find a Partner →
+          </button>
+
+          <button class="heroSecondary" onclick="go('join')">
+            Start Earning
+          </button>
+        </div>
+
+        <div class="heroStats">
+          <div class="statBox">
+            <b>Verified</b>
+            <span>Profile review</span>
+          </div>
+
+          <div class="statBox">
+            <b>6+</b>
+            <span>Service categories</span>
+          </div>
+
+          <div class="statBox">
+            <b>Clear</b>
+            <span>Hourly pricing</span>
+          </div>
+
+          <div class="statBox">
+            <b>Safe</b>
+            <span>Trust-first approach</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="heroPartners">
+
+        <div class="floatingPartner">
+          <div class="fpTop">
+            <div class="fpAvatar">N</div>
+            <div class="fpInfo">
+              <b>Neha ✓</b>
+              <span>MG Road · Age 29</span>
+            </div>
+          </div>
+          <div class="fpBottom">
+            <div class="rating">★★★★★ 4.9</div>
+            <div class="fpPrice">₹1099/hr</div>
+          </div>
+        </div>
+
+        <div class="floatingPartner">
+          <div class="fpTop">
+            <div class="fpAvatar">A</div>
+            <div class="fpInfo">
+              <b>Aarav ✓</b>
+              <span>DLF Phase 4 · Age 31</span>
+            </div>
+          </div>
+          <div class="fpBottom">
+            <div class="rating">★★★★★ 4.9</div>
+            <div class="fpPrice">₹999/hr</div>
+          </div>
+        </div>
+
+        <div class="floatingPartner">
+          <div class="fpTop">
+            <div class="fpAvatar">R</div>
+            <div class="fpInfo">
+              <b>Riya ✓</b>
+              <span>Golf Course Road · Age 27</span>
+            </div>
+          </div>
+          <div class="fpBottom">
+            <div class="rating">★★★★★ 4.8</div>
+            <div class="fpPrice">₹899/hr</div>
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
+</div>
 
-  <div class="section">
-    <h2>What do you need?</h2>
-    <p class="muted">Choose a service and find available partners.</p>
-    <div class="grid">
-      <div class="card service" onclick="startBooking('Movie Partner')"><div class="ico">🎬</div><h3>Movie Partner</h3><div class="muted">Cinema, OTT & movie outings</div></div>
-      <div class="card service" onclick="startBooking('Shopping Partner')"><div class="ico">🛍️</div><h3>Shopping Partner</h3><div class="muted">Mall, market & gift shopping</div></div>
-      <div class="card service" onclick="startBooking('Coffee & Conversation')"><div class="ico">☕</div><h3>Coffee & Conversation</h3><div class="muted">Coffee, walk & conversation</div></div>
-      <div class="card service" onclick="startBooking('Event Partner')"><div class="ico">🎉</div><h3>Event Partner</h3><div class="muted">Social & public events</div></div>
-      <div class="card service" onclick="startBooking('Travel Partner')"><div class="ico">✈️</div><h3>Travel Partner</h3><div class="muted">Sightseeing & travel company</div></div>
-      <div class="card service" onclick="startBooking('Assistance Partner')"><div class="ico">🤝</div><h3>Assistance Partner</h3><div class="muted">Everyday non-professional assistance</div></div>
+<div class="trustBar">
+  <div class="trustItem">
+    <span class="trustIcon">🛡️</span>
+    Verified profile review
+  </div>
+  <div class="trustItem">
+    <span class="trustIcon">💬</span>
+    Chat after confirmation
+  </div>
+  <div class="trustItem">
+    <span class="trustIcon">💰</span>
+    Transparent hourly rates
+  </div>
+  <div class="trustItem">
+    <span class="trustIcon">🔒</span>
+    Payment held during booking
+  </div>
+  <div class="trustItem">
+    <span class="trustIcon">🚨</span>
+    Safety & support
+  </div>
+</div>
+
+<section id="servicesSection" class="sectionBlock">
+
+  <div class="sectionIntro">
+    <span class="sectionTag">WHAT DO YOU NEED?</span>
+    <h2 class="sectionTitle">One platform, many kinds of company</h2>
+    <p class="sectionLead">
+      Choose the kind of companionship or everyday assistance you need,
+      then browse matching partners.
+    </p>
+  </div>
+
+  <div class="servicesGrid">
+
+    <div class="serviceCard">
+      <div class="serviceIcon">🎬</div>
+      <h3>Movie Partner</h3>
+      <p>Go to the cinema, watch a movie or simply enjoy a shared outing.</p>
+      <button class="smallLink" onclick="startBooking('Movie Partner')">Find Partner →</button>
     </div>
+
+    <div class="serviceCard">
+      <div class="serviceIcon">🛍️</div>
+      <h3>Shopping Partner</h3>
+      <p>Malls, markets, gift shopping or just someone to help with decisions.</p>
+      <button class="smallLink" onclick="startBooking('Shopping Partner')">Find Partner →</button>
+    </div>
+
+    <div class="serviceCard">
+      <div class="serviceIcon">☕</div>
+      <h3>Coffee & Conversation</h3>
+      <p>Meet for coffee, a walk or an easy conversation in a public place.</p>
+      <button class="smallLink" onclick="startBooking('Coffee & Conversation')">Find Partner →</button>
+    </div>
+
+    <div class="serviceCard">
+      <div class="serviceIcon">🎉</div>
+      <h3>Event Partner</h3>
+      <p>Attend public events, functions or social gatherings with company.</p>
+      <button class="smallLink" onclick="startBooking('Event Partner')">Find Partner →</button>
+    </div>
+
+    <div class="serviceCard">
+      <div class="serviceIcon">✈️</div>
+      <h3>Travel Partner</h3>
+      <p>Enjoy sightseeing, day trips and travel experiences with company.</p>
+      <button class="smallLink" onclick="startBooking('Travel Partner')">Find Partner →</button>
+    </div>
+
+    <div class="serviceCard">
+      <div class="serviceIcon">🤝</div>
+      <h3>Assistance Partner</h3>
+      <p>Everyday non-professional assistance when you need another pair of hands.</p>
+      <button class="smallLink" onclick="startBooking('Assistance Partner')">Find Partner →</button>
+    </div>
+
+  </div>
+</section>
+
+<section id="howSection" class="sectionBlock">
+
+  <div class="sectionIntro">
+    <span class="sectionTag">SIMPLE & SAFE</span>
+    <h2 class="sectionTitle">How Book A Partner works</h2>
+    <p class="sectionLead">
+      From finding someone to meeting them, each step is designed to stay clear.
+    </p>
   </div>
 
-  <div class="section steps">
-    <div class="card"><b>1. Choose</b><p class="muted">Service, age preference, area and time.</p></div>
-    <div class="card"><b>2. Match</b><p class="muted">Only verified & available partners appear.</p></div>
-    <div class="card"><b>3. Book & Chat</b><p class="muted">After confirmation, chat with your partner.</p></div>
+  <div class="stepsGrid">
+
+    <div class="stepCard">
+      <div class="stepNumber">1</div>
+      <h3>Find</h3>
+      <p>
+        Select your service, preferred age range, area, date and time.
+      </p>
+    </div>
+
+    <div class="stepCard">
+      <div class="stepNumber">2</div>
+      <h3>Choose</h3>
+      <p>
+        Compare matching partner profiles, ratings, services and hourly rates.
+      </p>
+    </div>
+
+    <div class="stepCard">
+      <div class="stepNumber">3</div>
+      <h3>Book & Pay</h3>
+      <p>
+        Create the booking request. In the live system, payment will be securely held during the booking.
+      </p>
+    </div>
+
+    <div class="stepCard">
+      <div class="stepNumber">4</div>
+      <h3>Meet & Approve</h3>
+      <p>
+        Meet your partner, complete the safety check and mark the meeting OK when satisfied.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<section class="sectionBlock">
+
+  <div class="sectionIntro">
+    <span class="sectionTag">MEET YOUR FUTURE PARTNER</span>
+    <h2 class="sectionTitle">Popular partner profiles</h2>
+    <p class="sectionLead">
+      See useful information before sending a booking request.
+    </p>
   </div>
 
-  <div class="section">
-    <h2>Safety & Trust</h2>
-    <div class="alert sos"><b>🚨 SOS / Emergency</b><br>In an emergency, contact local emergency services first.</div>
-    <div class="alert rules"><b>🛡️ Zero Tolerance for Misconduct</b><br>Misbehavior, harassment and abusive behaviour are not permitted.</div>
-    <div class="alert rules"><b>🚫 Service Policy</b><br>Professional companionship and assistance only. Escort, sexual or adult services are not available.</div>
+  <div class="partnerGrid">
+
+    <div class="partnerCard">
+      <div class="partnerHeader">
+        <div class="bigAvatar">N</div>
+        <div>
+          <div class="partnerName">
+            Neha
+            <span class="verifyChip">✓ VERIFIED</span>
+          </div>
+          <div class="partnerMeta">Age 29 · MG Road</div>
+        </div>
+      </div>
+
+      <p class="partnerBio">
+        Friendly company for movies, shopping and public events.
+      </p>
+
+      <div class="tagRow">
+        <span class="tag">Shopping Partner</span>
+        <span class="tag">Movie Partner</span>
+        <span class="tag">Event Partner</span>
+      </div>
+
+      <div class="partnerFooter">
+        <div>
+          <div class="rating">★★★★★ 4.9</div>
+          <div class="partnerPrice">₹1099/hr</div>
+        </div>
+
+        <div class="partnerActions">
+          <button class="outlineBtn" onclick="profileInfo('Neha')">Profile</button>
+          <button class="bookBtn" onclick="startBooking('Shopping Partner')">Book</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="partnerCard">
+      <div class="partnerHeader">
+        <div class="bigAvatar">A</div>
+        <div>
+          <div class="partnerName">
+            Aarav
+            <span class="verifyChip">✓ VERIFIED</span>
+          </div>
+          <div class="partnerMeta">Age 31 · DLF Phase 4</div>
+        </div>
+      </div>
+
+      <p class="partnerBio">
+        Available for movies, shopping and relaxed coffee conversations.
+      </p>
+
+      <div class="tagRow">
+        <span class="tag">Movie Partner</span>
+        <span class="tag">Shopping Partner</span>
+        <span class="tag">Coffee</span>
+      </div>
+
+      <div class="partnerFooter">
+        <div>
+          <div class="rating">★★★★★ 4.9</div>
+          <div class="partnerPrice">₹999/hr</div>
+        </div>
+
+        <div class="partnerActions">
+          <button class="outlineBtn" onclick="profileInfo('Aarav')">Profile</button>
+          <button class="bookBtn" onclick="startBooking('Movie Partner')">Book</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="partnerCard">
+      <div class="partnerHeader">
+        <div class="bigAvatar">R</div>
+        <div>
+          <div class="partnerName">
+            Riya
+            <span class="verifyChip">✓ VERIFIED</span>
+          </div>
+          <div class="partnerMeta">Age 27 · Golf Course Road</div>
+        </div>
+      </div>
+
+      <p class="partnerBio">
+        Social outings, movies and event company with clear hourly pricing.
+      </p>
+
+      <div class="tagRow">
+        <span class="tag">Movie Partner</span>
+        <span class="tag">Coffee</span>
+        <span class="tag">Events</span>
+      </div>
+
+      <div class="partnerFooter">
+        <div>
+          <div class="rating">★★★★★ 4.8</div>
+          <div class="partnerPrice">₹899/hr</div>
+        </div>
+
+        <div class="partnerActions">
+          <button class="outlineBtn" onclick="profileInfo('Riya')">Profile</button>
+          <button class="bookBtn" onclick="startBooking('Movie Partner')">Book</button>
+        </div>
+      </div>
+    </div>
+
   </div>
+
+  <div class="centerButton">
+    <button class="bigPurpleBtn" onclick="go('book')">
+      See All Available Partners →
+    </button>
+  </div>
+
+</section>
+
+<section class="sectionBlock">
+
+  <div class="safetyBand">
+
+    <div>
+      <span class="sectionTag">TRUST & SAFETY FIRST</span>
+      <h2>Built around trust, clarity and safer meetings</h2>
+      <p>
+        Book A Partner is intended for respectful, platonic companionship
+        and everyday assistance. Clear profiles, defined services and a
+        customer approval step help keep the experience transparent.
+      </p>
+      <button class="heroPrimary" onclick="go('safety')">
+        Safety & Trust →
+      </button>
+    </div>
+
+    <div class="safetyItems">
+
+      <div class="safetyItem">
+        <b>🛡️ Profile verification review</b>
+        <span>
+          Partner profiles can include profile photo, selfie, age,
+          mobile and service details for review.
+        </span>
+      </div>
+
+      <div class="safetyItem">
+        <b>📍 Public meeting locations</b>
+        <span>
+          Customers should prefer safe, public meeting locations for bookings.
+        </span>
+      </div>
+
+      <div class="safetyItem">
+        <b>🤝 Respectful, platonic service</b>
+        <span>
+          Harassment, threats, abuse or adult/escort services are not permitted.
+        </span>
+      </div>
+
+      <div class="safetyItem">
+        <b>💳 Payment protection concept</b>
+        <span>
+          The prototype keeps payout locked until customer approval.
+          Real payment handling will be connected in the backend.
+        </span>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+<section class="sectionBlock">
+
+  <div class="sectionIntro">
+    <span class="sectionTag">COMMUNITY</span>
+    <h2 class="sectionTitle">Why people may choose Book A Partner</h2>
+    <p class="sectionLead">
+      A few example experiences for the future platform.
+    </p>
+  </div>
+
+  <div class="reviewGrid">
+
+    <div class="reviewCard">
+      <div class="reviewStars">★★★★★</div>
+      <div class="reviewText">
+        “Having someone to join for a movie or coffee can make an ordinary
+        evening feel much better.”
+      </div>
+
+      <div class="reviewPerson">
+        <div class="reviewAvatar">R</div>
+        <div>
+          <b>Rahul, 30</b>
+          <span>Example customer story</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reviewCard">
+      <div class="reviewStars">★★★★★</div>
+      <div class="reviewText">
+        “I like the idea of seeing the partner information and hourly price
+        before sending the booking.”
+      </div>
+
+      <div class="reviewPerson">
+        <div class="reviewAvatar">P</div>
+        <div>
+          <b>Priya, 28</b>
+          <span>Example customer story</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reviewCard">
+      <div class="reviewStars">★★★★★</div>
+      <div class="reviewText">
+        “For partners, a transparent profile and clear payout rules make
+        the earning side easier to understand.”
+      </div>
+
+      <div class="reviewPerson">
+        <div class="reviewAvatar">A</div>
+        <div>
+          <b>Anita, 26</b>
+          <span>Example partner story</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<section class="sectionBlock">
+
+  <div class="sectionIntro">
+    <span class="sectionTag">QUESTIONS?</span>
+    <h2 class="sectionTitle">Frequently asked questions</h2>
+  </div>
+
+  <div class="faqWrap">
+
+    <div class="faq open">
+      <button class="faqBtn" onclick="toggleFaq(this)">
+        <span>Is Book A Partner a dating service?</span>
+        <span class="faqIcon">−</span>
+      </button>
+      <div class="faqAnswer">
+        No. Book A Partner is designed for respectful, platonic companionship
+        and everyday assistance. Romantic, sexual or escort services are not offered.
+      </div>
+    </div>
+
+    <div class="faq">
+      <button class="faqBtn" onclick="toggleFaq(this)">
+        <span>Can I choose my own partner?</span>
+        <span class="faqIcon">+</span>
+      </button>
+      <div class="faqAnswer">
+        Yes. The booking flow is designed so customers can review matching
+        profiles and send a request to a partner they prefer.
+      </div>
+    </div>
+
+    <div class="faq">
+      <button class="faqBtn" onclick="toggleFaq(this)">
+        <span>How are partners verified?</span>
+        <span class="faqIcon">+</span>
+      </button>
+      <div class="faqAnswer">
+        In the prototype, partners provide profile information, mobile number,
+        profile photo and selfie for review. Real identity and OTP verification
+        will be connected in the backend before launch.
+      </div>
+    </div>
+
+    <div class="faq">
+      <button class="faqBtn" onclick="toggleFaq(this)">
+        <span>Who receives the booking payment?</span>
+        <span class="faqIcon">+</span>
+      </button>
+      <div class="faqAnswer">
+        The intended live model is for the platform to collect the customer
+        payment, hold the amount during the booking and release the partner
+        payout after the customer approval/dispute process.
+      </div>
+    </div>
+
+    <div class="faq">
+      <button class="faqBtn" onclick="toggleFaq(this)">
+        <span>What happens if I report an issue?</span>
+        <span class="faqIcon">+</span>
+      </button>
+      <div class="faqAnswer">
+        The prototype places the partner payout on hold when a customer reports
+        an issue. Admin can review the booking and either keep the hold or
+        resolve the dispute before payout release.
+      </div>
+    </div>
+
+    <div class="faq">
+      <button class="faqBtn" onclick="toggleFaq(this)">
+        <span>When can chat open?</span>
+        <span class="faqIcon">+</span>
+      </button>
+      <div class="faqAnswer">
+        Chat is intended to open after the partner accepts the booking and the
+        booking becomes confirmed.
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<section class="finalCta">
+  <h2>Ready to find the right company?</h2>
+  <p>
+    Browse matching partners, choose the service you need and send your first
+    booking request.
+  </p>
+
+  <button class="heroPrimary" onclick="go('book')">
+    Find a Partner →
+  </button>
+
+  <button class="heroSecondary" onclick="go('join')">
+    Start Earning
+  </button>
+</section>
+
 </section>
 
 <section id="book" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>Find a Partner</h2>
-    <p class="muted">Tell us what you need. We'll show matching verified partners.</p>
+
+    <p class="muted">
+      Tell us what you need. We'll show matching verified partners.
+    </p>
+
     <div class="form">
+
       <label>Service</label>
       <select id="service">
-        <option>Movie Partner</option><option>Shopping Partner</option><option>Coffee & Conversation</option>
-        <option>Event Partner</option><option>Travel Partner</option><option>Assistance Partner</option>
+        <option>Movie Partner</option>
+        <option>Shopping Partner</option>
+        <option>Coffee & Conversation</option>
+        <option>Event Partner</option>
+        <option>Travel Partner</option>
+        <option>Assistance Partner</option>
       </select>
+
       <div class="row">
-        <div><label>Preferred age</label><select id="age"><option>Any age</option><option>21–25</option><option>26–30</option><option>31–35</option><option>36–45</option><option>46+</option></select></div>
-        <div><label>Area / City</label><input id="area" value="Gurgaon NCR" placeholder="e.g. Gurgaon"></div>
+
+        <div>
+          <label>Preferred age</label>
+          <select id="age">
+            <option>Any age</option>
+            <option>21–25</option>
+            <option>26–30</option>
+            <option>31–35</option>
+            <option>36–45</option>
+            <option>46+</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Area / City</label>
+          <input id="area" value="Gurgaon NCR" placeholder="e.g. Gurgaon">
+        </div>
+
       </div>
+
       <div class="row">
-        <div><label>Date</label><input id="date" type="date"></div>
-        <div><label>Time</label><input id="time" type="time"></div>
+
+        <div>
+          <label>Date</label>
+          <input id="date" type="date">
+        </div>
+
+        <div>
+          <label>Time</label>
+          <input id="time" type="time">
+        </div>
+
       </div>
+
       <label>Meeting location</label>
       <input id="location" placeholder="Enter meeting area / public place">
-      <button class="pink full" onclick="findPartners()">Find Available Partners</button>
+
+      <button class="pink full" onclick="findPartners()">
+        Find Available Partners
+      </button>
+
     </div>
   </div>
-  <div id="results" class="section"></div>
+
+  <div id="results" class="sectionBlock"></div>
+
 </section>
 
 <section id="details" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>Review Booking</h2>
+
     <div id="bookingSummary"></div>
-    <div class="notice">🔒 This is currently a prototype flow. Payment gateway and real OTP will be connected in the backend stage.</div>
-    <button class="pink full" onclick="goToPayment()">Continue to Payment</button>
-    <button class="light full" onclick="go('book')">← Change Partner</button>
+
+    <div class="notice">
+      🔒 Prototype mode. Real payment gateway and OTP verification will be connected in the backend stage.
+    </div>
+
+    <button class="pink full" onclick="goToPayment()">
+      Continue to Payment
+    </button>
+
+    <button class="light full" onclick="go('book')">
+      ← Change Partner
+    </button>
+
   </div>
+
 </section>
 
 <section id="payment" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>Demo Payment</h2>
-    <p class="muted">Test mode only — no real money will be charged.</p>
+
+    <p class="muted">
+      Test mode only — no real money will be charged.
+    </p>
+
     <div id="paymentSummary" class="summary"></div>
-    <div class="notice">🔒 Payment is shown as received but held in demo mode. In the live system, partner payout will be released only after customer approval; a reported issue will place the payout on hold for review.</div>
-    <button class="pink full" onclick="confirmDemoPayment()">Pay & Confirm Booking</button>
-    <button class="light full" onclick="go('details')">← Back to Booking</button>
+
+    <div class="notice">
+      🔒 In this prototype, payment is shown as received and held.
+      In the intended live flow, partner payout would remain locked until
+      customer approval or an admin dispute decision.
+    </div>
+
+    <button class="pink full" onclick="confirmDemoPayment()">
+      Pay & Confirm Booking
+    </button>
+
+    <button class="light full" onclick="go('details')">
+      ← Back to Booking
+    </button>
+
   </div>
+
 </section>
 
 <section id="success" class="screen">
-  <div class="card" style="text-align:center">
+
+  <div class="card formCard" style="text-align:center">
+
     <div style="font-size:48px">✅</div>
+
     <h2>Booking Request Created</h2>
-    <p class="muted">Your booking details have been saved in this browser for testing.</p>
+
+    <p class="muted">
+      Your booking details have been saved in this browser for testing.
+    </p>
+
     <div id="successText" class="summary"></div>
-    <button class="dark full" onclick="go('bookings')">View My Booking</button>
+
+    <button class="dark full" onclick="go('bookings')">
+      View My Booking
+    </button>
+
   </div>
+
 </section>
 
 <section id="bookings" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>My Bookings</h2>
+
     <div id="bookingList"></div>
+
   </div>
+
 </section>
 
 <section id="chat" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>My Chat</h2>
-    <p class="muted">Chat opens after a booking is confirmed.</p>
+
+    <p class="muted">
+      Chat opens after a booking is confirmed.
+    </p>
+
     <div class="chat">
-      <div class="msg them">Hello! Your booking request has been received.</div>
-      <div class="msg me">Thank you. Looking forward to the meeting.</div>
+      <div class="msg them">
+        Hello! Your booking request has been received.
+      </div>
+
+      <div class="msg me">
+        Thank you. Looking forward to the meeting.
+      </div>
     </div>
+
     <input id="chatInput" placeholder="Type a message">
-    <button class="pink full" onclick="sendMessage()">Send Message</button>
+
+    <button class="pink full" onclick="sendMessage()">
+      Send Message
+    </button>
+
   </div>
+
 </section>
 
 <section id="join" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>Start Earning</h2>
-    <p class="muted">Create your partner profile. Verification and real OTP will be connected in the backend stage.</p>
+
+    <p class="muted">
+      Create your partner profile. Verification and real OTP will be connected
+      in the backend stage.
+    </p>
+
     <div class="form">
-      <label>Full name</label><input id="partnerName" placeholder="Your name">
+
+      <label>Full name</label>
+      <input id="partnerName" placeholder="Your name">
+
       <div class="row">
-        <div><label>Age</label><input id="partnerAge" type="number" min="18" max="80" placeholder="18+"></div>
-        <div><label>Mobile number</label><input id="partnerMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10 digit mobile"></div>
+
+        <div>
+          <label>Age</label>
+          <input id="partnerAge" type="number" min="18" max="80" placeholder="18+">
+        </div>
+
+        <div>
+          <label>Mobile number</label>
+          <input id="partnerMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10 digit mobile">
+        </div>
+
       </div>
-      <label>City / Area</label><input id="partnerArea" placeholder="e.g. Gurgaon NCR">
-      <label>Profile photo</label><input id="partnerPhoto" type="file" accept="image/*">
+
+      <label>City / Area</label>
+      <input id="partnerArea" placeholder="e.g. Gurgaon NCR">
+
+      <label>Profile photo</label>
+      <input id="partnerPhoto" type="file" accept="image/*">
+
       <label>Service</label>
-      <select id="partnerService"><option>Movie Partner</option><option>Shopping Partner</option><option>Coffee & Conversation</option><option>Event Partner</option><option>Travel Partner</option><option>Assistance Partner</option></select>
+
+      <select id="partnerService">
+        <option>Movie Partner</option>
+        <option>Shopping Partner</option>
+        <option>Coffee & Conversation</option>
+        <option>Event Partner</option>
+        <option>Travel Partner</option>
+        <option>Assistance Partner</option>
+      </select>
+
       <div class="row">
-        <div><label>Hourly price (₹)</label><input id="partnerRate" type="number" min="1" placeholder="e.g. 899"></div>
-        <div><label>Availability</label><select id="partnerAvailability"><option>Available</option><option>Not available</option></select></div>
+
+        <div>
+          <label>Hourly price (₹)</label>
+          <input id="partnerRate" type="number" min="1" placeholder="e.g. 899">
+        </div>
+
+        <div>
+          <label>Availability</label>
+          <select id="partnerAvailability">
+            <option>Available</option>
+            <option>Not available</option>
+          </select>
+        </div>
+
       </div>
-      <label>Selfie for verification</label><input id="partnerSelfie" type="file" accept="image/*">
-      <div class="notice">🛡️ Verification checklist: profile photo + selfie + age + mobile + service details.</div>
-      <button class="pink full" onclick="partnerApply()">Create Partner Profile</button>
+
+      <label>Selfie for verification</label>
+      <input id="partnerSelfie" type="file" accept="image/*">
+
+      <div class="notice">
+        🛡️ Verification checklist: profile photo + selfie + age + mobile + service details.
+      </div>
+
+      <button class="pink full" onclick="partnerApply()">
+        Create Partner Profile
+      </button>
+
     </div>
+
   </div>
+
 </section>
 
 <section id="partnerDashboard" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>Partner Dashboard</h2>
-    <p class="muted">Manage your profile, availability and booking requests.</p>
+
+    <p class="muted">
+      Manage your profile, availability and booking requests.
+    </p>
+
     <div id="partnerProfileCard" class="summary"></div>
-    <div class="section"><h3>Booking Requests</h3><div id="partnerRequests"></div></div>
+
+    <div class="sectionBlock">
+      <h3>Booking Requests</h3>
+      <div id="partnerRequests"></div>
+    </div>
+
   </div>
+
 </section>
 
 <section id="meetingOtp" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>Meeting OTP</h2>
-    <p class="muted">For safety, the customer shares the OTP when meeting the verified partner.</p>
+
+    <p class="muted">
+      For safety, the customer shares the OTP when meeting the verified partner.
+    </p>
+
     <div id="meetingOtpBox" class="summary"></div>
-    <div class="notice">Demo only: real OTP will be generated and verified by the backend before launch.</div>
-    <div class="row">
-      <div><label>Enter OTP</label><input id="otpInput" inputmode="numeric" maxlength="6" placeholder="6-digit OTP"></div>
-      <div><label>&nbsp;</label><button class="green full" onclick="verifyMeetingOtp()">Verify Meeting</button></div>
+
+    <div class="notice">
+      Demo only: real OTP will be generated and verified by the backend before launch.
     </div>
+
+    <div class="row">
+
+      <div>
+        <label>Enter OTP</label>
+        <input id="otpInput" inputmode="numeric" maxlength="6" placeholder="6-digit OTP">
+      </div>
+
+      <div>
+        <label>&nbsp;</label>
+        <button class="green full" onclick="verifyMeetingOtp()">
+          Verify Meeting
+        </button>
+      </div>
+
+    </div>
+
   </div>
+
 </section>
 
 <section id="admin" class="screen">
-<div class="card">
-<h2>Admin / Support Panel</h2>
-<p class="muted">Review bookings, customer objections and partner payout decisions.</p>
-<div class="notice"><b>Admin only:</b> In the live system, payout decisions will require authorized admin access and a secure backend.</div>
-<div class="row">
-<div><label>Filter</label><select id="adminFilter" onchange="renderAdmin()"><option value="all">All Bookings</option><option value="issue">Issues / Holds</option><option value="payout">Payout Eligible</option><option value="pending">Awaiting Partner</option><option value="confirmed">Confirmed</option></select></div>
-<div><label>Summary</label><div id="adminSummary" class="summary" style="padding:10px"></div></div>
-</div>
-<div class="section"><h3>Bookings & Disputes</h3><div id="adminList"></div></div>
-</div>
+
+  <div class="card formCard">
+
+    <h2>Admin / Support Panel</h2>
+
+    <p class="muted">
+      Review bookings, customer objections and partner payout decisions.
+    </p>
+
+    <div class="notice">
+      <b>Admin only:</b>
+      The live platform will require authorized admin access and a secure backend.
+    </div>
+
+    <div class="row">
+
+      <div>
+
+        <label>Filter</label>
+
+        <select id="adminFilter" onchange="renderAdmin()">
+          <option value="all">All Bookings</option>
+          <option value="issue">Issues / Holds</option>
+          <option value="payout">Payout Eligible</option>
+          <option value="pending">Awaiting Partner</option>
+          <option value="confirmed">Confirmed</option>
+        </select>
+
+      </div>
+
+      <div>
+
+        <label>Summary</label>
+
+        <div id="adminSummary" class="summary" style="padding:10px"></div>
+
+      </div>
+
+    </div>
+
+    <div class="sectionBlock">
+
+      <h3>Bookings & Disputes</h3>
+
+      <div id="adminList"></div>
+
+    </div>
+
+  </div>
+
 </section>
 
 <section id="safety" class="screen">
-  <div class="card">
+
+  <div class="card formCard">
+
     <h2>Safety & Trust</h2>
-    <div class="alert sos"><b>🚨 Emergency</b><br>For an immediate emergency, contact local emergency services first.</div>
-    <div class="alert rules"><b>🛡️ Zero Tolerance</b><br>Harassment, abuse, threats or unsafe behaviour are not permitted. The company may suspend accounts and take appropriate legal action where warranted.</div>
-    <div class="alert rules"><b>🚫 Service Policy</b><br>Professional companionship and everyday non-professional assistance only. No escort or adult services.</div>
-    <div class="notice">Meeting OTP will be added after backend/OTP integration. Never share sensitive payment or account information in chat.</div>
+
+    <div class="alert sos">
+      <b>🚨 Emergency</b><br>
+      For an immediate emergency, contact local emergency services first.
+    </div>
+
+    <div class="alert rules">
+      <b>🛡️ Zero Tolerance</b><br>
+      Harassment, abuse, threats or unsafe behaviour are not permitted.
+      The company may suspend accounts and take appropriate legal action where warranted.
+    </div>
+
+    <div class="alert rules">
+      <b>🚫 Service Policy</b><br>
+      Professional companionship and everyday non-professional assistance only.
+      No escort or adult services.
+    </div>
+
+    <div class="alert rules">
+      <b>📍 Meeting Safety</b><br>
+      Customers and partners should prefer safe, public meeting locations and
+      follow the platform's safety instructions.
+    </div>
+
+    <div class="alert rules">
+      <b>🔒 Payment Safety</b><br>
+      Never share sensitive bank details, OTPs or account credentials in chat.
+    </div>
+
+    <div class="notice">
+      Meeting OTP and payment processing are prototype features at present.
+      Real services will require secure backend integration before launch.
+    </div>
+
   </div>
+
 </section>
 
-<div class="footer">Book A Partner • Real People. Meaningful Moments.<br>Prototype — booking, OTP and payment backend to be connected before launch.</div>
+<footer class="footer">
+
+  <div class="footerGrid">
+
+    <div>
+      <h3>Book A Partner</h3>
+      <p>
+        A trust-first platform concept for finding companions and
+        everyday assistance when you don't want to do something alone.
+      </p>
+      <p>
+        Real People. Meaningful Moments.
+      </p>
+    </div>
+
+    <div>
+      <h3>Services</h3>
+      <a href="#" onclick="startBooking('Movie Partner');return false">Movie Partner</a>
+      <a href="#" onclick="startBooking('Shopping Partner');return false">Shopping Partner</a>
+      <a href="#" onclick="startBooking('Coffee & Conversation');return false">Coffee & Conversation</a>
+      <a href="#" onclick="startBooking('Event Partner');return false">Event Partner</a>
+    </div>
+
+    <div>
+      <h3>Company</h3>
+      <a href="#" onclick="scrollHomeTo('howSection');return false">How It Works</a>
+      <a href="#" onclick="go('safety');return false">Safety & Trust</a>
+      <a href="#" onclick="go('join');return false">Start Earning</a>
+      <a href="#" onclick="go('admin');return false">Support</a>
+    </div>
+
+    <div>
+      <h3>Explore</h3>
+      <a href="#" onclick="go('book');return false">Find a Partner</a>
+      <a href="#" onclick="go('bookings');return false">My Bookings</a>
+      <a href="#" onclick="go('chat');return false">My Chat</a>
+      <a href="#" onclick="scrollHomeTo('servicesSection');return false">Services</a>
+    </div>
+
+  </div>
+
+  <div class="footerBottom">
+    Book A Partner • Prototype version • Real payment, OTP and secure backend integration required before public launch.
+  </div>
+
+</footer>
+
 </main>
 
 <script>
-const partners=[
- {name:'Riya',age:27,area:'Golf Course Road',rate:899,rating:4.8,reviews:96,services:['Movie Partner','Coffee & Conversation','Event Partner']},
- {name:'Neha',age:29,area:'MG Road',rate:1099,rating:4.9,reviews:74,services:['Movie Partner','Shopping Partner','Event Partner']},
- {name:'Aarav',age:31,area:'DLF Phase 4',rate:999,rating:4.9,reviews:128,services:['Movie Partner','Shopping Partner','Coffee & Conversation']},
- {name:'Vikram',age:34,area:'Cyber City',rate:799,rating:4.7,reviews:51,services:['Coffee & Conversation','Assistance Partner']}
-];
-let selected=null;
 
-function openMenu(){document.getElementById('drawer').classList.add('open');document.getElementById('overlay').classList.add('show')}
-function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('show')}
-function go(id){
-  closeMenu();
-  if(id==='chat'){
-    const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-    const confirmed=list.some(b=>b.status==='Confirmed');
-    if(!confirmed){alert('Chat opens only after a booking is confirmed.');return;}
+const partners = [
+  {
+    name:'Riya',
+    age:27,
+    area:'Golf Course Road',
+    rate:899,
+    rating:4.8,
+    reviews:96,
+    services:[
+      'Movie Partner',
+      'Coffee & Conversation',
+      'Event Partner'
+    ]
+  },
+  {
+    name:'Neha',
+    age:29,
+    area:'MG Road',
+    rate:1099,
+    rating:4.9,
+    reviews:74,
+    services:[
+      'Movie Partner',
+      'Shopping Partner',
+      'Event Partner'
+    ]
+  },
+  {
+    name:'Aarav',
+    age:31,
+    area:'DLF Phase 4',
+    rate:999,
+    rating:4.9,
+    reviews:128,
+    services:[
+      'Movie Partner',
+      'Shopping Partner',
+      'Coffee & Conversation'
+    ]
+  },
+  {
+    name:'Vikram',
+    age:34,
+    area:'Cyber City',
+    rate:799,
+    rating:4.7,
+    reviews:51,
+    services:[
+      'Coffee & Conversation',
+      'Assistance Partner'
+    ]
   }
-  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if(id==='bookings')renderBookings();
-  if(id==='partnerDashboard')renderPartnerDashboard();
-  if(id==='meetingOtp')renderMeetingOtp();
-  if(id==='admin')renderAdmin();
-  scrollTo(0,0);
+];
+
+let selected = null;
+
+function openMenu(){
+
+  document.getElementById('drawer').classList.add('open');
+
+  document.getElementById('overlay').classList.add('show');
+
 }
-function startBooking(service){go('book');document.getElementById('service').value=service;findPartners()}
-function ageOK(a,p){if(a==='Any age')return true;if(a==='21–25')return p.age>=21&&p.age<=25;if(a==='26–30')return p.age>=26&&p.age<=30;if(a==='31–35')return p.age>=31&&p.age<=35;if(a==='36–45')return p.age>=36&&p.age<=45;return p.age>=46}
+
+function closeMenu(){
+
+  document.getElementById('drawer').classList.remove('open');
+
+  document.getElementById('overlay').classList.remove('show');
+
+}
+
+function go(id){
+
+  closeMenu();
+
+  if(id === 'chat'){
+
+    const list = JSON.parse(
+      localStorage.getItem('bap_bookings') || '[]'
+    );
+
+    const confirmed = list.some(
+      b => b.status === 'Confirmed'
+    );
+
+    if(!confirmed){
+
+      alert(
+        'Chat opens only after a booking is confirmed.'
+      );
+
+      return;
+    }
+  }
+
+  document
+    .querySelectorAll('.screen')
+    .forEach(x => x.classList.remove('active'));
+
+  document
+    .getElementById(id)
+    .classList.add('active');
+
+  if(id === 'bookings'){
+    renderBookings();
+  }
+
+  if(id === 'partnerDashboard'){
+    renderPartnerDashboard();
+  }
+
+  if(id === 'meetingOtp'){
+    renderMeetingOtp();
+  }
+
+  if(id === 'admin'){
+    renderAdmin();
+  }
+
+  window.scrollTo({
+    top:0,
+    behavior:'smooth'
+  });
+
+}
+
+function scrollHomeTo(sectionId){
+
+  closeMenu();
+
+  go('home');
+
+  setTimeout(() => {
+
+    const target =
+      document.getElementById(sectionId);
+
+    if(target){
+
+      target.scrollIntoView({
+        behavior:'smooth',
+        block:'start'
+      });
+
+    }
+
+  },100);
+
+}
+
+function startBooking(service){
+
+  go('book');
+
+  document.getElementById('service').value =
+    service;
+
+  findPartners();
+
+}
+
+function ageOK(a,p){
+
+  if(a === 'Any age'){
+    return true;
+  }
+
+  if(a === '21–25'){
+    return p.age >= 21 && p.age <= 25;
+  }
+
+  if(a === '26–30'){
+    return p.age >= 26 && p.age <= 30;
+  }
+
+  if(a === '31–35'){
+    return p.age >= 31 && p.age <= 35;
+  }
+
+  if(a === '36–45'){
+    return p.age >= 36 && p.age <= 45;
+  }
+
+  return p.age >= 46;
+
+}
 
 function findPartners(){
- const s=document.getElementById('service').value;
- const a=document.getElementById('age').value;
- const area=document.getElementById('area').value||'Gurgaon NCR';
- let list=partners.filter(p=>p.services.includes(s)&&ageOK(a,p));
- let html='<h2>Available Partners</h2><p class="muted">'+s+' • '+area+' • Preferred age: '+a+'</p><div class="partners">';
- list.forEach(p=>{
-   html+=`<div class="card">
-   <div class="partner">
-   <div class="avatar">${p.name[0]}</div>
-   <div><b>${p.name}</b> <span class="pill verified">✓ VERIFIED</span>
-   <div class="muted">Age ${p.age} • ${p.area}</div>
-   <div><span class="stars">★★★★★</span> <b>${p.rating}</b> (${p.reviews})</div>
-   <span class="pill available">● AVAILABLE</span></div>
-   </div>
-   <div class="price">₹${p.rate} <small>/ hour</small></div>
-   <div>${p.services.map(x=>'<span class="pill">'+x+'</span>').join('')}</div>
-   <button class="pink full" onclick="selectPartner('${p.name}')">Request Booking</button>
-   </div>`;
- });
- if(!list.length)html+='<div class="card">No matching partners found. Try another service or age preference.</div>';
- html+='</div><div class="notice"><b>Next:</b> Select a partner → review booking → continue to payment.</div>';
- document.getElementById('results').innerHTML=html;
+
+  const service =
+    document.getElementById('service').value;
+
+  const age =
+    document.getElementById('age').value;
+
+  const area =
+    document.getElementById('area').value ||
+    'Gurgaon NCR';
+
+  let list =
+    partners.filter(p =>
+      p.services.includes(service) &&
+      ageOK(age,p)
+    );
+
+  let html =
+    '<h2>Available Partners</h2>' +
+    '<p class="muted">' +
+    service +
+    ' • ' +
+    area +
+    ' • Preferred age: ' +
+    age +
+    '</p>' +
+    '<div class="partners">';
+
+  list.forEach(p => {
+
+    html += `
+      <div class="card">
+
+        <div class="partner">
+
+          <div class="avatar">
+            ${p.name[0]}
+          </div>
+
+          <div>
+
+            <b>${p.name}</b>
+
+            <span class="pill verified">
+              ✓ VERIFIED
+            </span>
+
+            <div class="muted">
+              Age ${p.age} • ${p.area}
+            </div>
+
+            <div>
+              <span class="rating">
+                ★★★★★
+              </span>
+              <b>${p.rating}</b>
+              (${p.reviews})
+            </div>
+
+            <span class="pill available">
+              ● AVAILABLE
+            </span>
+
+          </div>
+
+        </div>
+
+        <div class="price">
+          ₹${p.rate}
+          <small>/ hour</small>
+        </div>
+
+        <div>
+          ${p.services.map(x =>
+            '<span class="pill">'+x+'</span>'
+          ).join('')}
+        </div>
+
+        <button
+          class="pink full"
+          onclick="selectPartner('${p.name}')"
+        >
+          Request Booking
+        </button>
+
+      </div>
+    `;
+
+  });
+
+  if(!list.length){
+
+    html += `
+      <div class="card">
+        No matching partners found.
+        Try another service or age preference.
+      </div>
+    `;
+
+  }
+
+  html +=
+    '</div>' +
+    '<div class="notice">' +
+    '<b>Next:</b> Select a partner → review booking → continue to payment.' +
+    '</div>';
+
+  document.getElementById('results').innerHTML =
+    html;
+
 }
 
 function selectPartner(name){
- const p=partners.find(x=>x.name===name);
- selected={
-   ...p,
-   service:document.getElementById('service').value,
-   age:document.getElementById('age').value,
-   area:document.getElementById('area').value||'Gurgaon NCR',
-   date:document.getElementById('date').value,
-   time:document.getElementById('time').value,
-   location:document.getElementById('location').value||'To be confirmed'
- };
- document.getElementById('bookingSummary').innerHTML=
- `<div class="summary"><b>${p.name}</b> <span class="pill verified">✓ VERIFIED</span>
- <p>${selected.service}</p>
- <p>📅 ${selected.date||'Date to be selected'} &nbsp; 🕐 ${selected.time||'Time to be selected'}</p>
- <p>📍 ${selected.location}</p><p>Area: ${selected.area}</p>
- <strong>₹${p.rate} / hour</strong></div>`;
- go('details');
+
+  const p =
+    partners.find(x => x.name === name);
+
+  selected = {
+
+    ...p,
+
+    service:
+      document.getElementById('service').value,
+
+    age:
+      document.getElementById('age').value,
+
+    area:
+      document.getElementById('area').value ||
+      'Gurgaon NCR',
+
+    date:
+      document.getElementById('date').value,
+
+    time:
+      document.getElementById('time').value,
+
+    location:
+      document.getElementById('location').value ||
+      ''
+
+  };
+
+  document.getElementById('bookingSummary').innerHTML = `
+
+    <div class="summary">
+
+      <b>${p.name}</b>
+
+      <span class="pill verified">
+        ✓ VERIFIED
+      </span>
+
+      <p>${selected.service}</p>
+
+      <p>
+        📅 ${selected.date || 'Date to be selected'}
+        &nbsp;
+        🕐 ${selected.time || 'Time to be selected'}
+      </p>
+
+      <p>
+        📍 ${selected.location || 'Meeting location to be selected'}
+      </p>
+
+      <p>
+        Area: ${selected.area}
+      </p>
+
+      <strong>
+        ₹${p.rate} / hour
+      </strong>
+
+    </div>
+
+  `;
+
+  go('details');
+
 }
 
 function goToPayment(){
-  if(!selected){go('book');return;}
-  if(!selected.date||!selected.time||!selected.location||selected.location.trim()===''){
-    alert('Please select date, time and meeting location before continuing.');
+
+  if(!selected){
+
     go('book');
+
     return;
   }
-  document.getElementById('paymentSummary').innerHTML=
-    `<b>${selected.name}</b> <span class="pill verified">✓ VERIFIED</span>
-     <p>${selected.service}</p>
-     <p>📅 ${selected.date} &nbsp; 🕐 ${selected.time}</p>
-     <p>📍 ${selected.location}</p>
-     <p><strong>₹${selected.rate} / hour</strong></p>`;
+
+  if(
+    !selected.date ||
+    !selected.time ||
+    !selected.location ||
+    selected.location.trim() === ''
+  ){
+
+    alert(
+      'Please select date, time and meeting location before continuing.'
+    );
+
+    go('book');
+
+    return;
+  }
+
+  document.getElementById('paymentSummary').innerHTML = `
+
+    <b>${selected.name}</b>
+
+    <span class="pill verified">
+      ✓ VERIFIED
+    </span>
+
+    <p>${selected.service}</p>
+
+    <p>
+      📅 ${selected.date}
+      &nbsp;
+      🕐 ${selected.time}
+    </p>
+
+    <p>
+      📍 ${selected.location}
+    </p>
+
+    <p>
+      <strong>
+        ₹${selected.rate} / hour
+      </strong>
+    </p>
+
+  `;
+
   go('payment');
+
 }
 
 function confirmDemoPayment(){
-  if(!selected){go('book');return;}
-  const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const id='BAP'+Date.now().toString().slice(-7);
-  const b={
+
+  if(!selected){
+
+    go('book');
+
+    return;
+  }
+
+  const bookings =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
+
+  const id =
+    'BAP' +
+    Date.now()
+      .toString()
+      .slice(-7);
+
+  const booking = {
+
     id,
+
     ...selected,
+
     status:'Awaiting Partner',
+
     partnerStatus:'Pending',
-    paymentStatus:'Payment Received — Held',
-    payoutStatus:'Partner payout locked until customer approval',
-    customerDecision:'Pending'
+
+    paymentStatus:
+      'Payment Received — Held',
+
+    payoutStatus:
+      'Partner payout locked until customer approval',
+
+    customerDecision:
+      'Pending'
+
   };
-  bookings.unshift(b);
-  localStorage.setItem('bap_bookings',JSON.stringify(bookings));
-  document.getElementById('successText').innerHTML=
-    `<b>Booking #${id}</b><br><br>
-     <span class="pill">✓ REQUEST SENT</span><br><br>
-     ${selected.service}<br>
-     ${selected.date} • ${selected.time}<br>
-     ${selected.location}<br><br>
-     Partner: ${selected.name}<br>
-     ₹${selected.rate} / hour<br><br>
-     <small>Payment received and held until booking completion.</small>`;
+
+  bookings.unshift(booking);
+
+  localStorage.setItem(
+    'bap_bookings',
+    JSON.stringify(bookings)
+  );
+
+  document.getElementById('successText').innerHTML = `
+
+    <b>Booking #${id}</b>
+
+    <br><br>
+
+    <span class="pill">
+      ✓ REQUEST SENT
+    </span>
+
+    <br><br>
+
+    ${selected.service}
+
+    <br>
+
+    ${selected.date} • ${selected.time}
+
+    <br>
+
+    ${selected.location}
+
+    <br><br>
+
+    Partner:
+    ${selected.name}
+
+    <br>
+
+    ₹${selected.rate} / hour
+
+    <br><br>
+
+    <small>
+      Payment received and held until booking completion.
+    </small>
+
+  `;
+
   go('success');
+
 }
 
 function renderBookings(){
-  const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const el=document.getElementById('bookingList');
+
+  const list =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
+
+  const el =
+    document.getElementById('bookingList');
+
   if(!list.length){
-    el.innerHTML="<p class='muted'>No bookings yet. Start by choosing a service.</p><button class='pink' onclick=\"go('book')\">Find a Partner</button>";
+
+    el.innerHTML =
+      "<p class='muted'>No bookings yet. Start by choosing a service.</p>" +
+      "<button class='pink' onclick=\"go('book')\">Find a Partner</button>";
+
     return;
   }
-  el.innerHTML=list.map(b=>{
-    let badgeClass=b.status==='Confirmed'?'available':'';
-    let actions='';
-    if(b.status==='Confirmed'){
-      if(b.customerDecision==='OK'){
-        actions="<span class='pill available'>✓ CUSTOMER APPROVED</span> <button class='dark' onclick=\"go('chat')\">Open Chat</button> <button class='pink' onclick=\"go('meetingOtp')\">Meeting OTP</button>";
-      }else if(b.customerDecision==='Issue'){
-        actions="<span class='pill' style='background:#fff1f2;color:#b42318'>⚠ PAYMENT ON HOLD — ISSUE REPORTED</span>";
+
+  el.innerHTML =
+    list.map(b => {
+
+      let badgeClass =
+        b.status === 'Confirmed'
+        ? 'available'
+        : '';
+
+      let actions = '';
+
+      if(b.status === 'Confirmed'){
+
+        if(b.customerDecision === 'OK'){
+
+          actions =
+            "<span class='pill available'>" +
+            "✓ CUSTOMER APPROVED" +
+            "</span> " +
+
+            "<button class='dark' onclick=\"go('chat')\">" +
+            "Open Chat" +
+            "</button> " +
+
+            "<button class='pink' onclick=\"go('meetingOtp')\">" +
+            "Meeting OTP" +
+            "</button>";
+
+        }
+
+        else if(
+          b.customerDecision === 'Issue'
+        ){
+
+          actions =
+            "<span class='pill' style='background:#fff1f2;color:#b42318'>" +
+            "⚠ PAYMENT ON HOLD — ISSUE REPORTED" +
+            "</span>";
+
+        }
+
+        else{
+
+          actions =
+
+            "<button class='green' onclick=\"customerApprove('" +
+            b.id +
+            "')\">" +
+            "✓ Meeting OK" +
+            "</button> " +
+
+            "<button class='light' onclick=\"customerReportIssue('" +
+            b.id +
+            "')\">" +
+            "Report an Issue" +
+            "</button> " +
+
+            "<button class='dark' onclick=\"go('chat')\">" +
+            "Open Chat" +
+            "</button> " +
+
+            "<button class='pink' onclick=\"go('meetingOtp')\">" +
+            "Meeting OTP" +
+            "</button>";
+
+        }
+
       }else{
-        actions="<button class='green' onclick=\"customerApprove('"+b.id+"')\">✓ Meeting OK</button> <button class='light' onclick=\"customerReportIssue('"+b.id+"')\">Report an Issue</button> <button class='dark' onclick=\"go('chat')\">Open Chat</button> <button class='pink' onclick=\"go('meetingOtp')\">Meeting OTP</button>";
+
+        actions =
+          "<button class='light' disabled>" +
+          "Chat locked" +
+          "</button>";
+
       }
-    }else{
-      actions="<button class='light' disabled>Chat locked</button>";
-    }
-    const paymentLine=b.paymentStatus?`<span class="pill">${b.paymentStatus}</span>`:'';
-    const payoutLine=b.payoutStatus?`<span class="pill">${b.payoutStatus}</span>`:'';
-    return `<div class="card" style="margin-top:10px">
-      <b>Booking #${b.id}</b>
-      <span class="pill ${badgeClass}">${b.status}</span>
-      ${paymentLine} ${payoutLine}
-      <p>${b.service} • ${b.name}</p>
-      <p class="muted">📅 ${b.date||'Pending'} • 🕐 ${b.time||'Pending'}<br>📍 ${b.location}</p>
-      ${actions}
-    </div>`;
-  }).join('');
+
+      const paymentLine =
+        b.paymentStatus
+        ? `<span class="pill">${b.paymentStatus}</span>`
+        : '';
+
+      const payoutLine =
+        b.payoutStatus
+        ? `<span class="pill">${b.payoutStatus}</span>`
+        : '';
+
+      return `
+
+        <div class="card" style="margin-top:10px">
+
+          <b>
+            Booking #${b.id}
+          </b>
+
+          <span class="pill ${badgeClass}">
+            ${b.status}
+          </span>
+
+          ${paymentLine}
+
+          ${payoutLine}
+
+          <p>
+            ${b.service} • ${b.name}
+          </p>
+
+          <p class="muted">
+
+            📅 ${b.date || 'Pending'}
+
+            • 🕐 ${b.time || 'Pending'}
+
+            <br>
+
+            📍 ${b.location}
+
+          </p>
+
+          ${actions}
+
+        </div>
+
+      `;
+
+    }).join('');
+
 }
 
 function sendMessage(){
-  const i=document.getElementById('chatInput');
-  if(i.value.trim()){
-    const box=document.querySelector('.chat');
-    const d=document.createElement('div');
-    d.className='msg me';
-    d.textContent=i.value.trim();
-    box.appendChild(d);
-    i.value='';
-    box.scrollTop=box.scrollHeight;
+
+  const input =
+    document.getElementById('chatInput');
+
+  if(!input.value.trim()){
+    return;
   }
+
+  const box =
+    document.querySelector('.chat');
+
+  const div =
+    document.createElement('div');
+
+  div.className =
+    'msg me';
+
+  div.textContent =
+    input.value.trim();
+
+  box.appendChild(div);
+
+  input.value = '';
+
+  box.scrollTop =
+    box.scrollHeight;
+
 }
 
 function partnerApply(){
-  const n=document.getElementById('partnerName').value.trim();
-  const age=Number(document.getElementById('partnerAge').value);
-  const m=document.getElementById('partnerMobile').value.trim();
-  const area=document.getElementById('partnerArea').value.trim();
-  const service=document.getElementById('partnerService').value;
-  const rate=Number(document.getElementById('partnerRate').value);
-  const availability=document.getElementById('partnerAvailability').value;
-  const photo=document.getElementById('partnerPhoto').files[0];
-  const selfie=document.getElementById('partnerSelfie').files[0];
 
-  if(!n||!Number.isFinite(age)||age<18||m.length!==10||!area||!Number.isFinite(rate)||rate<=0||!photo||!selfie){
-    alert('Please complete all partner details, including profile photo and selfie.');
+  const n =
+    document
+      .getElementById('partnerName')
+      .value.trim();
+
+  const age =
+    Number(
+      document.getElementById('partnerAge').value
+    );
+
+  const m =
+    document
+      .getElementById('partnerMobile')
+      .value.trim();
+
+  const area =
+    document
+      .getElementById('partnerArea')
+      .value.trim();
+
+  const service =
+    document.getElementById('partnerService').value;
+
+  const rate =
+    Number(
+      document.getElementById('partnerRate').value
+    );
+
+  const availability =
+    document.getElementById(
+      'partnerAvailability'
+    ).value;
+
+  const photo =
+    document.getElementById(
+      'partnerPhoto'
+    ).files[0];
+
+  const selfie =
+    document.getElementById(
+      'partnerSelfie'
+    ).files[0];
+
+  if(
+    !n ||
+    !Number.isFinite(age) ||
+    age < 18 ||
+    m.length !== 10 ||
+    !area ||
+    !Number.isFinite(rate) ||
+    rate <= 0 ||
+    !photo ||
+    !selfie
+  ){
+
+    alert(
+      'Please complete all partner details, including profile photo and selfie.'
+    );
+
     return;
   }
 
-  const partner={
+  const partner = {
+
     name:n,
+
     age,
+
     mobile:m,
+
     area,
+
     service,
+
     rate,
+
     availability,
-    verification:'Pending Review',
-    verificationNote:'Photo + selfie submitted for admin review',
-    photoName:photo.name,
-    selfieName:selfie.name
+
+    verification:
+      'Pending Review',
+
+    verificationNote:
+      'Photo + selfie submitted for admin review',
+
+    photoName:
+      photo.name,
+
+    selfieName:
+      selfie.name
+
   };
 
-  localStorage.setItem('bap_partner_profile',JSON.stringify(partner));
-  alert('Partner application saved for demo. Real mobile OTP, ID verification and admin approval will be connected in the backend stage.');
+  localStorage.setItem(
+    'bap_partner_profile',
+    JSON.stringify(partner)
+  );
+
+  alert(
+    'Partner application saved for demo. Real mobile OTP, identity verification and admin approval will be connected in the backend stage.'
+  );
+
   go('partnerDashboard');
+
 }
 
 function customerApprove(id){
-  const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const i=bookings.findIndex(b=>b.id===id);
-  if(i<0)return;
-  if(bookings[i].status!=='Confirmed'){
-    alert('The booking must be confirmed by the partner before customer approval.');
+
+  const bookings =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
+
+  const i =
+    bookings.findIndex(
+      b => b.id === id
+    );
+
+  if(i < 0){
     return;
   }
-  bookings[i].customerDecision='OK';
-  bookings[i].payoutStatus='Payout eligible — release to partner';
-  bookings[i].paymentStatus='Payment held → customer approved';
-  localStorage.setItem('bap_bookings',JSON.stringify(bookings));
-  alert('Customer marked the meeting as OK. The partner payout is now eligible for release in the live backend.');
+
+  if(
+    bookings[i].status !== 'Confirmed'
+  ){
+
+    alert(
+      'The booking must be confirmed by the partner before customer approval.'
+    );
+
+    return;
+  }
+
+  bookings[i].customerDecision =
+    'OK';
+
+  bookings[i].payoutStatus =
+    'Payout eligible — release to partner';
+
+  bookings[i].paymentStatus =
+    'Payment held → customer approved';
+
+  localStorage.setItem(
+    'bap_bookings',
+    JSON.stringify(bookings)
+  );
+
+  alert(
+    'Customer marked the meeting as OK. The partner payout is now eligible for release in the live backend.'
+  );
+
   renderBookings();
+
 }
 
 function customerReportIssue(id){
-  const reason=prompt('Please briefly describe the issue or objection. Leave blank to cancel.');
-  if(reason===null)return;
-  const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const i=bookings.findIndex(b=>b.id===id);
-  if(i<0)return;
-  bookings[i].customerDecision='Issue';
-  bookings[i].issueReason=reason.trim()||'Customer reported an issue';
-  bookings[i].payoutStatus='Payment on hold — dispute review required';
-  bookings[i].paymentStatus='Payment held — objection reported';
-  localStorage.setItem('bap_bookings',JSON.stringify(bookings));
-  alert('Issue reported. Partner payout remains on hold until the dispute is reviewed.');
+
+  const reason =
+    prompt(
+      'Please briefly describe the issue or objection. Leave blank to cancel.'
+    );
+
+  if(reason === null){
+    return;
+  }
+
+  const bookings =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
+
+  const i =
+    bookings.findIndex(
+      b => b.id === id
+    );
+
+  if(i < 0){
+    return;
+  }
+
+  bookings[i].customerDecision =
+    'Issue';
+
+  bookings[i].issueReason =
+    reason.trim() ||
+    'Customer reported an issue';
+
+  bookings[i].payoutStatus =
+    'Payment on hold — dispute review required';
+
+  bookings[i].paymentStatus =
+    'Payment held — objection reported';
+
+  localStorage.setItem(
+    'bap_bookings',
+    JSON.stringify(bookings)
+  );
+
+  alert(
+    'Issue reported. Partner payout remains on hold until the dispute is reviewed.'
+  );
+
   renderBookings();
+
 }
 
 function renderPartnerDashboard(){
-  const p=JSON.parse(localStorage.getItem('bap_partner_profile')||'null');
-  const profile=document.getElementById('partnerProfileCard');
-  const req=document.getElementById('partnerRequests');
+
+  const p =
+    JSON.parse(
+      localStorage.getItem(
+        'bap_partner_profile'
+      ) ||
+      'null'
+    );
+
+  const profile =
+    document.getElementById(
+      'partnerProfileCard'
+    );
+
+  const req =
+    document.getElementById(
+      'partnerRequests'
+    );
 
   if(!p){
-    profile.innerHTML="<b>No partner profile yet.</b><p>Create your profile from Start Earning.</p><button class='pink' onclick=\"go('join')\">Create Partner Profile</button>";
-    req.innerHTML='';
+
+    profile.innerHTML =
+
+      "<b>No partner profile yet.</b>" +
+
+      "<p>Create your profile from Start Earning.</p>" +
+
+      "<button class='pink' onclick=\"go('join')\">" +
+      "Create Partner Profile" +
+      "</button>";
+
+    req.innerHTML = '';
+
     return;
   }
 
-  profile.innerHTML=`<b>${p.name}</b>
-    <span class="pill pending">${p.verification}</span>
-    <p>Age ${p.age} • ${p.area}</p>
-    <p>${p.service} • ₹${p.rate}/hour • ${p.availability}</p>
-    <p>📸 ${p.photoName}<br>🤳 ${p.selfieName}</p>
-    <p><span class="pill">💰 Payout rule: customer approval required</span></p>`;
+  profile.innerHTML = `
 
-  const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const normalizedPartnerArea=(p.area||'').toLowerCase().trim();
+    <b>${p.name}</b>
 
-  const matching=bookings.filter(b=>{
-    if(b.status!=='Awaiting Partner'&&b.status!=='Confirmed')return false;
-    if(b.partnerStatus==='Rejected')return false;
-    if(b.service!==p.service)return false;
-    if(p.availability!=='Available')return false;
+    <span class="pill">
+      ${p.verification}
+    </span>
 
-    const customerArea=(b.area||'').toLowerCase().trim();
-    const meetingLocation=(b.location||'').toLowerCase().trim();
+    <p>
+      Age ${p.age} • ${p.area}
+    </p>
 
-    if(!normalizedPartnerArea)return true;
+    <p>
+      ${p.service} • ₹${p.rate}/hour • ${p.availability}
+    </p>
 
-    return(
-      (customerArea&&(
-        normalizedPartnerArea.includes(customerArea)||
-        customerArea.includes(normalizedPartnerArea)||
-        normalizedPartnerArea.split(/\s+/)[0]===customerArea.split(/\s+/)[0]
-      ))||
-      (meetingLocation&&(
-        normalizedPartnerArea.includes(meetingLocation)||
-        meetingLocation.includes(normalizedPartnerArea)||
-        meetingLocation.includes(normalizedPartnerArea.split(/\s+/)[0])
-      ))
+    <p>
+      📸 ${p.photoName}
+      <br>
+      🤳 ${p.selfieName}
+    </p>
+
+    <p>
+      <span class="pill">
+        💰 Payout rule: customer approval required
+      </span>
+    </p>
+
+  `;
+
+  const bookings =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
     );
-  });
+
+  const normalizedPartnerArea =
+    (p.area || '')
+    .toLowerCase()
+    .trim();
+
+  const matching =
+    bookings.filter(b => {
+
+      if(
+        b.status !== 'Awaiting Partner' &&
+        b.status !== 'Confirmed'
+      ){
+        return false;
+      }
+
+      if(
+        b.partnerStatus === 'Rejected'
+      ){
+        return false;
+      }
+
+      if(
+        b.service !== p.service
+      ){
+        return false;
+      }
+
+      if(
+        p.availability !== 'Available'
+      ){
+        return false;
+      }
+
+      const customerArea =
+        (b.area || '')
+        .toLowerCase()
+        .trim();
+
+      const meetingLocation =
+        (b.location || '')
+        .toLowerCase()
+        .trim();
+
+      if(!normalizedPartnerArea){
+        return true;
+      }
+
+      return (
+
+        (
+          customerArea &&
+          (
+            normalizedPartnerArea.includes(
+              customerArea
+            ) ||
+            customerArea.includes(
+              normalizedPartnerArea
+            ) ||
+            normalizedPartnerArea.split(/\s+/)[0] ===
+            customerArea.split(/\s+/)[0]
+          )
+        )
+
+        ||
+
+        (
+          meetingLocation &&
+          (
+            normalizedPartnerArea.includes(
+              meetingLocation
+            ) ||
+            meetingLocation.includes(
+              normalizedPartnerArea
+            ) ||
+            meetingLocation.includes(
+              normalizedPartnerArea.split(/\s+/)[0]
+            )
+          )
+        )
+
+      );
+
+    });
 
   if(!matching.length){
-    req.innerHTML='<p class="muted">No matching booking requests are waiting right now.</p>';
+
+    req.innerHTML =
+      '<p class="muted">' +
+      'No matching booking requests are waiting right now.' +
+      '</p>';
+
     return;
   }
 
-  req.innerHTML=matching.map(b=>{
-    const statusText=b.status==='Confirmed'?'Accepted / Confirmed':'Waiting for your response';
-    let payoutText='';
+  req.innerHTML =
+    matching.map(b => {
 
-    if(b.customerDecision==='OK'){
-      payoutText="<span class='pill available'>✓ CUSTOMER APPROVED — PAYOUT ELIGIBLE</span>";
-    }else if(b.customerDecision==='Issue'){
-      payoutText="<span class='pill' style='background:#fff1f2;color:#b42318'>⚠ PAYOUT ON HOLD — ISSUE REPORTED</span>";
-    }else{
-      payoutText="<span class='pill'>💰 PAYOUT HELD — WAITING FOR CUSTOMER OK</span>";
-    }
+      const statusText =
+        b.status === 'Confirmed'
+        ? 'Accepted / Confirmed'
+        : 'Waiting for your response';
 
-    const actions=b.status==='Confirmed'
-      ?payoutText
-      :"<button class='green' onclick=\"partnerAccept('"+b.id+"')\">Accept</button> <button class='light' onclick=\"partnerReject('"+b.id+"')\">Reject</button>";
+      let payoutText = '';
 
-    return `<div class="card" style="margin-top:10px">
-      <b>${b.service}</b>
-      <p>${b.date} • ${b.time}<br>📍 ${b.location}<br>Area: ${b.area}</p>
-      <span class="pill">${statusText}</span><br>
-      ${actions}
-    </div>`;
-  }).join('');
+      if(
+        b.customerDecision === 'OK'
+      ){
+
+        payoutText =
+          "<span class='pill available'>" +
+          "✓ CUSTOMER APPROVED — PAYOUT ELIGIBLE" +
+          "</span>";
+
+      }
+
+      else if(
+        b.customerDecision === 'Issue'
+      ){
+
+        payoutText =
+          "<span class='pill' style='background:#fff1f2;color:#b42318'>" +
+          "⚠ PAYOUT ON HOLD — ISSUE REPORTED" +
+          "</span>";
+
+      }
+
+      else{
+
+        payoutText =
+          "<span class='pill'>" +
+          "💰 PAYOUT HELD — WAITING FOR CUSTOMER OK" +
+          "</span>";
+
+      }
+
+      const actions =
+        b.status === 'Confirmed'
+        ? payoutText
+        :
+        "<button class='green' onclick=\"partnerAccept('" +
+        b.id +
+        "')\">Accept</button> " +
+
+        "<button class='light' onclick=\"partnerReject('" +
+        b.id +
+        "')\">Reject</button>";
+
+      return `
+
+        <div class="card" style="margin-top:10px">
+
+          <b>
+            ${b.service}
+          </b>
+
+          <p>
+            ${b.date} • ${b.time}
+            <br>
+            📍 ${b.location}
+            <br>
+            Area: ${b.area}
+          </p>
+
+          <span class="pill">
+            ${statusText}
+          </span>
+
+          <br>
+
+          ${actions}
+
+        </div>
+
+      `;
+
+    }).join('');
+
 }
 
 function partnerAccept(id){
-  const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const i=bookings.findIndex(b=>b.id===id);
-  if(i<0)return;
 
-  bookings[i].partnerStatus='Accepted';
-  bookings[i].status='Confirmed';
-  bookings[i].confirmedAt=new Date().toISOString();
+  const bookings =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
 
-  localStorage.setItem('bap_bookings',JSON.stringify(bookings));
+  const i =
+    bookings.findIndex(
+      b => b.id === id
+    );
 
-  alert('Demo: booking accepted. The customer can now chat and use the meeting OTP flow.');
+  if(i < 0){
+    return;
+  }
+
+  bookings[i].partnerStatus =
+    'Accepted';
+
+  bookings[i].status =
+    'Confirmed';
+
+  bookings[i].confirmedAt =
+    new Date().toISOString();
+
+  localStorage.setItem(
+    'bap_bookings',
+    JSON.stringify(bookings)
+  );
+
+  alert(
+    'Demo: booking accepted. The customer can now chat and use the meeting OTP flow.'
+  );
+
   renderPartnerDashboard();
+
 }
 
 function partnerReject(id){
-  const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const i=bookings.findIndex(b=>b.id===id);
-  if(i<0)return;
 
-  bookings[i].partnerStatus='Rejected';
-  bookings[i].status='Rejected';
+  const bookings =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
 
-  localStorage.setItem('bap_bookings',JSON.stringify(bookings));
+  const i =
+    bookings.findIndex(
+      b => b.id === id
+    );
+
+  if(i < 0){
+    return;
+  }
+
+  bookings[i].partnerStatus =
+    'Rejected';
+
+  bookings[i].status =
+    'Rejected';
+
+  localStorage.setItem(
+    'bap_bookings',
+    JSON.stringify(bookings)
+  );
+
   renderPartnerDashboard();
+
 }
 
 function renderAdmin(){
- const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
- const filter=document.getElementById('adminFilter').value;
- const summary=document.getElementById('adminSummary');
- const container=document.getElementById('adminList');
 
- const issues=list.filter(b=>b.customerDecision==='Issue').length;
- const eligible=list.filter(b=>b.customerDecision==='OK').length;
- const awaiting=list.filter(b=>b.status==='Awaiting Partner').length;
- const confirmed=list.filter(b=>b.status==='Confirmed').length;
+  const list =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
 
- summary.innerHTML=`Total ${list.length}<br>Issues ${issues} • Payout Eligible ${eligible}<br>Awaiting Partner ${awaiting} • Confirmed ${confirmed}`;
+  const filter =
+    document.getElementById(
+      'adminFilter'
+    ).value;
 
- let filtered=list;
+  const summary =
+    document.getElementById(
+      'adminSummary'
+    );
 
- if(filter==='issue')filtered=list.filter(b=>b.customerDecision==='Issue');
- if(filter==='payout')filtered=list.filter(b=>b.customerDecision==='OK');
- if(filter==='pending')filtered=list.filter(b=>b.status==='Awaiting Partner');
- if(filter==='confirmed')filtered=list.filter(b=>b.status==='Confirmed');
+  const container =
+    document.getElementById(
+      'adminList'
+    );
 
- if(!filtered.length){
-   container.innerHTML='<div class="card">No bookings in this filter.</div>';
-   return;
- }
+  const issues =
+    list.filter(
+      b => b.customerDecision === 'Issue'
+    ).length;
 
- container.innerHTML=filtered.map(b=>{
-   const issue=b.customerDecision==='Issue';
-   const approved=b.customerDecision==='OK';
+  const eligible =
+    list.filter(
+      b => b.customerDecision === 'OK'
+    ).length;
 
-   let decision='Waiting';
+  const awaiting =
+    list.filter(
+      b => b.status === 'Awaiting Partner'
+    ).length;
 
-   if(issue)decision='Dispute / Payout Hold';
-   else if(approved)decision='Customer Approved / Payout Eligible';
-   else if(b.status==='Awaiting Partner')decision='Awaiting Partner';
-   else if(b.status==='Confirmed')decision='Awaiting Customer Approval';
+  const confirmed =
+    list.filter(
+      b => b.status === 'Confirmed'
+    ).length;
 
-   let actions='';
+  summary.innerHTML =
 
-   if(issue){
-     actions=`<button class="green" onclick="adminResolveIssue('${b.id}')">Resolve & Approve Payout</button>
-     <button class="light" onclick="adminKeepHold('${b.id}')">Keep On Hold</button>`;
-   }else if(approved){
-     actions=`<span class="pill available">✓ PAYOUT ELIGIBLE</span>
-     <button class="green" onclick="adminReleasePayout('${b.id}')">Release Payout</button>`;
-   }else if(b.status==='Confirmed'){
-     actions=`<span class="pill">WAITING FOR CUSTOMER OK</span>
-     <button class="light" onclick="adminKeepHold('${b.id}')">Keep On Hold</button>`;
-   }else{
-     actions='<span class="pill">NO PAYOUT ACTION YET</span>';
-   }
+    `Total ${list.length}<br>` +
 
-   return `<div class="card" style="margin-top:10px">
-   <b>Booking #${b.id}</b>
-   <span class="pill">${b.status}</span>
-   ${issue?'<span class="pill" style="background:#fff1f2;color:#b42318">⚠ ISSUE</span>':''}
-   ${approved?'<span class="pill available">✓ CUSTOMER OK</span>':''}
-   <p><b>Partner:</b> ${b.name}<br><b>Service:</b> ${b.service}<br><b>Amount:</b> ₹${b.rate}/hour</p>
-   <p class="muted">📅 ${b.date} • 🕐 ${b.time}<br>📍 ${b.location}</p>
-   <p><b>Payment:</b> ${b.paymentStatus||'—'}<br><b>Payout:</b> ${b.payoutStatus||'—'}<br><b>Decision:</b> ${decision}</p>
-   ${issue?`<div class="alert sos"><b>Customer objection:</b><br>${b.issueReason||'Customer reported an issue.'}</div>`:''}
-   <div style="margin-top:8px">${actions}</div>
-   </div>`;
- }).join('');
+    `Issues ${issues} • Payout Eligible ${eligible}<br>` +
+
+    `Awaiting Partner ${awaiting} • Confirmed ${confirmed}`;
+
+  let filtered = list;
+
+  if(filter === 'issue'){
+    filtered =
+      list.filter(
+        b => b.customerDecision === 'Issue'
+      );
+  }
+
+  if(filter === 'payout'){
+    filtered =
+      list.filter(
+        b => b.customerDecision === 'OK'
+      );
+  }
+
+  if(filter === 'pending'){
+    filtered =
+      list.filter(
+        b => b.status === 'Awaiting Partner'
+      );
+  }
+
+  if(filter === 'confirmed'){
+    filtered =
+      list.filter(
+        b => b.status === 'Confirmed'
+      );
+  }
+
+  if(!filtered.length){
+
+    container.innerHTML =
+      '<div class="card">No bookings in this filter.</div>';
+
+    return;
+  }
+
+  container.innerHTML =
+    filtered.map(b => {
+
+      const issue =
+        b.customerDecision === 'Issue';
+
+      const approved =
+        b.customerDecision === 'OK';
+
+      let decision =
+        'Waiting';
+
+      if(issue){
+        decision =
+          'Dispute / Payout Hold';
+      }
+
+      else if(approved){
+        decision =
+          'Customer Approved / Payout Eligible';
+      }
+
+      else if(
+        b.status === 'Awaiting Partner'
+      ){
+        decision =
+          'Awaiting Partner';
+      }
+
+      else if(
+        b.status === 'Confirmed'
+      ){
+        decision =
+          'Awaiting Customer Approval';
+      }
+
+      let actions = '';
+
+      if(issue){
+
+        actions =
+
+          `<button class="green" onclick="adminResolveIssue('${b.id}')">
+            Resolve & Approve Payout
+          </button>
+
+          <button class="light" onclick="adminKeepHold('${b.id}')">
+            Keep On Hold
+          </button>`;
+
+      }
+
+      else if(approved){
+
+        actions =
+
+          `<span class="pill available">
+            ✓ PAYOUT ELIGIBLE
+          </span>
+
+          <button class="green" onclick="adminReleasePayout('${b.id}')">
+            Release Payout
+          </button>`;
+
+      }
+
+      else if(
+        b.status === 'Confirmed'
+      ){
+
+        actions =
+
+          `<span class="pill">
+            WAITING FOR CUSTOMER OK
+          </span>
+
+          <button class="light" onclick="adminKeepHold('${b.id}')">
+            Keep On Hold
+          </button>`;
+
+      }
+
+      else{
+
+        actions =
+          '<span class="pill">' +
+          'NO PAYOUT ACTION YET' +
+          '</span>';
+
+      }
+
+      return `
+
+        <div class="card" style="margin-top:10px">
+
+          <b>
+            Booking #${b.id}
+          </b>
+
+          <span class="pill">
+            ${b.status}
+          </span>
+
+          ${
+            issue
+            ? "<span class='pill' style='background:#fff1f2;color:#b42318'>⚠ ISSUE</span>"
+            : ""
+          }
+
+          ${
+            approved
+            ? "<span class='pill available'>✓ CUSTOMER OK</span>"
+            : ""
+          }
+
+          <p>
+
+            <b>Partner:</b>
+            ${b.name}
+
+            <br>
+
+            <b>Service:</b>
+            ${b.service}
+
+            <br>
+
+            <b>Amount:</b>
+            ₹${b.rate}/hour
+
+          </p>
+
+          <p class="muted">
+
+            📅 ${b.date} • 🕐 ${b.time}
+
+            <br>
+
+            📍 ${b.location}
+
+          </p>
+
+          <p>
+
+            <b>Payment:</b>
+            ${b.paymentStatus || '—'}
+
+            <br>
+
+            <b>Payout:</b>
+            ${b.payoutStatus || '—'}
+
+            <br>
+
+            <b>Decision:</b>
+            ${decision}
+
+          </p>
+
+          ${
+            issue
+            ?
+            `<div class="alert sos">
+              <b>Customer objection:</b>
+              <br>
+              ${b.issueReason || 'Customer reported an issue.'}
+            </div>`
+            :
+            ''
+          }
+
+          <div style="margin-top:8px">
+            ${actions}
+          </div>
+
+        </div>
+
+      `;
+
+    }).join('');
+
 }
 
 function adminReleasePayout(id){
- const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
- const i=list.findIndex(b=>b.id===id);
- if(i<0)return;
 
- if(list[i].customerDecision!=='OK'&&list[i].adminDecision!=='Dispute Resolved'){
-   alert('Payout cannot be released until the customer approves or the admin resolves the dispute.');
-   return;
- }
+  const list =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
 
- list[i].adminDecision='Payout Approved';
- list[i].payoutStatus='Payout Approved by Admin — ready for partner settlement';
- list[i].paymentStatus='Payment held → payout approved';
+  const i =
+    list.findIndex(
+      b => b.id === id
+    );
 
- localStorage.setItem('bap_bookings',JSON.stringify(list));
+  if(i < 0){
+    return;
+  }
 
- alert('Demo: payout approved. Real settlement will happen through the secure backend/payment system.');
- renderAdmin();
+  if(
+    list[i].customerDecision !== 'OK' &&
+    list[i].adminDecision !== 'Dispute Resolved'
+  ){
+
+    alert(
+      'Payout cannot be released until the customer approves or the admin resolves the dispute.'
+    );
+
+    return;
+  }
+
+  list[i].adminDecision =
+    'Payout Approved';
+
+  list[i].payoutStatus =
+    'Payout Approved by Admin — ready for partner settlement';
+
+  list[i].paymentStatus =
+    'Payment held → payout approved';
+
+  localStorage.setItem(
+    'bap_bookings',
+    JSON.stringify(list)
+  );
+
+  alert(
+    'Demo: payout approved. Real settlement will happen through the secure backend/payment system.'
+  );
+
+  renderAdmin();
+
 }
 
 function adminKeepHold(id){
- const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
- const i=list.findIndex(b=>b.id===id);
- if(i<0)return;
 
- list[i].adminDecision='Keep On Hold';
- list[i].payoutStatus='Payment on hold — admin review required';
+  const list =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
 
- localStorage.setItem('bap_bookings',JSON.stringify(list));
- alert('Demo: payout remains on hold.');
- renderAdmin();
+  const i =
+    list.findIndex(
+      b => b.id === id
+    );
+
+  if(i < 0){
+    return;
+  }
+
+  list[i].adminDecision =
+    'Keep On Hold';
+
+  list[i].payoutStatus =
+    'Payment on hold — admin review required';
+
+  localStorage.setItem(
+    'bap_bookings',
+    JSON.stringify(list)
+  );
+
+  alert(
+    'Demo: payout remains on hold.'
+  );
+
+  renderAdmin();
+
 }
 
 function adminResolveIssue(id){
- const list=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
- const i=list.findIndex(b=>b.id===id);
- if(i<0)return;
 
- list[i].adminDecision='Dispute Resolved';
- list[i].customerDecision='OK';
- list[i].payoutStatus='Payout eligible — dispute resolved by Admin';
- list[i].paymentStatus='Payment held → dispute resolved';
+  const list =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
 
- localStorage.setItem('bap_bookings',JSON.stringify(list));
- alert('Demo: dispute resolved. The payout is now eligible for final release.');
- renderAdmin();
+  const i =
+    list.findIndex(
+      b => b.id === id
+    );
+
+  if(i < 0){
+    return;
+  }
+
+  list[i].adminDecision =
+    'Dispute Resolved';
+
+  list[i].customerDecision =
+    'OK';
+
+  list[i].payoutStatus =
+    'Payout eligible — dispute resolved by Admin';
+
+  list[i].paymentStatus =
+    'Payment held → dispute resolved';
+
+  localStorage.setItem(
+    'bap_bookings',
+    JSON.stringify(list)
+  );
+
+  alert(
+    'Demo: dispute resolved. The payout is now eligible for final release.'
+  );
+
+  renderAdmin();
+
 }
 
 function renderMeetingOtp(){
-  const bookings=JSON.parse(localStorage.getItem('bap_bookings')||'[]');
-  const confirmed=bookings.find(b=>b.status==='Confirmed');
 
-  document.getElementById('meetingOtpBox').innerHTML=confirmed
-    ?`<b>Booking #${confirmed.id}</b>
-      <p>${confirmed.service} • ${confirmed.name}</p>
-      <p>📅 ${confirmed.date} • ${confirmed.time}<br>
-      📍 ${confirmed.location}</p>`
-    :'<b>No confirmed booking found. Meeting OTP unlocks after partner acceptance.</b>';
+  const bookings =
+    JSON.parse(
+      localStorage.getItem('bap_bookings') ||
+      '[]'
+    );
+
+  const confirmed =
+    bookings.find(
+      b => b.status === 'Confirmed'
+    );
+
+  document.getElementById(
+    'meetingOtpBox'
+  ).innerHTML =
+
+    confirmed
+
+    ?
+
+    `<b>
+      Booking #${confirmed.id}
+    </b>
+
+    <p>
+      ${confirmed.service} • ${confirmed.name}
+    </p>
+
+    <p>
+      📅 ${confirmed.date} • ${confirmed.time}
+      <br>
+      📍 ${confirmed.location}
+    </p>`
+
+    :
+
+    '<b>No confirmed booking found. Meeting OTP unlocks after partner acceptance.</b>';
+
 }
 
 function verifyMeetingOtp(){
- const value=document.getElementById('otpInput').value.trim();
 
- if(!/^\d{6}$/.test(value)){
-   alert('Enter the 6-digit demo OTP.');
-   return;
- }
+  const value =
+    document
+      .getElementById('otpInput')
+      .value.trim();
 
- alert('Demo: meeting OTP accepted. Real OTP verification will be connected to the backend.');
+  if(
+    !/^\d{6}$/.test(value)
+  ){
+
+    alert(
+      'Enter the 6-digit demo OTP.'
+    );
+
+    return;
+  }
+
+  alert(
+    'Demo: meeting OTP accepted. Real OTP verification will be connected to the backend.'
+  );
+
 }
 
-const today=new Date();
-document.getElementById('date').min=today.toISOString().slice(0,10);
+function toggleFaq(button){
+
+  const faq =
+    button.closest('.faq');
+
+  faq.classList.toggle('open');
+
+  const icon =
+    faq.querySelector('.faqIcon');
+
+  if(
+    faq.classList.contains('open')
+  ){
+
+    icon.textContent =
+      '−';
+
+  }else{
+
+    icon.textContent =
+      '+';
+
+  }
+
+}
+
+function profileInfo(name){
+
+  const p =
+    partners.find(
+      x => x.name === name
+    );
+
+  if(!p){
+    return;
+  }
+
+  alert(
+    p.name +
+    ' • Age ' +
+    p.age +
+    ' • ' +
+    p.area +
+    '\nRating: ' +
+    p.rating +
+    ' (' +
+    p.reviews +
+    ' reviews)\nHourly rate: ₹' +
+    p.rate +
+    '\nServices: ' +
+    p.services.join(', ')
+  );
+
+}
+
+const today =
+  new Date();
+
+document.getElementById(
+  'date'
+).min =
+  today.toISOString().slice(0,10);
+
 </script>
+
 </body>
 </html>
