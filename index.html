@@ -4238,6 +4238,23 @@ function startBooking(service){
 
   findPartners();
 
+      'location'
+    );
+
+  if(input){
+    input.value =
+      value || '';
+  }
+
+}
+
+
+/*
+==========================================================
+GOOGLE PLACES AUTOCOMPLETE
+==========================================================
+*/
+
 }
 
 
@@ -4315,23 +4332,6 @@ function setLocationValue(value){
 
   const input =
     document.getElementById(
-      'location'
-    );
-
-  if(input){
-    input.value =
-      value || '';
-  }
-
-}
-
-
-/*
-==========================================================
-GOOGLE PLACES AUTOCOMPLETE
-==========================================================
-*/
-
 async function initGooglePlaces(){
 
   if(
@@ -4592,15 +4592,44 @@ function findPartners(){
 
   }
 
-  const list =
-    partners.filter(
+ const approvedPartner =
+  JSON.parse(
+    localStorage.getItem(
+      'bap_partner_profile'
+    ) || 'null'
+  );
 
-      p =>
-        p.services.includes(service) &&
-        ageOK(age,p)
+const approvedPartnerFormatted =
+  approvedPartner &&
+  approvedPartner.verification === 'Approved'
+    ? {
+        name: approvedPartner.name,
+        age: Number(approvedPartner.age),
+        area: approvedPartner.area,
+        rate: Number(approvedPartner.rate),
+        services: [
+          approvedPartner.service
+        ],
+        availability:
+          approvedPartner.availability
+      }
+    : null;
 
-    );
+const allPartners = [
+  ...partners,
+  ...(approvedPartnerFormatted
+    ? [approvedPartnerFormatted]
+    : [])
+];
 
+const list =
+  allPartners.filter(
+
+    p =>
+      p.services.includes(service) &&
+      ageOK(age,p)
+
+  );
   let html =
 
     '<h2>Available Partners</h2>' +
