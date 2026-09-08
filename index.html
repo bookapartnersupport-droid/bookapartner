@@ -3732,7 +3732,21 @@ input,select,textarea{
       </div>
 
     </div>
+<!-- PARTNER APPLICATIONS -->
 
+<div class="sectionBlock">
+
+  <h3>
+    Partner Applications
+  </h3>
+
+  <div id="partnerApplications">
+    <p class="muted">
+      No partner applications yet.
+    </p>
+  </div>
+
+</div>
     <div class="sectionBlock">
 
       <h3>
@@ -6045,7 +6059,83 @@ function renderAdmin(){
       .getElementById(
         'adminList'
       );
+  const partnerBox =
+    document.getElementById(
+      'partnerApplications'
+    );
 
+  const partner =
+    JSON.parse(
+      localStorage.getItem(
+        'bap_partner_profile'
+      ) || 'null'
+    );
+
+  if(partnerBox){
+
+    if(!partner){
+
+      partnerBox.innerHTML =
+        "<p class='muted'>" +
+        "No partner applications yet." +
+        "</p>";
+
+    }else{
+
+      partnerBox.innerHTML = `
+
+        <div class="card">
+
+          <span class="pill">
+            ${partner.verification || 'Pending Review'}
+          </span>
+
+          <h4 style="margin-top:12px;">
+            ${partner.name || 'Partner'}
+          </h4>
+
+          <p>
+            📱 ${partner.mobile || '—'}<br>
+            🎂 Age: ${partner.age || '—'}<br>
+            📍 ${partner.area || '—'}<br>
+            🛎️ Service: ${partner.service || '—'}<br>
+            💰 ₹${partner.rate || '—'} / hour<br>
+            🕐 Availability: ${partner.availability || '—'}
+          </p>
+
+          <p class="muted">
+            📷 Photo: ${partner.photoName || 'Not provided'}<br>
+            🤳 Selfie: ${partner.selfieName || 'Not provided'}
+          </p>
+
+          <p class="muted">
+            ${partner.verificationNote || ''}
+          </p>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+
+            <button
+              class="green"
+              onclick="adminApprovePartner()"
+            >
+              ✓ Approve
+            </button>
+
+            <button
+              class="light"
+              onclick="adminRejectPartner()"
+            >
+              Reject
+            </button>
+
+          </div>
+
+        </div>
+
+      `;
+    }
+  }
+  
   const issues =
     list.filter(
       b =>
@@ -6414,7 +6504,69 @@ function renderAdmin(){
 
 }
 
+function adminApprovePartner(){
 
+  const partner =
+    JSON.parse(
+      localStorage.getItem(
+        'bap_partner_profile'
+      ) || 'null'
+    );
+
+  if(!partner){
+    alert('No partner application found.');
+    return;
+  }
+
+  partner.verification =
+    'Approved';
+
+  partner.verificationNote =
+    'Partner approved by admin.';
+
+  localStorage.setItem(
+    'bap_partner_profile',
+    JSON.stringify(partner)
+  );
+
+  alert(
+    'Partner approved successfully.'
+  );
+
+  renderAdmin();
+}
+
+function adminRejectPartner(){
+
+  const partner =
+    JSON.parse(
+      localStorage.getItem(
+        'bap_partner_profile'
+      ) || 'null'
+    );
+
+  if(!partner){
+    alert('No partner application found.');
+    return;
+  }
+
+  partner.verification =
+    'Rejected';
+
+  partner.verificationNote =
+    'Partner application rejected by admin.';
+
+  localStorage.setItem(
+    'bap_partner_profile',
+    JSON.stringify(partner)
+  );
+
+  alert(
+    'Partner application rejected.'
+  );
+
+  renderAdmin();
+}
 /*
 ==========================================================
 ADMIN PAYOUT
