@@ -41,7 +41,7 @@ body:before{
 }
 
 header{
-  height:72px;
+  height:76px;
   background:rgba(255,255,255,.94);
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
@@ -67,7 +67,7 @@ header{
 
 .logo{
   width:210px;
-  height:62px;
+  height:64px;
   object-fit:contain;
   object-position:left center;
   transform:scale(1.18);
@@ -950,24 +950,6 @@ input,select,textarea{
   margin:24px auto;
 }
 
-.muted{
-  color:#697386;
-}
-
-button{
-  cursor:pointer;
-}
-
-.full{
-  width:100%;
-  margin-top:10px;
-}
-
-.primary{
-  background:#fff;
-  color:#111827;
-}
-
 .pink{
   background:#ed176f;
   color:#fff;
@@ -986,6 +968,11 @@ button{
 .green{
   background:#067647;
   color:#fff;
+}
+
+.full{
+  width:100%;
+  margin-top:10px;
 }
 
 .notice{
@@ -1015,82 +1002,55 @@ button{
   border:1px solid #fde68a;
 }
 
-.partners{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:12px;
+.summary{
+  background:#111827;
+  color:#fff;
+  border-radius:16px;
+  padding:16px;
 }
 
-.partner{
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-
-.avatar{
-  width:52px;
-  height:52px;
-  border-radius:50%;
-  background:#e9edf3;
-  display:grid;
-  place-items:center;
-  font-size:20px;
-  font-weight:900;
-  flex-shrink:0;
-}
-
-.price{
-  font-size:19px;
-  font-weight:900;
-  margin:11px 0;
-}
-
-.pill{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:99px;
-  font-size:11px;
-  font-weight:900;
-  background:#eef2ff;
-  color:#171b2b;
-  margin:3px;
-  border:1px solid #dbe3f2;
-}
-
-.available{
-  background:#ecfdf3;
-  color:#067647;
-}
-
-.verified{
-  background:#eff8ff;
-  color:#175cd3;
-}
-
-.chat{
-  height:260px;
-  overflow:auto;
-  background:#f8fafc;
-  border:1px solid #e4e7ec;
-  border-radius:12px;
-  padding:10px;
-}
-
-.msg{
-  max-width:80%;
-  padding:9px 11px;
-  border-radius:12px;
-  margin:7px 0;
+.transportBox{
+  margin-top:12px;
+  padding:14px;
+  border-radius:13px;
+  background:linear-gradient(135deg,#f3edff,#eef7ff);
+  border:1px solid #ddd0f8;
+  color:#2e2456;
+  line-height:1.55;
   font-size:13px;
 }
 
-.me{
-  margin-left:auto;
-  background:#ead8ff;
+.locationBox{
+  margin-top:6px;
+  padding:12px;
+  background:#fff;
+  border:1px dashed #b9a6e7;
+  border-radius:10px;
 }
 
-.them{
-  background:#e9eef5;
+.locationStatus{
+  margin-top:6px;
+  font-size:12px;
+  font-weight:800;
+  color:#067647;
+}
+
+.googleHint{
+  margin-top:5px;
+  font-size:11px;
+  color:#737d95;
+}
+
+#locationAutocomplete{
+  margin-top:5px;
+}
+
+#locationAutocomplete gmp-place-autocomplete{
+  width:100%;
+}
+
+#locationAutocomplete:empty{
+  display:none;
 }
 
 @media(max-width:1100px){
@@ -1320,61 +1280,37 @@ button{
 
     <nav class="desktopNav">
 
-      <button
-        class="navBtn"
-        onclick="go('home')"
-      >
+      <button class="navBtn" onclick="go('home')">
         Home
       </button>
 
-      <button
-        class="navBtn"
-        onclick="go('book')"
-      >
+      <button class="navBtn" onclick="go('book')">
         Find a Partner
       </button>
 
-      <button
-        class="navBtn"
-        onclick="scrollHomeTo('servicesSection')"
-      >
+      <button class="navBtn" onclick="scrollHomeTo('servicesSection')">
         Services
       </button>
 
-      <button
-        class="navBtn"
-        onclick="scrollHomeTo('howSection')"
-      >
+      <button class="navBtn" onclick="scrollHomeTo('howSection')">
         How It Works
       </button>
 
-      <button
-        class="navBtn"
-        onclick="go('safety')"
-      >
+      <button class="navBtn" onclick="go('safety')">
         Safety
       </button>
 
-      <button
-        class="navOutline"
-        onclick="go('join')"
-      >
+      <button class="navOutline" onclick="go('join')">
         Start Earning
       </button>
 
-      <button
-        class="navSolid"
-        onclick="go('book')"
-      >
+      <button class="navSolid" onclick="go('book')">
         Find a Partner
       </button>
 
     </nav>
 
-    <button
-      class="menu"
-      onclick="openMenu()"
-    >
+    <button class="menu" onclick="openMenu()">
       ☰
     </button>
 
@@ -1409,73 +1345,43 @@ button{
 
   </div>
 
-  <button
-    class="menuItem"
-    onclick="go('home')"
-  >
+  <button class="menuItem" onclick="go('home')">
     🏠 Home
   </button>
 
-  <button
-    class="menuItem"
-    onclick="go('book')"
-  >
+  <button class="menuItem" onclick="go('book')">
     📋 Find a Partner
   </button>
 
-  <button
-    class="menuItem"
-    onclick="scrollHomeTo('servicesSection')"
-  >
+  <button class="menuItem" onclick="scrollHomeTo('servicesSection')">
     ✨ Services
   </button>
 
-  <button
-    class="menuItem"
-    onclick="scrollHomeTo('howSection')"
-  >
+  <button class="menuItem" onclick="scrollHomeTo('howSection')">
     ⚡ How It Works
   </button>
 
-  <button
-    class="menuItem"
-    onclick="go('join')"
-  >
+  <button class="menuItem" onclick="go('join')">
     🤝 Start Earning
   </button>
 
-  <button
-    class="menuItem"
-    onclick="go('partnerDashboard')"
-  >
+  <button class="menuItem" onclick="go('partnerDashboard')">
     🧑‍💼 Partner Dashboard
   </button>
 
-  <button
-    class="menuItem"
-    onclick="go('admin')"
-  >
+  <button class="menuItem" onclick="go('admin')">
     🛡️ Admin / Support Panel
   </button>
 
-  <button
-    class="menuItem"
-    onclick="go('bookings')"
-  >
+  <button class="menuItem" onclick="go('bookings')">
     🧾 My Bookings
   </button>
 
-  <button
-    class="menuItem"
-    onclick="go('chat')"
-  >
+  <button class="menuItem" onclick="go('chat')">
     💬 My Chat
   </button>
 
-  <button
-    class="menuItem"
-    onclick="go('safety')"
-  >
+  <button class="menuItem" onclick="go('safety')">
     🛡️ Safety & Trust
   </button>
 
@@ -1504,17 +1410,23 @@ button{
         </span>
 
         <h1 class="heroTitle">
+
           Never feel alone again.
+
           <br>
+
           <span class="pinkText">
             Find the right partner.
           </span>
+
         </h1>
 
         <p class="heroLead">
-          Find a verified partner for movies, shopping, coffee, events,
-          travel and everyday assistance — with clear hourly pricing and
-          a booking experience designed around trust.
+
+          Find a verified partner for movies, shopping, coffee,
+          events, travel and everyday assistance — with clear hourly
+          pricing and a booking experience designed around trust.
+
         </p>
 
         <div class="heroActions">
@@ -1766,7 +1678,7 @@ button{
       </h3>
 
       <p>
-        Malls, markets, gift shopping or just someone to help with decisions.
+        Malls, markets, gift shopping or someone to help with decisions.
       </p>
 
       <button
@@ -1940,7 +1852,7 @@ button{
       </h3>
 
       <p>
-        Create the booking request. In the live system, payment will be securely held during the booking.
+        Create the booking request. The intended live model holds payment during the booking.
       </p>
 
     </div>
@@ -1996,10 +1908,13 @@ button{
         <div>
 
           <div class="partnerName">
+
             Neha
+
             <span class="verifyChip">
               ✓ VERIFIED
             </span>
+
           </div>
 
           <div class="partnerMeta">
@@ -2077,10 +1992,13 @@ button{
         <div>
 
           <div class="partnerName">
+
             Aarav
+
             <span class="verifyChip">
               ✓ VERIFIED
             </span>
+
           </div>
 
           <div class="partnerMeta">
@@ -2158,10 +2076,13 @@ button{
         <div>
 
           <div class="partnerName">
+
             Riya
+
             <span class="verifyChip">
               ✓ VERIFIED
             </span>
+
           </div>
 
           <div class="partnerMeta">
@@ -2314,12 +2235,12 @@ button{
       <div class="safetyItem">
 
         <b>
-          💳 Payment protection concept
+          🚗 Transport policy
         </b>
 
         <span>
-          The prototype keeps payout locked until customer approval.
-          Real payment handling will be connected in the backend.
+          Partner travel is free up to 10 km. Beyond 10 km, the transport
+          charge is capped at ₹150.
         </span>
 
       </div>
@@ -2357,8 +2278,7 @@ button{
       </div>
 
       <div class="reviewText">
-        “Having someone to join for a movie or coffee can make an ordinary
-        evening feel much better.”
+        “Having someone to join for a movie or coffee can make an ordinary evening feel much better.”
       </div>
 
       <div class="reviewPerson">
@@ -2390,8 +2310,7 @@ button{
       </div>
 
       <div class="reviewText">
-        “I like the idea of seeing the partner information and hourly price
-        before sending the booking.”
+        “I like the idea of seeing the partner information and hourly price before sending the booking.”
       </div>
 
       <div class="reviewPerson">
@@ -2423,8 +2342,7 @@ button{
       </div>
 
       <div class="reviewText">
-        “For partners, a transparent profile and clear payout rules make
-        the earning side easier to understand.”
+        “For partners, a transparent profile and clear payout rules make the earning side easier to understand.”
       </div>
 
       <div class="reviewPerson">
@@ -2487,8 +2405,10 @@ button{
       </button>
 
       <div class="faqAnswer">
+
         No. Book A Partner is designed for respectful, platonic companionship
         and everyday assistance. Romantic, sexual or escort services are not offered.
+
       </div>
 
     </div>
@@ -2511,8 +2431,10 @@ button{
       </button>
 
       <div class="faqAnswer">
+
         Yes. The booking flow is designed so customers can review matching
         profiles and send a request to a partner they prefer.
+
       </div>
 
     </div>
@@ -2535,9 +2457,11 @@ button{
       </button>
 
       <div class="faqAnswer">
+
         In the prototype, partners provide profile information, mobile number,
         profile photo and selfie for review. Real identity and OTP verification
         will be connected in the backend before launch.
+
       </div>
 
     </div>
@@ -2560,9 +2484,38 @@ button{
       </button>
 
       <div class="faqAnswer">
+
         The intended live model is for the platform to collect the customer
         payment, hold the amount during the booking and release the partner
         payout after the customer approval/dispute process.
+
+      </div>
+
+    </div>
+
+    <div class="faq">
+
+      <button
+        class="faqBtn"
+        onclick="toggleFaq(this)"
+      >
+
+        <span>
+          How does transport pricing work?
+        </span>
+
+        <span class="faqIcon">
+          +
+        </span>
+
+      </button>
+
+      <div class="faqAnswer">
+
+        Partner travel is free up to 10 km. For travel beyond 10 km, the
+        transport charge is capped at ₹150. Exact distance calculation will
+        be handled by the live backend/location service.
+
       </div>
 
     </div>
@@ -2585,9 +2538,11 @@ button{
       </button>
 
       <div class="faqAnswer">
+
         The prototype places the partner payout on hold when a customer reports
         an issue. Admin can review the booking and either keep the hold or
         resolve the dispute before payout release.
+
       </div>
 
     </div>
@@ -2610,8 +2565,10 @@ button{
       </button>
 
       <div class="faqAnswer">
+
         Chat is intended to open after the partner accepts the booking and the
         booking becomes confirmed.
+
       </div>
 
     </div>
@@ -2627,8 +2584,7 @@ button{
   </h2>
 
   <p>
-    Browse matching partners, choose the service you need and send your first
-    booking request.
+    Browse matching partners, choose the service you need and send your first booking request.
   </p>
 
   <button
@@ -2786,10 +2742,57 @@ button{
         Meeting location
       </label>
 
-      <input
-        id="location"
-        placeholder="Enter meeting area / public place"
-      >
+      <div class="locationBox">
+
+        <div
+          id="locationAutocomplete"
+        ></div>
+
+        <input
+          id="location"
+          type="text"
+          placeholder="Enter Gurgaon area / address"
+          autocomplete="street-address"
+        >
+
+        <input
+          id="locationLat"
+          type="hidden"
+        >
+
+        <input
+          id="locationLng"
+          type="hidden"
+        >
+
+        <div
+          id="locationStatus"
+          class="locationStatus"
+        ></div>
+
+        <div class="googleHint">
+          Google location suggestions will appear here after the Maps API key is configured.
+          You can also enter an address manually during prototype testing.
+        </div>
+
+      </div>
+
+      <div class="transportBox">
+
+        🚗 <b>Partner Transport Policy</b><br>
+
+        <strong>FREE up to 10 km</strong><br>
+
+        Beyond 10 km:
+        <strong>₹150 maximum transport charge</strong>
+
+        <br>
+
+        <small>
+          Exact distance/charge calculation will be connected to the live backend.
+        </small>
+
+      </div>
 
       <button
         class="pink full"
@@ -2822,8 +2825,20 @@ button{
 
     <div id="bookingSummary"></div>
 
+    <div class="transportBox">
+
+      🚗 <b>Transport</b><br>
+
+      Free up to 10 km.
+      Beyond 10 km, transport charge is capped at ₹150.
+
+    </div>
+
     <div class="notice">
-      🔒 Prototype mode. Real payment gateway and OTP verification will be connected in the backend stage.
+
+      🔒 Prototype mode. Real payment gateway, OTP and live distance-based
+      transport calculation will be connected in the backend stage.
+
     </div>
 
     <button
@@ -2864,10 +2879,20 @@ button{
       class="summary"
     ></div>
 
+    <div class="transportBox">
+
+      🚗 Transport policy:
+      <strong>10 km free</strong> →
+      beyond 10 km <strong>₹150 maximum</strong>
+
+    </div>
+
     <div class="notice">
+
       🔒 In this prototype, payment is shown as received and held.
       In the intended live flow, partner payout would remain locked until
       customer approval or an admin dispute decision.
+
     </div>
 
     <button
@@ -2959,7 +2984,6 @@ button{
     </p>
 
     <div class="chat">
-
       <div class="msg them">
         Hello! Your booking request has been received.
       </div>
@@ -2967,7 +2991,6 @@ button{
       <div class="msg me">
         Thank you. Looking forward to the meeting.
       </div>
-
     </div>
 
     <input
@@ -3150,7 +3173,10 @@ button{
       >
 
       <div class="notice">
-        🛡️ Verification checklist: profile photo + selfie + age + mobile + service details.
+
+        🛡️ Verification checklist:
+        profile photo + selfie + age + mobile + service details.
+
       </div>
 
       <button
@@ -3221,7 +3247,10 @@ button{
     ></div>
 
     <div class="notice">
-      Demo only: real OTP will be generated and verified by the backend before launch.
+
+      Demo only:
+      real OTP will be generated and verified by the backend before launch.
+
     </div>
 
     <div class="row">
@@ -3278,8 +3307,13 @@ button{
     </p>
 
     <div class="notice">
-      <b>Admin only:</b>
+
+      <b>
+        Admin only:
+      </b>
+
       The live platform will require authorized admin access and a secure backend.
+
     </div>
 
     <div class="row">
@@ -3406,8 +3440,19 @@ button{
 
       <br>
 
-      Customers and partners should prefer safe, public meeting locations and
-      follow the platform's safety instructions.
+      Customers and partners should prefer safe, public meeting locations.
+
+    </div>
+
+    <div class="alert rules">
+
+      <b>
+        🚗 Transport
+      </b>
+
+      <br>
+
+      Transport is free up to 10 km. Beyond 10 km, the charge is capped at ₹150.
 
     </div>
 
@@ -3425,8 +3470,8 @@ button{
 
     <div class="notice">
 
-      Meeting OTP and payment processing are prototype features at present.
-      Real services will require secure backend integration before launch.
+      Meeting OTP, payment processing and live distance calculations are
+      prototype features at present.
 
     </div>
 
@@ -3567,7 +3612,8 @@ button{
 
   <div class="footerBottom">
 
-    Book A Partner • Prototype version • Real payment, OTP and secure backend integration required before public launch.
+    Book A Partner • Prototype version • Real payment, OTP,
+    location services and secure backend integration required before public launch.
 
   </div>
 
@@ -3576,6 +3622,33 @@ button{
 </main>
 
 <script>
+
+/*
+==========================================================
+GOOGLE MAPS CONFIGURATION
+==========================================================
+
+1. Create a Google Maps Platform project.
+2. Enable Maps JavaScript API + Places API (New).
+3. Create a browser API key.
+4. Restrict the key to your GitHub Pages website/domain.
+5. Paste the key below.
+
+Example:
+const GOOGLE_MAPS_API_KEY = "AIza....";
+
+Until a key is added, the normal address input remains available.
+*/
+
+const GOOGLE_MAPS_API_KEY =
+  "PASTE_YOUR_GOOGLE_MAPS_API_KEY_HERE";
+
+
+/*
+==========================================================
+PARTNER DEMO DATA
+==========================================================
+*/
 
 const partners = [
 
@@ -3638,6 +3711,13 @@ const partners = [
 
 let selected = null;
 
+
+/*
+==========================================================
+MENU
+==========================================================
+*/
+
 function openMenu(){
 
   document
@@ -3666,6 +3746,13 @@ function closeMenu(){
 
 }
 
+
+/*
+==========================================================
+NAVIGATION
+==========================================================
+*/
+
 function go(id){
 
   closeMenu();
@@ -3680,7 +3767,8 @@ function go(id){
 
     const confirmed =
       list.some(
-        b => b.status === 'Confirmed'
+        b =>
+          b.status === 'Confirmed'
       );
 
     if(!confirmed){
@@ -3697,7 +3785,8 @@ function go(id){
   document
     .querySelectorAll('.screen')
     .forEach(
-      x => x.classList.remove('active')
+      x =>
+        x.classList.remove('active')
     );
 
   document
@@ -3739,7 +3828,9 @@ function scrollHomeTo(sectionId){
     () => {
 
       const target =
-        document.getElementById(sectionId);
+        document.getElementById(
+          sectionId
+        );
 
       if(target){
 
@@ -3764,11 +3855,19 @@ function startBooking(service){
 
   document
     .getElementById('service')
-    .value = service;
+    .value =
+    service;
 
   findPartners();
 
 }
+
+
+/*
+==========================================================
+AGE MATCH
+==========================================================
+*/
 
 function ageOK(a,p){
 
@@ -3800,6 +3899,290 @@ function ageOK(a,p){
 
 }
 
+
+/*
+==========================================================
+LOCATION HELPERS
+==========================================================
+*/
+
+function setLocationStatus(message){
+
+  const el =
+    document.getElementById(
+      'locationStatus'
+    );
+
+  if(el){
+    el.textContent =
+      message;
+  }
+
+}
+
+function getLocationValue(){
+
+  const input =
+    document.getElementById(
+      'location'
+    );
+
+  return input
+    ? input.value.trim()
+    : '';
+
+}
+
+function setLocationValue(value){
+
+  const input =
+    document.getElementById(
+      'location'
+    );
+
+  if(input){
+    input.value =
+      value || '';
+  }
+
+}
+
+
+/*
+==========================================================
+GOOGLE PLACES AUTOCOMPLETE
+==========================================================
+*/
+
+async function initGooglePlaces(){
+
+  if(
+    !GOOGLE_MAPS_API_KEY ||
+    GOOGLE_MAPS_API_KEY.includes(
+      'PASTE_YOUR_GOOGLE_MAPS_API_KEY_HERE'
+    )
+  ){
+
+    setLocationStatus(
+      '📍 Enter any Gurgaon address manually, or add the Google Maps API key to enable suggestions.'
+    );
+
+    return;
+  }
+
+  try{
+
+    const script =
+      document.createElement('script');
+
+    script.src =
+      'https://maps.googleapis.com/maps/api/js?key=' +
+      encodeURIComponent(
+        GOOGLE_MAPS_API_KEY
+      ) +
+      '&v=weekly';
+
+    script.async = true;
+    script.defer = true;
+
+    script.onload =
+      async function(){
+
+        try{
+
+          const places =
+            await google.maps.importLibrary(
+              'places'
+            );
+
+          const PlaceAutocompleteElement =
+            places.PlaceAutocompleteElement;
+
+          const widget =
+            new PlaceAutocompleteElement();
+
+          widget.placeholder =
+            'Search Gurgaon area / full address...';
+
+          widget.locationBias = {
+
+            center:{
+              lat:28.4595,
+              lng:77.0266
+            },
+
+            radius:20000
+
+          };
+
+          widget.includedRegionCodes =
+            ['in'];
+
+          const container =
+            document.getElementById(
+              'locationAutocomplete'
+            );
+
+          const regularInput =
+            document.getElementById(
+              'location'
+            );
+
+          if(container){
+
+            container.innerHTML = '';
+
+            container.appendChild(
+              widget
+            );
+
+          }
+
+          if(regularInput){
+
+            regularInput.style.display =
+              'none';
+
+          }
+
+          widget.addEventListener(
+            'gmp-select',
+            async event => {
+
+              try{
+
+                const prediction =
+                  event.placePrediction;
+
+                if(!prediction){
+                  return;
+                }
+
+                const place =
+                  prediction.toPlace();
+
+                await place.fetchFields({
+
+                  fields:[
+                    'displayName',
+                    'formattedAddress',
+                    'location'
+                  ]
+
+                });
+
+                const address =
+                  place.formattedAddress ||
+                  place.displayName ||
+                  '';
+
+                setLocationValue(
+                  address
+                );
+
+                const lat =
+                  place.location &&
+                  typeof place.location.lat === 'function'
+                    ? place.location.lat()
+                    : '';
+
+                const lng =
+                  place.location &&
+                  typeof place.location.lng === 'function'
+                    ? place.location.lng()
+                    : '';
+
+                const latInput =
+                  document.getElementById(
+                    'locationLat'
+                  );
+
+                const lngInput =
+                  document.getElementById(
+                    'locationLng'
+                  );
+
+                if(latInput){
+                  latInput.value =
+                    lat;
+                }
+
+                if(lngInput){
+                  lngInput.value =
+                    lng;
+                }
+
+                setLocationStatus(
+                  '✓ Location selected: ' +
+                  address
+                );
+
+              }catch(error){
+
+                console.error(
+                  'Place selection error:',
+                  error
+                );
+
+                setLocationStatus(
+                  'Please enter the address manually.'
+                );
+
+              }
+
+            }
+          );
+
+          setLocationStatus(
+            '✓ Google location search is active.'
+          );
+
+        }catch(error){
+
+          console.error(
+            'Google Places initialization failed:',
+            error
+          );
+
+          setLocationStatus(
+            'Google location search could not load. Manual address entry is available.'
+          );
+
+        }
+
+      };
+
+    script.onerror =
+      function(){
+
+        setLocationStatus(
+          'Google Maps could not load. You can still enter the address manually.'
+        );
+
+      };
+
+    document
+      .head
+      .appendChild(script);
+
+  }catch(error){
+
+    console.error(
+      'Google Maps setup error:',
+      error
+    );
+
+  }
+
+}
+
+
+/*
+==========================================================
+PARTNER SEARCH
+==========================================================
+*/
+
 function findPartners(){
 
   const service =
@@ -3817,6 +4200,19 @@ function findPartners(){
       .getElementById('area')
       .value ||
       'Gurgaon NCR';
+
+  const location =
+    getLocationValue();
+
+  if(!location){
+
+    alert(
+      'Please enter/select the meeting location.'
+    );
+
+    return;
+
+  }
 
   const list =
     partners.filter(
@@ -3909,11 +4305,21 @@ function findPartners(){
           <div>
 
             ${p.services.map(
+
               x =>
-              '<span class="pill">'+
-              x+
-              '</span>'
+                '<span class="pill">' +
+                x +
+                '</span>'
+
             ).join('')}
+
+          </div>
+
+          <div class="transportBox">
+
+            🚗 <b>Transport:</b>
+            Free up to 10 km.
+            Beyond 10 km, maximum ₹150.
 
           </div>
 
@@ -3959,15 +4365,24 @@ function findPartners(){
 
   document
     .getElementById('results')
-    .innerHTML = html;
+    .innerHTML =
+    html;
 
 }
+
+
+/*
+==========================================================
+SELECT PARTNER
+==========================================================
+*/
 
 function selectPartner(name){
 
   const p =
     partners.find(
-      x => x.name === name
+      x =>
+        x.name === name
     );
 
   selected = {
@@ -4001,10 +4416,17 @@ function selectPartner(name){
         .value,
 
     location:
+      getLocationValue(),
+
+    locationLat:
       document
-        .getElementById('location')
-        .value ||
-      ''
+        .getElementById('locationLat')
+        .value,
+
+    locationLng:
+      document
+        .getElementById('locationLng')
+        .value
 
   };
 
@@ -4045,22 +4467,18 @@ function selectPartner(name){
         </p>
 
         <p>
-
-          📍
-          ${
-            selected.location ||
-            'Meeting location to be selected'
-          }
-
+          📍 ${selected.location}
         </p>
 
         <p>
           Area: ${selected.area}
         </p>
 
-        <strong>
-          ₹${p.rate} / hour
-        </strong>
+        <p>
+          <strong>
+            ₹${p.rate} / hour
+          </strong>
+        </p>
 
       </div>
 
@@ -4070,6 +4488,13 @@ function selectPartner(name){
 
 }
 
+
+/*
+==========================================================
+PAYMENT
+==========================================================
+*/
+
 function goToPayment(){
 
   if(!selected){
@@ -4077,14 +4502,14 @@ function goToPayment(){
     go('book');
 
     return;
+
   }
 
   if(
 
     !selected.date ||
     !selected.time ||
-    !selected.location ||
-    selected.location.trim() === ''
+    !selected.location
 
   ){
 
@@ -4143,6 +4568,13 @@ function goToPayment(){
 
 }
 
+
+/*
+==========================================================
+CREATE DEMO BOOKING
+==========================================================
+*/
+
 function confirmDemoPayment(){
 
   if(!selected){
@@ -4150,13 +4582,15 @@ function confirmDemoPayment(){
     go('book');
 
     return;
+
   }
 
   const bookings =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const id =
@@ -4184,11 +4618,16 @@ function confirmDemoPayment(){
       'Partner payout locked until customer approval',
 
     customerDecision:
-      'Pending'
+      'Pending',
+
+    transportPolicy:
+      '10 km free; beyond 10 km maximum ₹150'
 
   };
 
-  bookings.unshift(booking);
+  bookings.unshift(
+    booking
+  );
 
   localStorage.setItem(
     'bap_bookings',
@@ -4234,6 +4673,13 @@ function confirmDemoPayment(){
 
       <br><br>
 
+      🚗 Transport:
+      FREE up to 10 km
+      •
+      ₹150 maximum beyond 10 km
+
+      <br><br>
+
       <small>
         Payment received and held until booking completion.
       </small>
@@ -4244,13 +4690,21 @@ function confirmDemoPayment(){
 
 }
 
+
+/*
+==========================================================
+BOOKINGS
+==========================================================
+*/
+
 function renderBookings(){
 
   const list =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const el =
@@ -4271,6 +4725,7 @@ function renderBookings(){
       "</button>";
 
     return;
+
   }
 
   el.innerHTML =
@@ -4285,7 +4740,9 @@ function renderBookings(){
 
         let actions = '';
 
-        if(b.status === 'Confirmed'){
+        if(
+          b.status === 'Confirmed'
+        ){
 
           if(
             b.customerDecision === 'OK'
@@ -4377,7 +4834,10 @@ function renderBookings(){
 
         return `
 
-          <div class="card" style="margin-top:10px">
+          <div
+            class="card"
+            style="margin-top:10px"
+          >
 
             <b>
               Booking #${b.id}
@@ -4410,6 +4870,14 @@ function renderBookings(){
 
             </p>
 
+            <div class="transportBox">
+
+              🚗
+              ${b.transportPolicy ||
+              '10 km free; beyond 10 km maximum ₹150'}
+
+            </div>
+
             ${actions}
 
           </div>
@@ -4421,6 +4889,13 @@ function renderBookings(){
     ).join('');
 
 }
+
+
+/*
+==========================================================
+CHAT
+==========================================================
+*/
 
 function sendMessage(){
 
@@ -4449,14 +4924,24 @@ function sendMessage(){
   div.textContent =
     input.value.trim();
 
-  box.appendChild(div);
+  box.appendChild(
+    div
+  );
 
-  input.value = '';
+  input.value =
+    '';
 
   box.scrollTop =
     box.scrollHeight;
 
 }
+
+
+/*
+==========================================================
+PARTNER APPLICATION
+==========================================================
+*/
 
 function partnerApply(){
 
@@ -4468,9 +4953,9 @@ function partnerApply(){
 
   const age =
     Number(
-      document.getElementById(
-        'partnerAge'
-      ).value
+      document
+        .getElementById('partnerAge')
+        .value
     );
 
   const m =
@@ -4492,9 +4977,9 @@ function partnerApply(){
 
   const rate =
     Number(
-      document.getElementById(
-        'partnerRate'
-      ).value
+      document
+        .getElementById('partnerRate')
+        .value
     );
 
   const availability =
@@ -4537,6 +5022,7 @@ function partnerApply(){
     );
 
     return;
+
   }
 
   const partner = {
@@ -4582,18 +5068,27 @@ function partnerApply(){
 
 }
 
+
+/*
+==========================================================
+CUSTOMER APPROVAL
+==========================================================
+*/
+
 function customerApprove(id){
 
   const bookings =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const i =
     bookings.findIndex(
-      b => b.id === id
+      b =>
+        b.id === id
     );
 
   if(i < 0){
@@ -4610,6 +5105,7 @@ function customerApprove(id){
     );
 
     return;
+
   }
 
   bookings[i].customerDecision =
@@ -4634,6 +5130,13 @@ function customerApprove(id){
 
 }
 
+
+/*
+==========================================================
+REPORT ISSUE
+==========================================================
+*/
+
 function customerReportIssue(id){
 
   const reason =
@@ -4649,12 +5152,14 @@ function customerReportIssue(id){
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const i =
     bookings.findIndex(
-      b => b.id === id
+      b =>
+        b.id === id
     );
 
   if(i < 0){
@@ -4687,13 +5192,21 @@ function customerReportIssue(id){
 
 }
 
+
+/*
+==========================================================
+PARTNER DASHBOARD
+==========================================================
+*/
+
 function renderPartnerDashboard(){
 
   const p =
     JSON.parse(
       localStorage.getItem(
         'bap_partner_profile'
-      ) || 'null'
+      ) ||
+      'null'
     );
 
   const profile =
@@ -4720,9 +5233,11 @@ function renderPartnerDashboard(){
 
       "</button>";
 
-    req.innerHTML = '';
+    req.innerHTML =
+      '';
 
     return;
+
   }
 
   profile.innerHTML = `
@@ -4740,7 +5255,9 @@ function renderPartnerDashboard(){
     </p>
 
     <p>
-      ${p.service} • ₹${p.rate}/hour • ${p.availability}
+      ${p.service}
+      • ₹${p.rate}/hour
+      • ${p.availability}
     </p>
 
     <p>
@@ -4769,7 +5286,8 @@ function renderPartnerDashboard(){
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const normalizedPartnerArea =
@@ -4790,6 +5308,7 @@ function renderPartnerDashboard(){
         ){
 
           return false;
+
         }
 
         if(
@@ -4798,6 +5317,7 @@ function renderPartnerDashboard(){
         ){
 
           return false;
+
         }
 
         if(
@@ -4806,6 +5326,7 @@ function renderPartnerDashboard(){
         ){
 
           return false;
+
         }
 
         if(
@@ -4814,6 +5335,7 @@ function renderPartnerDashboard(){
         ){
 
           return false;
+
         }
 
         const customerArea =
@@ -4826,11 +5348,10 @@ function renderPartnerDashboard(){
             .toLowerCase()
             .trim();
 
-        if(
-          !normalizedPartnerArea
-        ){
+        if(!normalizedPartnerArea){
 
           return true;
+
         }
 
         return (
@@ -4894,6 +5415,7 @@ function renderPartnerDashboard(){
       '</p>';
 
     return;
+
   }
 
   req.innerHTML =
@@ -4909,7 +5431,8 @@ function renderPartnerDashboard(){
         let payoutText = '';
 
         if(
-          b.customerDecision === 'OK'
+          b.customerDecision ===
+          'OK'
         ){
 
           payoutText =
@@ -4920,7 +5443,8 @@ function renderPartnerDashboard(){
         }
 
         else if(
-          b.customerDecision === 'Issue'
+          b.customerDecision ===
+          'Issue'
         ){
 
           payoutText =
@@ -5009,18 +5533,27 @@ function renderPartnerDashboard(){
 
 }
 
+
+/*
+==========================================================
+PARTNER ACCEPT
+==========================================================
+*/
+
 function partnerAccept(id){
 
   const bookings =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const i =
     bookings.findIndex(
-      b => b.id === id
+      b =>
+        b.id === id
     );
 
   if(i < 0){
@@ -5049,18 +5582,27 @@ function partnerAccept(id){
 
 }
 
+
+/*
+==========================================================
+PARTNER REJECT
+==========================================================
+*/
+
 function partnerReject(id){
 
   const bookings =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const i =
     bookings.findIndex(
-      b => b.id === id
+      b =>
+        b.id === id
     );
 
   if(i < 0){
@@ -5082,13 +5624,21 @@ function partnerReject(id){
 
 }
 
+
+/*
+==========================================================
+ADMIN
+==========================================================
+*/
+
 function renderAdmin(){
 
   const list =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const filter =
@@ -5099,14 +5649,16 @@ function renderAdmin(){
       .value;
 
   const summary =
-    document.getElementById(
-      'adminSummary'
-    );
+    document
+      .getElementById(
+        'adminSummary'
+      );
 
   const container =
-    document.getElementById(
-      'adminList'
-    );
+    document
+      .getElementById(
+        'adminList'
+      );
 
   const issues =
     list.filter(
@@ -5144,7 +5696,8 @@ function renderAdmin(){
 
     `Awaiting Partner ${awaiting} • Confirmed ${confirmed}`;
 
-  let filtered = list;
+  let filtered =
+    list;
 
   if(
     filter === 'issue'
@@ -5201,9 +5754,12 @@ function renderAdmin(){
   if(!filtered.length){
 
     container.innerHTML =
-      '<div class="card">No bookings in this filter.</div>';
+      '<div class="card">' +
+      'No bookings in this filter.' +
+      '</div>';
 
     return;
+
   }
 
   container.innerHTML =
@@ -5256,7 +5812,8 @@ function renderAdmin(){
 
         }
 
-        let actions = '';
+        let actions =
+          '';
 
         if(issue){
 
@@ -5398,6 +5955,14 @@ function renderAdmin(){
 
             </p>
 
+            <div class="transportBox">
+
+              🚗
+              ${b.transportPolicy ||
+              '10 km free; beyond 10 km maximum ₹150'}
+
+            </div>
+
             <p>
 
               <b>
@@ -5436,7 +6001,8 @@ function renderAdmin(){
 
                 <br>
 
-                ${b.issueReason || 'Customer reported an issue.'}
+                ${b.issueReason ||
+                'Customer reported an issue.'}
 
               </div>`
 
@@ -5462,18 +6028,27 @@ function renderAdmin(){
 
 }
 
+
+/*
+==========================================================
+ADMIN PAYOUT
+==========================================================
+*/
+
 function adminReleasePayout(id){
 
   const list =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const i =
     list.findIndex(
-      b => b.id === id
+      b =>
+        b.id === id
     );
 
   if(i < 0){
@@ -5519,18 +6094,27 @@ function adminReleasePayout(id){
 
 }
 
+
+/*
+==========================================================
+ADMIN HOLD
+==========================================================
+*/
+
 function adminKeepHold(id){
 
   const list =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const i =
     list.findIndex(
-      b => b.id === id
+      b =>
+        b.id === id
     );
 
   if(i < 0){
@@ -5556,18 +6140,27 @@ function adminKeepHold(id){
 
 }
 
+
+/*
+==========================================================
+ADMIN RESOLVE ISSUE
+==========================================================
+*/
+
 function adminResolveIssue(id){
 
   const list =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const i =
     list.findIndex(
-      b => b.id === id
+      b =>
+        b.id === id
     );
 
   if(i < 0){
@@ -5599,13 +6192,21 @@ function adminResolveIssue(id){
 
 }
 
+
+/*
+==========================================================
+MEETING OTP
+==========================================================
+*/
+
 function renderMeetingOtp(){
 
   const bookings =
     JSON.parse(
       localStorage.getItem(
         'bap_bookings'
-      ) || '[]'
+      ) ||
+      '[]'
     );
 
   const confirmed =
@@ -5655,6 +6256,13 @@ function renderMeetingOtp(){
 
 }
 
+
+/*
+==========================================================
+OTP VERIFY DEMO
+==========================================================
+*/
+
 function verifyMeetingOtp(){
 
   const value =
@@ -5674,6 +6282,7 @@ function verifyMeetingOtp(){
     );
 
     return;
+
   }
 
   alert(
@@ -5682,12 +6291,23 @@ function verifyMeetingOtp(){
 
 }
 
+
+/*
+==========================================================
+FAQ
+==========================================================
+*/
+
 function toggleFaq(button){
 
   const faq =
-    button.closest('.faq');
+    button.closest(
+      '.faq'
+    );
 
-  faq.classList.toggle('open');
+  faq.classList.toggle(
+    'open'
+  );
 
   const icon =
     faq.querySelector(
@@ -5695,7 +6315,9 @@ function toggleFaq(button){
     );
 
   if(
-    faq.classList.contains('open')
+    faq.classList.contains(
+      'open'
+    )
   ){
 
     icon.textContent =
@@ -5711,6 +6333,13 @@ function toggleFaq(button){
   }
 
 }
+
+
+/*
+==========================================================
+PARTNER PROFILE DEMO
+==========================================================
+*/
 
 function profileInfo(name){
 
@@ -5744,7 +6373,9 @@ function profileInfo(name){
 
     p.reviews +
 
-    ' reviews)\nHourly rate: ₹' +
+    ' reviews)' +
+
+    '\nHourly rate: ₹' +
 
     p.rate +
 
@@ -5756,6 +6387,13 @@ function profileInfo(name){
 
 }
 
+
+/*
+==========================================================
+DATE
+==========================================================
+*/
+
 const today =
   new Date();
 
@@ -5765,6 +6403,15 @@ document
   today
     .toISOString()
     .slice(0,10);
+
+
+/*
+==========================================================
+INITIALIZE GOOGLE
+==========================================================
+*/
+
+initGooglePlaces();
 
 </script>
 
