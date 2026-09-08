@@ -6877,7 +6877,7 @@ function verifyLoginOTP(){
     'bap_current_user',
     JSON.stringify(loginUser)
   );
-
+   updateLoginNav();
   message.style.color = '#16a34a';
   message.textContent = 'Login successful!';
 
