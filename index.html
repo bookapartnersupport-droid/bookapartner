@@ -1340,7 +1340,13 @@ input,select,textarea{
   font-size:28px;
   color:#0f172a;
 }
-
+.profileLabel{
+  display:block;
+  margin-bottom:8px;
+  font-size:13px;
+  font-weight:700;
+  color:#334155;
+}
 .accountSub{
   margin:7px 0 22px;
   color:#64748b;
@@ -6950,7 +6956,245 @@ function closeAccountMenu(){
     menu.classList.remove('show');
   }
 }
+function openCustomerProfile(){
 
+  const oldProfile = document.getElementById('customerProfileModal');
+
+  if(oldProfile){
+    oldProfile.classList.add('show');
+    return;
+  }
+
+  const user = JSON.parse(
+    localStorage.getItem('bap_current_user') || 'null'
+  );
+
+  const phone = user && user.phone
+    ? user.phone
+    : '';
+
+  const modal = document.createElement('div');
+
+  modal.id = 'customerProfileModal';
+  modal.className = 'accountMenu show';
+
+  modal.innerHTML = `
+    <div class="accountBox">
+
+      <button
+        class="accountClose"
+        onclick="closeCustomerProfile()"
+      >
+        ×
+      </button>
+
+      <div class="accountAvatar">👤</div>
+
+      <h2>My Profile</h2>
+
+      <p class="accountSub">
+        Your customer account details
+      </p>
+
+      <div style="margin-top:18px;">
+
+        <label class="profileLabel">
+          Mobile Number
+        </label>
+
+        <input
+          id="customerProfilePhone"
+          value="${phone}"
+          readonly
+          style="
+            width:100%;
+            box-sizing:border-box;
+            height:50px;
+            padding:0 14px;
+            border:1px solid #e2e8f0;
+            border-radius:12px;
+            background:#f8fafc;
+            color:#334155;
+            font-size:15px;
+          "
+        >
+
+        <label
+          class="profileLabel"
+          style="margin-top:16px;"
+        >
+          Name
+        </label>
+
+        <input
+          id="customerProfileName"
+          type="text"
+          placeholder="Enter your name"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            height:50px;
+            padding:0 14px;
+            border:1px solid #cbd5e1;
+            border-radius:12px;
+            background:#fff;
+            color:#334155;
+            font-size:15px;
+            outline:none;
+          "
+        >
+
+        <label
+          class="profileLabel"
+          style="margin-top:16px;"
+        >
+          Email
+        </label>
+
+        <input
+          id="customerProfileEmail"
+          type="email"
+          placeholder="Enter your email"
+          style="
+            width:100%;
+            box-sizing:border-box;
+            height:50px;
+            padding:0 14px;
+            border:1px solid #cbd5e1;
+            border-radius:12px;
+            background:#fff;
+            color:#334155;
+            font-size:15px;
+            outline:none;
+          "
+        >
+
+        <button
+          class="loginPrimary"
+          style="margin-top:20px;"
+          onclick="saveCustomerProfile()"
+        >
+          Save Profile
+        </button>
+
+        <div
+          id="profileSaveMessage"
+          style="
+            min-height:20px;
+            margin-top:11px;
+            text-align:center;
+            font-size:13px;
+            font-weight:700;
+          "
+        ></div>
+
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  loadCustomerProfile();
+}
+
+function loadCustomerProfile(){
+
+  try{
+
+    const user = JSON.parse(
+      localStorage.getItem('bap_current_user') || 'null'
+    );
+
+    if(!user) return;
+
+    const nameField = document.getElementById(
+      'customerProfileName'
+    );
+
+    const emailField = document.getElementById(
+      'customerProfileEmail'
+    );
+
+    if(nameField){
+      nameField.value = user.name || '';
+    }
+
+    if(emailField){
+      emailField.value = user.email || '';
+    }
+
+  }catch(e){
+    console.error('Profile load error:',e);
+  }
+}
+
+function saveCustomerProfile(){
+
+  const name = document
+    .getElementById('customerProfileName')
+    .value
+    .trim();
+
+  const email = document
+    .getElementById('customerProfileEmail')
+    .value
+    .trim();
+
+  const message = document.getElementById(
+    'profileSaveMessage'
+  );
+
+  if(!name){
+
+    message.style.color = '#dc2626';
+    message.textContent = 'Please enter your name.';
+    return;
+  }
+
+  let user;
+
+  try{
+
+    user = JSON.parse(
+      localStorage.getItem('bap_current_user') || 'null'
+    );
+
+  }catch(e){
+
+    user = null;
+
+  }
+
+  if(!user){
+
+    message.style.color = '#dc2626';
+    message.textContent = 'Please login again.';
+    return;
+  }
+
+  user.name = name;
+  user.email = email;
+
+  localStorage.setItem(
+    'bap_current_user',
+    JSON.stringify(user)
+  );
+
+  message.style.color = '#16a34a';
+  message.textContent = 'Profile saved successfully.';
+}
+
+function closeCustomerProfile(){
+
+  const modal = document.getElementById(
+    'customerProfileModal'
+  );
+
+  if(modal){
+    modal.remove();
+  }
+}
 function logoutCustomer(){
 
   localStorage.removeItem('bap_current_user');
@@ -7010,7 +7254,7 @@ initGooglePlaces();
 
     <button
       class="accountOption"
-      onclick="closeAccountMenu(); alert('Profile section coming next.');"
+      onclick="closeAccountMenu(); openCustomerProfile();"
     >
       👤
       <span>
