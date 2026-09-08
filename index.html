@@ -1263,6 +1263,219 @@ input,select,textarea{
   .footerGrid{
     grid-template-columns:1fr;
   }
+}/* =========================
+   LOGIN MODAL
+========================= */
+
+.loginModal{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.62);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:99999;
+}
+
+.loginModal.show{
+  display:flex;
+}
+
+.loginBox{
+  width:min(430px,100%);
+  background:#ffffff;
+  border-radius:24px;
+  padding:30px 26px 24px;
+  position:relative;
+  box-shadow:0 25px 70px rgba(15,23,42,.28);
+  animation:loginPop .22s ease-out;
+}
+
+@keyframes loginPop{
+  from{
+    opacity:0;
+    transform:translateY(15px) scale(.97);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+.loginClose{
+  position:absolute;
+  top:12px;
+  right:14px;
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:50%;
+  background:#f1f5f9;
+  color:#334155;
+  font-size:24px;
+  line-height:38px;
+  cursor:pointer;
+}
+
+.loginIcon{
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#ede9fe,#fce7f3);
+  font-size:28px;
+  margin-bottom:16px;
+}
+
+.loginBox h2{
+  margin:0;
+  font-size:28px;
+  color:#0f172a;
+  letter-spacing:-.5px;
+}
+
+.loginSub{
+  margin:7px 0 24px;
+  color:#64748b;
+  font-size:14px;
+}
+
+.loginBox label{
+  display:block;
+  margin-bottom:8px;
+  font-size:13px;
+  font-weight:700;
+  color:#334155;
+}
+
+.phoneInput{
+  display:flex;
+  align-items:center;
+  border:1px solid #cbd5e1;
+  border-radius:13px;
+  overflow:hidden;
+  background:#fff;
+  margin-bottom:15px;
+  transition:.2s;
+}
+
+.phoneInput:focus-within{
+  border-color:#8b5cf6;
+  box-shadow:0 0 0 4px rgba(139,92,246,.10);
+}
+
+.phoneInput span{
+  padding:0 13px;
+  height:50px;
+  display:flex;
+  align-items:center;
+  font-weight:700;
+  color:#475569;
+  background:#f8fafc;
+  border-right:1px solid #e2e8f0;
+}
+
+.phoneInput input{
+  flex:1;
+  border:0;
+  outline:0;
+  height:50px;
+  padding:0 13px;
+  font-size:16px;
+  min-width:0;
+}
+
+.otpInput{
+  width:100%;
+  height:52px;
+  box-sizing:border-box;
+  border:1px solid #cbd5e1;
+  border-radius:13px;
+  padding:0 15px;
+  font-size:20px;
+  letter-spacing:5px;
+  outline:0;
+  margin-bottom:14px;
+}
+
+.otpInput:focus{
+  border-color:#8b5cf6;
+  box-shadow:0 0 0 4px rgba(139,92,246,.10);
+}
+
+.loginPrimary{
+  width:100%;
+  height:52px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(135deg,#7c3aed,#db2777);
+  color:#fff;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 10px 25px rgba(124,58,237,.20);
+}
+
+.loginPrimary:hover{
+  transform:translateY(-1px);
+}
+
+.backLogin{
+  width:100%;
+  border:0;
+  background:transparent;
+  color:#64748b;
+  font-size:14px;
+  font-weight:700;
+  padding:13px 8px 3px;
+  cursor:pointer;
+}
+
+.demoOtpText{
+  margin:0 0 13px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#f8fafc;
+  color:#475569;
+  font-size:13px;
+  text-align:center;
+}
+
+.loginMessage{
+  min-height:20px;
+  margin-top:13px;
+  text-align:center;
+  font-size:13px;
+  font-weight:700;
+  color:#dc2626;
+}
+
+.loginTerms{
+  margin-top:16px;
+  text-align:center;
+  color:#94a3b8;
+  font-size:11px;
+  line-height:1.5;
+}
+
+@media(max-width:560px){
+  .loginModal{
+    padding:14px;
+  }
+
+  .loginBox{
+    padding:27px 20px 20px;
+    border-radius:20px;
+  }
+
+  .loginBox h2{
+    font-size:24px;
+  }
 }
 </style>
 </head>
@@ -1303,7 +1516,9 @@ input,select,textarea{
       <button class="navOutline" onclick="go('join')">
         Start Earning
       </button>
-
+      <button class="navBtn" onclick="openLogin()">
+      Login
+      </button>
       <button class="navSolid" onclick="go('book')">
         Find a Partner
       </button>
@@ -6410,10 +6625,208 @@ document
 INITIALIZE GOOGLE
 ==========================================================
 */
+/* =========================
+   LOGIN / DEMO OTP
+========================= */
 
+let loginDemoOTP = '';
+
+function openLogin(){
+  const modal = document.getElementById('loginModal');
+
+  if(!modal) return;
+
+  modal.classList.add('show');
+
+  document.getElementById('phoneStep').style.display = 'block';
+  document.getElementById('otpStep').style.display = 'none';
+
+  document.getElementById('loginPhone').value = '';
+  document.getElementById('loginOtp').value = '';
+  document.getElementById('demoOtpText').textContent = '';
+  document.getElementById('loginMessage').textContent = '';
+
+  setTimeout(() => {
+    document.getElementById('loginPhone').focus();
+  },100);
+}
+
+function closeLogin(){
+  const modal = document.getElementById('loginModal');
+
+  if(modal){
+    modal.classList.remove('show');
+  }
+}
+
+function sendLoginOTP(){
+
+  const phoneInput = document.getElementById('loginPhone');
+  const message = document.getElementById('loginMessage');
+  const phone = phoneInput.value.trim();
+
+  if(!/^[6-9]\d{9}$/.test(phone)){
+    message.style.color = '#dc2626';
+    message.textContent = 'Please enter a valid 10-digit mobile number.';
+    phoneInput.focus();
+    return;
+  }
+
+  /* Demo OTP */
+  loginDemoOTP = String(
+    Math.floor(100000 + Math.random() * 900000)
+  );
+
+  document.getElementById('phoneStep').style.display = 'none';
+  document.getElementById('otpStep').style.display = 'block';
+
+  document.getElementById('demoOtpText').innerHTML =
+    'Demo OTP: <strong>' + loginDemoOTP + '</strong>';
+
+  message.style.color = '#16a34a';
+  message.textContent = 'OTP sent successfully.';
+
+  setTimeout(() => {
+    document.getElementById('loginOtp').focus();
+  },100);
+}
+
+function backToPhone(){
+
+  document.getElementById('phoneStep').style.display = 'block';
+  document.getElementById('otpStep').style.display = 'none';
+
+  document.getElementById('loginOtp').value = '';
+  document.getElementById('demoOtpText').textContent = '';
+  document.getElementById('loginMessage').textContent = '';
+
+  setTimeout(() => {
+    document.getElementById('loginPhone').focus();
+  },100);
+}
+
+function verifyLoginOTP(){
+
+  const phone = document.getElementById('loginPhone').value.trim();
+  const otp = document.getElementById('loginOtp').value.trim();
+  const message = document.getElementById('loginMessage');
+
+  if(!/^\d{6}$/.test(otp)){
+    message.style.color = '#dc2626';
+    message.textContent = 'Please enter the 6-digit OTP.';
+    return;
+  }
+
+  if(otp !== loginDemoOTP){
+    message.style.color = '#dc2626';
+    message.textContent = 'Invalid OTP. Please try again.';
+    return;
+  }
+
+  const loginUser = {
+    phone: phone,
+    role: 'customer',
+    loggedIn: true,
+    loginTime: new Date().toISOString()
+  };
+
+  localStorage.setItem(
+    'bap_current_user',
+    JSON.stringify(loginUser)
+  );
+
+  message.style.color = '#16a34a';
+  message.textContent = 'Login successful!';
+
+  setTimeout(() => {
+    closeLogin();
+
+    alert(
+      'Welcome to Book A Partner!\\n\\n' +
+      'You are now logged in as Customer.'
+    );
+  },500);
+}
+
+/* Close login popup when clicking outside the box */
+document.addEventListener('click', function(e){
+
+  const modal = document.getElementById('loginModal');
+
+  if(!modal) return;
+
+  if(e.target === modal){
+    closeLogin();
+  }
+});
+
+/* Close login popup with Escape key */
+document.addEventListener('keydown', function(e){
+
+  if(e.key === 'Escape'){
+    closeLogin();
+  }
+
+});
 initGooglePlaces();
 
 </script>
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="loginModal">
+  <div class="loginBox">
+    <button class="loginClose" onclick="closeLogin()">×</button>
 
+    <div class="loginIcon">🔐</div>
+
+    <h2>Welcome Back</h2>
+    <p class="loginSub">Login to Book A Partner</p>
+
+    <div id="phoneStep">
+      <label>Mobile Number</label>
+
+      <div class="phoneInput">
+        <span>+91</span>
+        <input
+          id="loginPhone"
+          type="tel"
+          maxlength="10"
+          placeholder="Enter mobile number"
+        >
+      </div>
+
+      <button class="loginPrimary" onclick="sendLoginOTP()">
+        Send OTP
+      </button>
+    </div>
+
+    <div id="otpStep" style="display:none;">
+      <label>Enter OTP</label>
+
+      <input
+        id="loginOtp"
+        type="tel"
+        maxlength="6"
+        class="otpInput"
+        placeholder="Enter 6-digit OTP"
+      >
+
+      <div id="demoOtpText" class="demoOtpText"></div>
+
+      <button class="loginPrimary" onclick="verifyLoginOTP()">
+        Verify & Login
+      </button>
+
+      <button class="backLogin" onclick="backToPhone()">
+        ← Change Number
+      </button>
+    </div>
+
+    <div id="loginMessage" class="loginMessage"></div>
+
+    <div class="loginTerms">
+      By continuing, you agree to our Terms & Privacy Policy.
+    </div>
+  </div>
+</div>
 </body>
 </html>
