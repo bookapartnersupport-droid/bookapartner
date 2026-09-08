@@ -1266,7 +1266,147 @@ input,select,textarea{
 }/* =========================
    LOGIN MODAL
 ========================= */
+/* =========================
+   CUSTOMER ACCOUNT MENU
+========================= */
 
+.accountMenu{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.55);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  z-index:99998;
+}
+
+.accountMenu.show{
+  display:flex;
+}
+
+.accountBox{
+  width:min(430px,100%);
+  background:#ffffff;
+  border-radius:24px;
+  padding:30px 24px 24px;
+  position:relative;
+  box-shadow:0 25px 70px rgba(15,23,42,.28);
+  animation:accountPop .22s ease-out;
+}
+
+@keyframes accountPop{
+  from{
+    opacity:0;
+    transform:translateY(15px) scale(.97);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+.accountClose{
+  position:absolute;
+  top:12px;
+  right:14px;
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:50%;
+  background:#f1f5f9;
+  color:#334155;
+  font-size:24px;
+  line-height:38px;
+  cursor:pointer;
+}
+
+.accountAvatar{
+  width:58px;
+  height:58px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#ede9fe,#fce7f3);
+  font-size:27px;
+  margin-bottom:16px;
+}
+
+.accountBox h2{
+  margin:0;
+  font-size:28px;
+  color:#0f172a;
+}
+
+.accountSub{
+  margin:7px 0 22px;
+  color:#64748b;
+  font-size:14px;
+}
+
+.accountOption{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  text-align:left;
+  border:1px solid #e2e8f0;
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  margin-top:11px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.accountOption:hover{
+  transform:translateY(-1px);
+  border-color:#c4b5fd;
+  box-shadow:0 8px 20px rgba(124,58,237,.08);
+}
+
+.accountOption span{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+.accountOption strong{
+  color:#0f172a;
+  font-size:15px;
+}
+
+.accountOption small{
+  color:#64748b;
+  font-size:12px;
+}
+
+.accountOption.logoutOption{
+  margin-top:16px;
+  border-color:#fecaca;
+}
+
+.accountOption.logoutOption strong{
+  color:#dc2626;
+}
+
+@media(max-width:560px){
+  .accountMenu{
+    padding:14px;
+  }
+
+  .accountBox{
+    padding:27px 20px 20px;
+    border-radius:20px;
+  }
+
+  .accountBox h2{
+    font-size:24px;
+  }
+}
 .loginModal{
   position:fixed;
   inset:0;
@@ -1516,9 +1656,12 @@ input,select,textarea{
       <button class="navOutline" onclick="go('join')">
         Start Earning
       </button>
-      <button class="navBtn" onclick="openLogin()">
+     <button
+     id="loginNavBtn"
+     class="navBtn"
+      onclick="handleAccountClick()">
       Login
-      </button>
+     </button>
       <button class="navSolid" onclick="go('book')">
         Find a Partner
       </button>
@@ -6747,7 +6890,77 @@ function verifyLoginOTP(){
     );
   },500);
 }
+/* =========================
+   CUSTOMER ACCOUNT
+========================= */
 
+function isCustomerLoggedIn(){
+  try{
+    const user = JSON.parse(
+      localStorage.getItem('bap_current_user') || 'null'
+    );
+
+    return !!(
+      user &&
+      user.loggedIn === true &&
+      user.role === 'customer'
+    );
+  }catch(e){
+    return false;
+  }
+}
+
+function handleAccountClick(){
+
+  if(!isCustomerLoggedIn()){
+    openLogin();
+    return;
+  }
+
+  openAccountMenu();
+}
+
+function updateLoginNav(){
+
+  const btn = document.getElementById('loginNavBtn');
+
+  if(!btn) return;
+
+  if(isCustomerLoggedIn()){
+    btn.textContent = 'My Account';
+  }else{
+    btn.textContent = 'Login';
+  }
+}
+
+function openAccountMenu(){
+
+  const menu = document.getElementById('accountMenu');
+
+  if(!menu) return;
+
+  menu.classList.add('show');
+}
+
+function closeAccountMenu(){
+
+  const menu = document.getElementById('accountMenu');
+
+  if(menu){
+    menu.classList.remove('show');
+  }
+}
+
+function logoutCustomer(){
+
+  localStorage.removeItem('bap_current_user');
+
+  closeAccountMenu();
+
+  updateLoginNav();
+
+  alert('You have been logged out successfully.');
+}
 /* Close login popup when clicking outside the box */
 document.addEventListener('click', function(e){
 
@@ -6768,9 +6981,57 @@ document.addEventListener('keydown', function(e){
   }
 
 });
+updateLoginNav();
 initGooglePlaces();
 
 </script>
+  <!-- CUSTOMER ACCOUNT MENU -->
+<div id="accountMenu" class="accountMenu">
+
+  <div class="accountBox">
+
+    <button class="accountClose" onclick="closeAccountMenu()">×</button>
+
+    <div class="accountAvatar">👤</div>
+
+    <h2>My Account</h2>
+    <p class="accountSub">Manage your Book A Partner account</p>
+
+    <button
+      class="accountOption"
+      onclick="closeAccountMenu(); go('bookings');"
+    >
+      📋
+      <span>
+        <strong>My Bookings</strong>
+        <small>View your bookings and status</small>
+      </span>
+    </button>
+
+    <button
+      class="accountOption"
+      onclick="closeAccountMenu(); alert('Profile section coming next.');"
+    >
+      👤
+      <span>
+        <strong>My Profile</strong>
+        <small>Manage your account details</small>
+      </span>
+    </button>
+
+    <button
+      class="accountOption logoutOption"
+      onclick="logoutCustomer()"
+    >
+      🚪
+      <span>
+        <strong>Logout</strong>
+        <small>Sign out of your account</small>
+      </span>
+    </button>
+
+  </div>
+</div>
 <!-- LOGIN MODAL -->
 <div id="loginModal" class="loginModal">
   <div class="loginBox">
