@@ -5092,15 +5092,7 @@ function renderBookings(){
     currentUser = null;
   }
 
-  const list =
-    currentUser &&
-    currentUser.phone
-      ? allBookings.filter(
-          b =>
-            b.customerPhone ===
-            currentUser.phone
-        )
-      : [];
+  const list = allBookings;
 
   const el =
     document.getElementById(
