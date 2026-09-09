@@ -6172,10 +6172,79 @@ function renderAdmin(){
             🕐 Availability: ${partner.availability || '—'}
           </p>
 
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:15px;">
+
+  <div>
+    <small
+      style="
+        display:block;
+        font-weight:700;
+        margin-bottom:6px;
+        color:#334155;
+      "
+    >
+      📷 Profile Photo
+    </small>
+
+    ${
+      partner.photoData
+        ? `
+          <img
+            src="${partner.photoData}"
+            alt="Partner profile photo"
+            style="
+              width:140px;
+              height:140px;
+              object-fit:cover;
+              border-radius:14px;
+              border:1px solid #e2e8f0;
+            "
+          >
+        `
+        : `
           <p class="muted">
-            📷 Photo: ${partner.photoName || 'Not provided'}<br>
-            🤳 Selfie: ${partner.selfieName || 'Not provided'}
+            Photo not available
           </p>
+        `
+    }
+  </div>
+
+  <div>
+    <small
+      style="
+        display:block;
+        font-weight:700;
+        margin-bottom:6px;
+        color:#334155;
+      "
+    >
+      🤳 Selfie
+    </small>
+
+    ${
+      partner.selfieData
+        ? `
+          <img
+            src="${partner.selfieData}"
+            alt="Partner selfie"
+            style="
+              width:140px;
+              height:140px;
+              object-fit:cover;
+              border-radius:14px;
+              border:1px solid #e2e8f0;
+            "
+          >
+        `
+        : `
+          <p class="muted">
+            Selfie not available
+          </p>
+        `
+    }
+  </div>
+
+</div>
 
           <p class="muted">
             ${partner.verificationNote || ''}
