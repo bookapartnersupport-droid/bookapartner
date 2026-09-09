@@ -5380,8 +5380,29 @@ function sendMessage(){
 PARTNER APPLICATION
 ==========================================================
 */
+function readFileAsDataURL(file){
 
-function partnerApply(){
+  return new Promise(
+    (resolve,reject) => {
+
+      const reader =
+        new FileReader();
+
+      reader.onload = () => {
+        resolve(reader.result);
+      };
+
+      reader.onerror = () => {
+        reject(reader.error);
+      };
+
+      reader.readAsDataURL(file);
+
+    }
+  );
+
+}
+async function partnerApply(){
 
   const n =
     document
@@ -5440,8 +5461,8 @@ function partnerApply(){
         'partnerSelfie'
       )
       .files[0];
-
-  if(
+    
+ if(
 
     !n ||
     !Number.isFinite(age) ||
@@ -5462,7 +5483,11 @@ function partnerApply(){
     return;
 
   }
+    const photoData =
+  await readFileAsDataURL(photo);
 
+const selfieData =
+  await readFileAsDataURL(selfie);
   const partner = {
 
     name:n,
@@ -5485,11 +5510,17 @@ function partnerApply(){
     verificationNote:
       'Photo + selfie submitted for admin review',
 
-    photoName:
-      photo.name,
+   photoName:
+  photo.name,
 
-    selfieName:
-      selfie.name
+photoData:
+  photoData,
+
+selfieName:
+  selfie.name,
+
+selfieData:
+  selfieData
 
   };
 
