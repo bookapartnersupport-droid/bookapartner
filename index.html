@@ -4330,6 +4330,17 @@ function setLocationValue(value){
 
   const input =
     document.getElementById(
+      'location'
+    );
+
+  if(input){
+
+    input.value =
+      value || '';
+
+  }
+
+}
 async function initGooglePlaces(){
 
   if(
