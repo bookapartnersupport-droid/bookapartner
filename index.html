@@ -4795,11 +4795,44 @@ SELECT PARTNER
 
 function selectPartner(name){
 
-  const p =
-    partners.find(
-      x =>
-        x.name === name
-    );
+ const approvedPartner =
+  JSON.parse(
+    localStorage.getItem(
+      'bap_partner_profile'
+    ) || 'null'
+  );
+
+const approvedPartnerFormatted =
+  approvedPartner &&
+  approvedPartner.verification === 'Approved'
+    ? {
+        name: approvedPartner.name,
+        age: Number(approvedPartner.age),
+        mobile: approvedPartner.mobile,
+        area: approvedPartner.area,
+        rate: Number(approvedPartner.rate),
+        rating: approvedPartner.rating ?? 'New',
+        reviews: approvedPartner.reviews ?? 0,
+        services: [
+          approvedPartner.service
+        ],
+        availability:
+          approvedPartner.availability
+      }
+    : null;
+
+const allSelectablePartners = [
+  ...partners,
+  ...(approvedPartnerFormatted
+    ? [approvedPartnerFormatted]
+    : [])
+];
+
+const p =
+  allSelectablePartners.find(
+    x =>
+      x.name === name
+  );
 
   selected = {
 
