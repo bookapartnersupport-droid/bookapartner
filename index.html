@@ -5856,55 +5856,21 @@ function renderPartnerDashboard(){
 
         }
 
-        return (
+      return (
 
-          (
+  customerArea &&
+  (
+    customerArea.includes('gurgaon') ||
+    customerArea.includes('gurugram') ||
+    meetingLocation.includes('gurgaon') ||
+    meetingLocation.includes('gurugram') ||
+    normalizedPartnerArea.includes(customerArea) ||
+    customerArea.includes(normalizedPartnerArea) ||
+    meetingLocation.includes(normalizedPartnerArea) ||
+    normalizedPartnerArea.includes(meetingLocation)
+  )
 
-            customerArea &&
-
-            (
-
-              normalizedPartnerArea.includes(
-                customerArea
-              ) ||
-
-              customerArea.includes(
-                normalizedPartnerArea
-              ) ||
-
-              normalizedPartnerArea.split(/\s+/)[0] ===
-              customerArea.split(/\s+/)[0]
-
-            )
-
-          )
-
-          ||
-
-          (
-
-            meetingLocation &&
-
-            (
-
-              normalizedPartnerArea.includes(
-                meetingLocation
-              ) ||
-
-              meetingLocation.includes(
-                normalizedPartnerArea
-              ) ||
-
-              meetingLocation.includes(
-                normalizedPartnerArea.split(/\s+/)[0]
-              )
-
-            )
-
-          )
-
-        );
-
+);
       }
 
     );
