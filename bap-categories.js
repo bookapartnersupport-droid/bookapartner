@@ -1738,3 +1738,997 @@
 
 
 })();
+/* ==========================================================
+   BOOK A PARTNER — STORAGE QUOTA FIX
+   Compresses partner images before localStorage save
+   and avoids storing large proof files in localStorage.
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+
+  function bapCompressImage(file){
+
+    return new Promise(
+      function(resolve,reject){
+
+        if(
+          !file ||
+          !file.type ||
+          !file.type.startsWith('image/')
+        ){
+
+          resolve(null);
+
+          return;
+
+        }
+
+
+        const reader =
+          new FileReader();
+
+
+        reader.onload =
+          function(){
+
+            const img =
+              new Image();
+
+
+            img.onload =
+              function(){
+
+                const maxWidth =
+                  1000;
+
+                const maxHeight =
+                  1000;
+
+
+                let width =
+                  img.width;
+
+                let height =
+                  img.height;
+
+
+                const scale =
+                  Math.min(
+                    1,
+                    maxWidth / width,
+                    maxHeight / height
+                  );
+
+
+                width =
+                  Math.round(
+                    width * scale
+                  );
+
+
+                height =
+                  Math.round(
+                    height * scale
+                  );
+
+
+                const canvas =
+                  document.createElement(
+                    'canvas'
+                  );
+
+
+                canvas.width =
+                  width;
+
+                canvas.height =
+                  height;
+
+
+                const ctx =
+                  canvas.getContext(
+                    '2d'
+                  );
+
+
+                if(!ctx){
+
+                  resolve(
+                    reader.result
+                  );
+
+                  return;
+
+                }
+
+
+                ctx.drawImage(
+                  img,
+                  0,
+                  0,
+                  width,
+                  height
+                );
+
+
+                const compressed =
+                  canvas.toDataURL(
+                    'image/jpeg',
+                    0.70
+                  );
+
+
+                resolve(
+                  compressed
+                );
+
+              };
+
+
+            img.onerror =
+              function(){
+
+                resolve(
+                  reader.result
+                );
+
+              };
+
+
+            img.src =
+              reader.result;
+
+          };
+
+
+        reader.onerror =
+          function(){
+
+            reject(
+              reader.error
+            );
+
+          };
+
+
+        reader.readAsDataURL(
+          file
+        );
+
+      }
+    );
+
+  }
+
+
+  function installBapStorageFix(){
+
+    if(
+      window.__BAP_STORAGE_FIX_INSTALLED
+    ){
+
+      return;
+
+    }
+
+
+    if(
+      typeof window.readFileAsDataURL !==
+      'function'
+    ){
+
+      setTimeout(
+        installBapStorageFix,
+        700
+      );
+
+      return;
+
+    }
+
+
+    window.__BAP_STORAGE_FIX_INSTALLED =
+      true;
+
+
+    const originalReadFileAsDataURL =
+      window.readFileAsDataURL;
+
+
+    window.readFileAsDataURL =
+      async function(file){
+
+        if(!file){
+
+          return '';
+
+        }
+
+
+        /*
+          Compress profile/selfie images.
+        */
+
+        if(
+          file.type &&
+          file.type.startsWith(
+            'image/'
+          )
+        ){
+
+          try{
+
+            const compressed =
+              await bapCompressImage(
+                file
+              );
+
+
+            if(compressed){
+
+              return compressed;
+
+            }
+
+          }catch(error){
+
+            console.warn(
+              'Image compression failed:',
+              error
+            );
+
+          }
+
+        }
+
+
+        /*
+          Do not store large PDF/document
+          binaries inside localStorage.
+        */
+
+        if(
+          file.type ===
+          'application/pdf'
+        ){
+
+          return '';
+
+        }
+
+
+        if(
+          file.size &&
+          file.size >
+          1200000
+        ){
+
+          return '';
+
+        }
+
+
+        return originalReadFileAsDataURL(
+          file
+        );
+
+      };
+
+
+    /*
+      Wrap partnerApply one more time so the
+      old large profile is removed before the
+      new profile is saved.
+    */
+
+    if(
+      typeof window.partnerApply ===
+      'function' &&
+      !window.partnerApply
+        .__BAP_STORAGE_WRAPPED
+    ){
+
+      const originalPartnerApply =
+        window.partnerApply;
+
+
+      async function storageSafePartnerApply(){
+
+        const previousProfile =
+          localStorage.getItem(
+            'bap_partner_profile'
+          );
+
+
+        /*
+          The new partner application replaces
+          the current prototype profile, so remove
+          the old large profile before saving.
+        */
+
+        localStorage.removeItem(
+          'bap_partner_profile'
+        );
+
+
+        try{
+
+          await originalPartnerApply();
+
+
+          /*
+            Restore the previous profile only if
+            no new profile was created.
+          */
+
+          const newProfile =
+            localStorage.getItem(
+              'bap_partner_profile'
+            );
+
+
+          if(
+            !newProfile &&
+            previousProfile !== null
+          ){
+
+            try{
+
+              localStorage.setItem(
+                'bap_partner_profile',
+                previousProfile
+              );
+
+            }catch(error){
+
+              console.warn(
+                'Previous profile could not be restored.',
+                error
+              );
+
+            }
+
+          }
+
+        }catch(error){
+
+          /*
+            Restore previous profile when the
+            new save fails.
+          */
+
+          if(
+            !localStorage.getItem(
+              'bap_partner_profile'
+            ) &&
+            previousProfile !== null
+          ){
+
+            try{
+
+              localStorage.setItem(
+                'bap_partner_profile',
+                previousProfile
+              );
+
+            }catch(restoreError){
+
+              console.warn(
+                'Profile restore failed:',
+                restoreError
+              );
+
+            }
+
+          }
+
+
+          if(
+            error &&
+            (
+              error.name ===
+              'QuotaExceededError' ||
+              String(
+                error.message || ''
+              ).includes(
+                'quota'
+              )
+            )
+          ){
+
+            alert(
+              'Profile images are too large for this browser demo. They will be stored securely in the live backend.'
+            );
+
+
+            return;
+
+          }
+
+
+          throw error;
+
+        }
+
+      }
+
+
+      storageSafePartnerApply
+        .__BAP_STORAGE_WRAPPED =
+        true;
+
+
+      storageSafePartnerApply
+        .__BAP_STORAGE_ORIGINAL =
+        originalPartnerApply;
+
+
+      window.partnerApply =
+        storageSafePartnerApply;
+
+    }
+
+  }
+
+
+  setTimeout(
+    installBapStorageFix,
+    1800
+  );
+
+
+  setTimeout(
+    installBapStorageFix,
+    3500
+  );
+
+
+})();
+/* ==========================================================
+   BOOK A PARTNER — FINAL IMAGE / STORAGE SAFETY PATCH
+   Compresses partner images before partnerApply runs and
+   prevents large proof files from filling localStorage.
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+
+  async function bapCompressPartnerImage(file){
+
+    if(
+      !file ||
+      !file.type ||
+      !file.type.startsWith('image/')
+    ){
+
+      return file;
+
+    }
+
+
+    return new Promise(
+      function(resolve){
+
+        const reader =
+          new FileReader();
+
+
+        reader.onload =
+          function(){
+
+            const img =
+              new Image();
+
+
+            img.onload =
+              function(){
+
+                const maxSize =
+                  900;
+
+
+                let width =
+                  img.width;
+
+                let height =
+                  img.height;
+
+
+                const scale =
+                  Math.min(
+                    1,
+                    maxSize / width,
+                    maxSize / height
+                  );
+
+
+                width =
+                  Math.max(
+                    1,
+                    Math.round(
+                      width * scale
+                    )
+                  );
+
+
+                height =
+                  Math.max(
+                    1,
+                    Math.round(
+                      height * scale
+                    )
+                  );
+
+
+                const canvas =
+                  document.createElement(
+                    'canvas'
+                  );
+
+
+                canvas.width =
+                  width;
+
+                canvas.height =
+                  height;
+
+
+                const ctx =
+                  canvas.getContext(
+                    '2d'
+                  );
+
+
+                if(!ctx){
+
+                  resolve(file);
+
+                  return;
+
+                }
+
+
+                ctx.drawImage(
+                  img,
+                  0,
+                  0,
+                  width,
+                  height
+                );
+
+
+                canvas.toBlob(
+                  function(blob){
+
+                    if(!blob){
+
+                      resolve(file);
+
+                      return;
+
+                    }
+
+
+                    const compressedFile =
+                      new File(
+                        [
+                          blob
+                        ],
+                        'compressed_' +
+                        file.name
+                          .replace(
+                            /\.[^/.]+$/,
+                            ''
+                          ) +
+                        '.jpg',
+                        {
+                          type:
+                            'image/jpeg',
+                          lastModified:
+                            Date.now()
+                        }
+                      );
+
+
+                    resolve(
+                      compressedFile
+                    );
+
+                  },
+                  'image/jpeg',
+                  0.68
+                );
+
+              };
+
+
+            img.onerror =
+              function(){
+
+                resolve(file);
+
+              };
+
+
+            img.src =
+              reader.result;
+
+          };
+
+
+        reader.onerror =
+          function(){
+
+            resolve(file);
+
+          };
+
+
+        reader.readAsDataURL(
+          file
+        );
+
+      }
+    );
+
+  }
+
+
+  async function bapReplaceFileInputFile(
+    inputId
+  ){
+
+    const input =
+      document.getElementById(
+        inputId
+      );
+
+
+    if(
+      !input ||
+      !input.files ||
+      !input.files[0]
+    ){
+
+      return;
+
+    }
+
+
+    const originalFile =
+      input.files[0];
+
+
+    const compressedFile =
+      await bapCompressPartnerImage(
+        originalFile
+      );
+
+
+    if(!compressedFile){
+
+      return;
+
+    }
+
+
+    try{
+
+      const dataTransfer =
+        new DataTransfer();
+
+
+      dataTransfer.items.add(
+        compressedFile
+      );
+
+
+      input.files =
+        dataTransfer.files;
+
+    }catch(error){
+
+      console.warn(
+        'Could not replace compressed image:',
+        error
+      );
+
+    }
+
+  }
+
+
+  function bapInstallFinalApplyPatch(){
+
+    if(
+      typeof window.partnerApply !==
+      'function'
+    ){
+
+      setTimeout(
+        bapInstallFinalApplyPatch,
+        700
+      );
+
+      return;
+
+    }
+
+
+    if(
+      window.partnerApply
+        .__BAP_FINAL_STORAGE_PATCH
+    ){
+
+      return;
+
+    }
+
+
+    const previousApply =
+      window.partnerApply;
+
+
+    async function finalSafePartnerApply(){
+
+      /*
+        Remove the previous prototype profile
+        before creating a new one. This prevents
+        old large photo/selfie data from consuming
+        the available browser storage.
+      */
+
+      try{
+
+        localStorage.removeItem(
+          'bap_partner_profile'
+        );
+
+      }catch(error){
+
+        console.warn(
+          'Could not clear previous partner profile:',
+          error
+        );
+
+      }
+
+
+      /*
+        Compress profile photo and selfie
+        before the existing partnerApply()
+        reads them.
+      */
+
+      await bapReplaceFileInputFile(
+        'partnerPhoto'
+      );
+
+
+      await bapReplaceFileInputFile(
+        'partnerSelfie'
+      );
+
+
+      try{
+
+        await previousApply();
+
+      }catch(error){
+
+        if(
+          error &&
+          (
+            error.name ===
+            'QuotaExceededError' ||
+            String(
+              error.message || ''
+            ).toLowerCase()
+              .includes(
+                'quota'
+              )
+          )
+        ){
+
+          alert(
+            'Browser storage is full. The profile could not be saved in this prototype. The live backend will store partner documents securely.'
+          );
+
+          return;
+
+        }
+
+
+        throw error;
+
+      }
+
+    }
+
+
+    finalSafePartnerApply
+      .__BAP_FINAL_STORAGE_PATCH =
+      true;
+
+
+    window.partnerApply =
+      finalSafePartnerApply;
+
+  }
+
+
+  /*
+    Prevent large certificate PDF data from
+    being stored inside localStorage.
+  */
+
+  function bapInstallStorageGuard(){
+
+    if(
+      window.__BAP_LS_GUARD_INSTALLED
+    ){
+
+      return;
+
+    }
+
+
+    const originalSetItem =
+      localStorage.setItem.bind(
+        localStorage
+      );
+
+
+    function safeSetItem(
+      key,
+      value
+    ){
+
+      if(
+        key ===
+        'bap_partner_profile'
+      ){
+
+        try{
+
+          const profile =
+            JSON.parse(
+              value
+            );
+
+
+          /*
+            Keep the certificate filename,
+            but do not store a huge PDF binary
+            inside localStorage.
+          */
+
+          if(
+            profile &&
+            profile.experienceProofData &&
+            String(
+              profile.experienceProofData
+            ).length >
+            400000
+          ){
+
+            delete profile.experienceProofData;
+
+          }
+
+
+          value =
+            JSON.stringify(
+              profile
+            );
+
+        }catch(error){
+
+          console.warn(
+            'Partner profile cleanup failed:',
+            error
+          );
+
+        }
+
+      }
+
+
+      try{
+
+        originalSetItem(
+          key,
+          value
+        );
+
+      }catch(error){
+
+        if(
+          key ===
+          'bap_partner_profile' &&
+          error &&
+          error.name ===
+          'QuotaExceededError'
+        ){
+
+          try{
+
+            const profile =
+              JSON.parse(
+                value
+              );
+
+
+            if(profile){
+
+              delete profile.photoData;
+
+              delete profile.selfieData;
+
+              delete profile.experienceProofData;
+
+
+              originalSetItem(
+                key,
+                JSON.stringify(
+                  profile
+                )
+              );
+
+              return;
+
+            }
+
+          }catch(fallbackError){
+
+            console.error(
+              'Storage fallback failed:',
+              fallbackError
+            );
+
+          }
+
+        }
+
+
+        throw error;
+
+      }
+
+    }
+
+
+    localStorage.setItem =
+      safeSetItem;
+
+
+    window.__BAP_LS_GUARD_INSTALLED =
+      true;
+
+  }
+
+
+  setTimeout(
+    bapInstallStorageGuard,
+    500
+  );
+
+
+  setTimeout(
+    bapInstallFinalApplyPatch,
+    1200
+  );
+
+
+  setTimeout(
+    bapInstallFinalApplyPatch,
+    2500
+  );
+
+
+})();
