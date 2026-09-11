@@ -5303,3 +5303,1006 @@
 
 
 })();
+/* ==========================================================
+   BOOK A PARTNER — FINAL PROOF OVERRIDE
+   Ensures selected proof gets an ID attached to the saved
+   partner profile and adds Admin Open Proof button.
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+
+  const DB_NAME =
+    'bap_partner_documents';
+
+  const DB_VERSION =
+    1;
+
+  const STORE_NAME =
+    'documents';
+
+
+  let latestProofId =
+    null;
+
+  let latestProofName =
+    '';
+
+
+  /* ==========================================================
+     DATABASE
+     ========================================================== */
+
+  function openProofDB(){
+
+    return new Promise(
+      function(resolve,reject){
+
+        const request =
+          indexedDB.open(
+            DB_NAME,
+            DB_VERSION
+          );
+
+
+        request.onupgradeneeded =
+          function(event){
+
+            const db =
+              event.target.result;
+
+
+            if(
+              !db.objectStoreNames.contains(
+                STORE_NAME
+              )
+            ){
+
+              db.createObjectStore(
+                STORE_NAME,
+                {
+                  keyPath:'id'
+                }
+              );
+
+            }
+
+          };
+
+
+        request.onsuccess =
+          function(){
+
+            resolve(
+              request.result
+            );
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  async function saveProof(
+    id,
+    file
+  ){
+
+    const db =
+      await openProofDB();
+
+
+    return new Promise(
+      function(resolve,reject){
+
+        const tx =
+          db.transaction(
+            STORE_NAME,
+            'readwrite'
+          );
+
+
+        const store =
+          tx.objectStore(
+            STORE_NAME
+          );
+
+
+        const request =
+          store.put({
+
+            id:id,
+
+            name:
+              file.name,
+
+            type:
+              file.type ||
+              'application/octet-stream',
+
+            blob:
+              file
+
+          });
+
+
+        request.onsuccess =
+          function(){
+
+            resolve(
+              true
+            );
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  async function findProofByName(
+    name
+  ){
+
+    if(!name){
+
+      return null;
+
+    }
+
+
+    const db =
+      await openProofDB();
+
+
+    return new Promise(
+      function(resolve,reject){
+
+        const tx =
+          db.transaction(
+            STORE_NAME,
+            'readonly'
+          );
+
+
+        const store =
+          tx.objectStore(
+            STORE_NAME
+          );
+
+
+        const request =
+          store.getAll();
+
+
+        request.onsuccess =
+          function(){
+
+            const records =
+              request.result ||
+              [];
+
+
+            const matches =
+              records
+                .filter(
+                  item =>
+                    item &&
+                    item.name ===
+                    name
+                )
+                .sort(
+                  function(a,b){
+
+                    return String(
+                      b.id || ''
+                    ).localeCompare(
+                      String(
+                        a.id || ''
+                      )
+                    );
+
+                  }
+                );
+
+
+            resolve(
+              matches[0] ||
+              null
+            );
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     WATCH PROOF INPUT
+     ========================================================== */
+
+  function watchProofInput(){
+
+    const input =
+      document.getElementById(
+        'partnerExperienceProof'
+      );
+
+
+    if(
+      !input ||
+      input.__BAP_FINAL_OVERRIDE
+    ){
+
+      return;
+
+    }
+
+
+    input.__BAP_FINAL_OVERRIDE =
+      true;
+
+
+    input.addEventListener(
+      'change',
+      async function(){
+
+        const file =
+          input.files &&
+          input.files[0]
+            ? input.files[0]
+            : null;
+
+
+        if(!file){
+
+          latestProofId =
+            null;
+
+          latestProofName =
+            '';
+
+          return;
+
+        }
+
+
+        const id =
+          'final_proof_' +
+          Date.now() +
+          '_' +
+          Math.random()
+            .toString(36)
+            .slice(2);
+
+
+        try{
+
+          await saveProof(
+            id,
+            file
+          );
+
+
+          latestProofId =
+            id;
+
+
+          latestProofName =
+            file.name;
+
+
+          window.BAP_FINAL_PROOF_ID =
+            id;
+
+
+          window.BAP_FINAL_PROOF_NAME =
+            file.name;
+
+
+          /*
+            Keep a small metadata copy outside
+            the partner profile so the ID survives
+            profile-save timing issues.
+          */
+
+          try{
+
+            localStorage.setItem(
+              'bap_last_proof_meta',
+              JSON.stringify({
+
+                id:id,
+
+                name:file.name
+
+              })
+            );
+
+          }catch(error){
+
+            console.warn(
+              'Proof metadata storage warning:',
+              error
+            );
+
+          }
+
+        }catch(error){
+
+          console.error(
+            'Final proof save failed:',
+            error
+          );
+
+
+          latestProofId =
+            null;
+
+
+          alert(
+            'Proof could not be saved. Please choose the file again.'
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     PATCH PROFILE SAVE
+     ========================================================== */
+
+  function installProfileSavePatch(){
+
+    if(
+      window.__BAP_FINAL_PROFILE_SAVE_PATCH
+    ){
+
+      return;
+
+    }
+
+
+    const originalSetItem =
+      localStorage.setItem.bind(
+        localStorage
+      );
+
+
+    localStorage.setItem =
+      function(
+        key,
+        value
+      ){
+
+        if(
+          key ===
+          'bap_partner_profile'
+        ){
+
+          try{
+
+            const profile =
+              JSON.parse(
+                value
+              );
+
+
+            let proofMeta =
+              null;
+
+
+            try{
+
+              proofMeta =
+                JSON.parse(
+                  localStorage.getItem(
+                    'bap_last_proof_meta'
+                  ) ||
+                  'null'
+                );
+
+            }catch(error){
+
+              proofMeta =
+                null;
+
+            }
+
+
+            const proofId =
+              latestProofId ||
+              (
+                proofMeta &&
+                proofMeta.id
+              ) ||
+              '';
+
+
+            const proofName =
+              latestProofName ||
+              (
+                proofMeta &&
+                proofMeta.name
+              ) ||
+              '';
+
+
+            if(
+              profile &&
+              proofId &&
+              proofName &&
+              (
+                profile.experienceProofName ===
+                proofName ||
+                !profile.experienceProofName
+              )
+            ){
+
+              profile.experienceProofId =
+                proofId;
+
+
+              profile.experienceProofName =
+                proofName;
+
+
+              delete profile.experienceProofData;
+
+
+              value =
+                JSON.stringify(
+                  profile
+                );
+
+            }
+
+          }catch(error){
+
+            console.warn(
+              'Final profile proof patch warning:',
+              error
+            );
+
+          }
+
+        }
+
+
+        return originalSetItem(
+          key,
+          value
+        );
+
+      };
+
+
+    window.__BAP_FINAL_PROFILE_SAVE_PATCH =
+      true;
+
+  }
+
+
+  /* ==========================================================
+     ADMIN OPEN BUTTON
+     ========================================================== */
+
+  async function addAdminProofButton(){
+
+    let partner =
+      null;
+
+
+    try{
+
+      partner =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profile'
+          ) ||
+          'null'
+        );
+
+    }catch(error){
+
+      return;
+
+    }
+
+
+    if(!partner){
+
+      return;
+
+    }
+
+
+    let proofId =
+      partner.experienceProofId ||
+      '';
+
+
+    let proofName =
+      partner.experienceProofName ||
+      '';
+
+
+    /*
+      Fallback to latest proof metadata.
+    */
+
+    if(
+      !proofId
+    ){
+
+      try{
+
+        const meta =
+          JSON.parse(
+            localStorage.getItem(
+              'bap_last_proof_meta'
+            ) ||
+            'null'
+          );
+
+
+        if(
+          meta &&
+          meta.id
+        ){
+
+          proofId =
+            meta.id;
+
+          proofName =
+            meta.name ||
+            proofName;
+
+        }
+
+      }catch(error){
+
+        console.warn(
+          'Proof metadata read warning:',
+          error
+        );
+
+      }
+
+    }
+
+
+    /*
+      Final fallback:
+      find the proof by filename in IndexedDB.
+    */
+
+    if(
+      !proofId &&
+      proofName
+    ){
+
+      try{
+
+        const record =
+          await findProofByName(
+            proofName
+          );
+
+
+        if(record){
+
+          proofId =
+            record.id;
+
+        }
+
+      }catch(error){
+
+        console.warn(
+          'Proof lookup warning:',
+          error
+        );
+
+      }
+
+    }
+
+
+    if(!proofId){
+
+      return;
+
+    }
+
+
+    /*
+      Also repair the profile metadata.
+    */
+
+    try{
+
+      if(
+        !partner.experienceProofId
+      ){
+
+        partner.experienceProofId =
+          proofId;
+
+
+        partner.experienceProofName =
+          proofName;
+
+
+        localStorage.setItem(
+          'bap_partner_profile',
+          JSON.stringify(
+            partner
+          )
+        );
+
+      }
+
+    }catch(error){
+
+      console.warn(
+        'Proof profile repair warning:',
+        error
+      );
+
+    }
+
+
+    const cards =
+      document.querySelectorAll(
+        '.card'
+      );
+
+
+    let targetCard =
+      null;
+
+
+    for(
+      const card of cards
+    ){
+
+      const text =
+        String(
+          card.textContent ||
+          ''
+        );
+
+
+      if(
+        text.includes(
+          String(
+            partner.name ||
+            ''
+          )
+        ) &&
+        text.includes(
+          String(
+            partner.service ||
+            ''
+          )
+        )
+      ){
+
+        targetCard =
+          card;
+
+        break;
+
+      }
+
+    }
+
+
+    if(!targetCard){
+
+      return;
+
+    }
+
+
+    if(
+      targetCard.querySelector(
+        '#bapUltimateOpenProof'
+      )
+    ){
+
+      return;
+
+    }
+
+
+    const button =
+      document.createElement(
+        'button'
+      );
+
+
+    button.id =
+      'bapUltimateOpenProof';
+
+
+    button.type =
+      'button';
+
+
+    button.className =
+      'light';
+
+
+    button.style.cssText =
+      [
+        'margin-top:10px',
+        'font-weight:700',
+        'display:block'
+      ].join(';');
+
+
+    button.textContent =
+      '📄 Open Proof / Certificate';
+
+
+    button.onclick =
+      async function(){
+
+        try{
+
+          const record =
+            await findProofByName(
+              proofName
+            );
+
+
+          let finalRecord =
+            record;
+
+
+          if(
+            !finalRecord &&
+            proofId
+          ){
+
+            const db =
+              await openProofDB();
+
+
+            finalRecord =
+              await new Promise(
+                function(
+                  resolve,
+                  reject
+                ){
+
+                  const tx =
+                    db.transaction(
+                      STORE_NAME,
+                      'readonly'
+                    );
+
+
+                  const request =
+                    tx.objectStore(
+                      STORE_NAME
+                    ).get(
+                      proofId
+                    );
+
+
+                  request.onsuccess =
+                    function(){
+
+                      resolve(
+                        request.result ||
+                        null
+                      );
+
+                    };
+
+
+                  request.onerror =
+                    function(){
+
+                      reject(
+                        request.error
+                      );
+
+                    };
+
+                }
+              );
+
+          }
+
+
+          if(
+            !finalRecord ||
+            !finalRecord.blob
+          ){
+
+            alert(
+              'Proof document is not available in this browser. Please ask the partner to upload it again.'
+            );
+
+            return;
+
+          }
+
+
+          const blob =
+            finalRecord.blob instanceof Blob
+              ? finalRecord.blob
+              : new Blob(
+                  [
+                    finalRecord.blob
+                  ],
+                  {
+                    type:
+                      finalRecord.type ||
+                      'application/octet-stream'
+                  }
+                );
+
+
+          const url =
+            URL.createObjectURL(
+              blob
+            );
+
+
+          window.open(
+            url,
+            '_blank',
+            'noopener,noreferrer'
+          );
+
+
+          setTimeout(
+            function(){
+
+              URL.revokeObjectURL(
+                url
+              );
+
+            },
+            60000
+          );
+
+
+        }catch(error){
+
+          console.error(
+            'Ultimate proof open error:',
+            error
+          );
+
+
+          alert(
+            'Could not open the proof document.'
+          );
+
+        }
+
+      };
+
+
+    const details =
+      targetCard.querySelector(
+        '#bapAdminSpecializedDetails'
+      );
+
+
+    if(details){
+
+      details.appendChild(
+        button
+      );
+
+    }else{
+
+      targetCard.appendChild(
+        button
+      );
+
+    }
+
+  }
+
+
+  /* ==========================================================
+     START
+     ========================================================== */
+
+  function startUltimateProofFix(){
+
+    installProfileSavePatch();
+
+    watchProofInput();
+
+    addAdminProofButton();
+
+
+    setTimeout(
+      watchProofInput,
+      500
+    );
+
+
+    setTimeout(
+      installProfileSavePatch,
+      1000
+    );
+
+
+    setTimeout(
+      addAdminProofButton,
+      1000
+    );
+
+
+    setTimeout(
+      addAdminProofButton,
+      2500
+    );
+
+
+    setTimeout(
+      addAdminProofButton,
+      5000
+    );
+
+  }
+
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    startUltimateProofFix
+  );
+
+
+})();
