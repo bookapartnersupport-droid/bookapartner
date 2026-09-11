@@ -3783,3 +3783,759 @@
   );
 
 })();
+/* ==========================================================
+   BOOK A PARTNER — FINAL PROOF STORAGE + OPEN PROOF PATCH
+   Stores JPEG/PNG/PDF proof files in IndexedDB and adds
+   an Admin button to open the saved proof document.
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+
+  const BAP_PROOF_DB_NAME =
+    'bap_partner_documents';
+
+  const BAP_PROOF_DB_VERSION =
+    1;
+
+  const BAP_PROOF_STORE =
+    'documents';
+
+
+  /* ==========================================================
+     OPEN DATABASE
+     ========================================================== */
+
+  function bapOpenProofDB(){
+
+    return new Promise(
+      function(resolve,reject){
+
+        const request =
+          indexedDB.open(
+            BAP_PROOF_DB_NAME,
+            BAP_PROOF_DB_VERSION
+          );
+
+
+        request.onupgradeneeded =
+          function(event){
+
+            const db =
+              event.target.result;
+
+
+            if(
+              !db.objectStoreNames.contains(
+                BAP_PROOF_STORE
+              )
+            ){
+
+              db.createObjectStore(
+                BAP_PROOF_STORE,
+                {
+                  keyPath:'id'
+                }
+              );
+
+            }
+
+          };
+
+
+        request.onsuccess =
+          function(){
+
+            resolve(
+              request.result
+            );
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     SAVE PROOF FILE
+     ========================================================== */
+
+  async function bapSaveProofFile(
+    id,
+    file
+  ){
+
+    if(
+      !id ||
+      !file
+    ){
+
+      return null;
+
+    }
+
+
+    const db =
+      await bapOpenProofDB();
+
+
+    return new Promise(
+      function(resolve,reject){
+
+        const transaction =
+          db.transaction(
+            BAP_PROOF_STORE,
+            'readwrite'
+          );
+
+
+        const store =
+          transaction.objectStore(
+            BAP_PROOF_STORE
+          );
+
+
+        const request =
+          store.put({
+
+            id:id,
+
+            name:
+              file.name,
+
+            type:
+              file.type ||
+              'application/octet-stream',
+
+            blob:
+              file
+
+          });
+
+
+        request.onsuccess =
+          function(){
+
+            resolve(
+              id
+            );
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     GET PROOF FILE
+     ========================================================== */
+
+  async function bapGetProofFile(
+    id
+  ){
+
+    if(!id){
+
+      return null;
+
+    }
+
+
+    const db =
+      await bapOpenProofDB();
+
+
+    return new Promise(
+      function(resolve,reject){
+
+        const transaction =
+          db.transaction(
+            BAP_PROOF_STORE,
+            'readonly'
+          );
+
+
+        const store =
+          transaction.objectStore(
+            BAP_PROOF_STORE
+          );
+
+
+        const request =
+          store.get(id);
+
+
+        request.onsuccess =
+          function(){
+
+            resolve(
+              request.result ||
+              null
+            );
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     OPEN PROOF
+     ========================================================== */
+
+  window.BAP_openProof =
+    async function(proofId){
+
+      if(!proofId){
+
+        alert(
+          'Proof document is not available. Please ask the partner to upload it again.'
+        );
+
+        return;
+
+      }
+
+
+      try{
+
+        const record =
+          await bapGetProofFile(
+            proofId
+          );
+
+
+        if(
+          !record ||
+          !record.blob
+        ){
+
+          alert(
+            'Proof document is not available in this browser demo. Please ask the partner to upload it again.'
+          );
+
+          return;
+
+        }
+
+
+        const blob =
+          record.blob instanceof Blob
+            ? record.blob
+            : new Blob(
+                [record.blob],
+                {
+                  type:
+                    record.type ||
+                    'application/octet-stream'
+                }
+              );
+
+
+        const url =
+          URL.createObjectURL(
+            blob
+          );
+
+
+        window.open(
+          url,
+          '_blank',
+          'noopener,noreferrer'
+        );
+
+
+        setTimeout(
+          function(){
+
+            URL.revokeObjectURL(
+              url
+            );
+
+          },
+          60000
+        );
+
+
+      }catch(error){
+
+        console.error(
+          'BAP proof open error:',
+          error
+        );
+
+
+        alert(
+          'Could not open the verification proof.'
+        );
+
+      }
+
+    };
+
+
+  /* ==========================================================
+     SAVE CURRENT FORM PROOF
+     ========================================================== */
+
+  async function bapCaptureCurrentProof(){
+
+    const input =
+      document.getElementById(
+        'partnerExperienceProof'
+      );
+
+
+    if(
+      !input ||
+      !input.files ||
+      !input.files[0]
+    ){
+
+      return null;
+
+    }
+
+
+    const file =
+      input.files[0];
+
+
+    const proofId =
+      'proof_' +
+      Date.now() +
+      '_' +
+      Math.random()
+        .toString(36)
+        .slice(2);
+
+
+    await bapSaveProofFile(
+      proofId,
+      file
+    );
+
+
+    return {
+
+      id:
+        proofId,
+
+      name:
+        file.name
+
+    };
+
+  }
+
+
+  /* ==========================================================
+     WRAP PARTNER APPLY
+     ========================================================== */
+
+  function installProofPartnerApply(){
+
+    if(
+      typeof window.partnerApply !==
+      'function'
+    ){
+
+      setTimeout(
+        installProofPartnerApply,
+        1000
+      );
+
+      return;
+
+    }
+
+
+    if(
+      window.partnerApply
+        .__BAP_FINAL_PROOF_PATCH
+    ){
+
+      return;
+
+    }
+
+
+    const previousPartnerApply =
+      window.partnerApply;
+
+
+    async function proofPartnerApply(){
+
+      let proofInfo =
+        null;
+
+
+      /*
+        Save the actual proof file BEFORE
+        the original partnerApply runs.
+      */
+
+      try{
+
+        proofInfo =
+          await bapCaptureCurrentProof();
+
+      }catch(error){
+
+        console.error(
+          'Could not save proof:',
+          error
+        );
+
+
+        alert(
+          'The proof document could not be saved. Please try again.'
+        );
+
+
+        return;
+
+      }
+
+
+      /*
+        Run the existing partner application.
+      */
+
+      await previousPartnerApply();
+
+
+      /*
+        Add the IndexedDB proof reference
+        to the saved partner profile.
+      */
+
+      if(
+        proofInfo
+      ){
+
+        try{
+
+          const savedProfile =
+            JSON.parse(
+              localStorage.getItem(
+                'bap_partner_profile'
+              ) ||
+              'null'
+            );
+
+
+          if(savedProfile){
+
+            savedProfile.experienceProofId =
+              proofInfo.id;
+
+
+            savedProfile.experienceProofName =
+              proofInfo.name;
+
+
+            /*
+              Never store the large binary
+              proof file in localStorage.
+            */
+
+            delete savedProfile.experienceProofData;
+
+
+            localStorage.setItem(
+              'bap_partner_profile',
+              JSON.stringify(
+                savedProfile
+              )
+            );
+
+          }
+
+        }catch(error){
+
+          console.error(
+            'Proof metadata save error:',
+            error
+          );
+
+        }
+
+      }
+
+    }
+
+
+    proofPartnerApply
+      .__BAP_FINAL_PROOF_PATCH =
+      true;
+
+
+    window.partnerApply =
+      proofPartnerApply;
+
+  }
+
+
+  /* ==========================================================
+     ADMIN PROOF BUTTON
+     ========================================================== */
+
+  function addAdminOpenProofButton(){
+
+    let partner =
+      null;
+
+
+    try{
+
+      partner =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profile'
+          ) ||
+          'null'
+        );
+
+    }catch(error){
+
+      return;
+
+    }
+
+
+    if(!partner){
+
+      return;
+
+    }
+
+
+    if(
+      !partner.experienceProofId
+    ){
+
+      return;
+
+    }
+
+
+    const cards =
+      document.querySelectorAll(
+        '.card'
+      );
+
+
+    let targetCard =
+      null;
+
+
+    for(
+      const card of cards
+    ){
+
+      const text =
+        String(
+          card.textContent ||
+          ''
+        );
+
+
+      if(
+        text.includes(
+          String(
+            partner.name ||
+            ''
+          )
+        ) &&
+        text.includes(
+          String(
+            partner.service ||
+            ''
+          )
+        )
+      ){
+
+        targetCard =
+          card;
+
+        break;
+
+      }
+
+    }
+
+
+    if(!targetCard){
+
+      return;
+
+    }
+
+
+    if(
+      targetCard.querySelector(
+        '#bapFinalOpenProofButton'
+      )
+    ){
+
+      return;
+
+    }
+
+
+    const detailsBox =
+      targetCard.querySelector(
+        '#bapAdminSpecializedDetails'
+      );
+
+
+    if(!detailsBox){
+
+      return;
+
+    }
+
+
+    const button =
+      document.createElement(
+        'button'
+      );
+
+
+    button.id =
+      'bapFinalOpenProofButton';
+
+
+    button.type =
+      'button';
+
+
+    button.className =
+      'light';
+
+
+    button.style.cssText =
+      [
+        'margin-top:10px',
+        'font-weight:700',
+        'display:block'
+      ].join(';');
+
+
+    button.textContent =
+      '📄 Open Proof / Certificate';
+
+
+    button.onclick =
+      function(){
+
+        window.BAP_openProof(
+          partner.experienceProofId
+        );
+
+      };
+
+
+    detailsBox.appendChild(
+      button
+    );
+
+  }
+
+
+  /* ==========================================================
+     START
+     ========================================================== */
+
+  function startFinalProofPatch(){
+
+    installProofPartnerApply();
+
+    addAdminOpenProofButton();
+
+
+    setTimeout(
+      installProofPartnerApply,
+      1000
+    );
+
+
+    setTimeout(
+      installProofPartnerApply,
+      2500
+    );
+
+
+    setTimeout(
+      installProofPartnerApply,
+      4000
+    );
+
+
+    setTimeout(
+      addAdminOpenProofButton,
+      500
+    );
+
+
+    setTimeout(
+      addAdminOpenProofButton,
+      1500
+    );
+
+
+    setTimeout(
+      addAdminOpenProofButton,
+      3000
+    );
+
+
+  }
+
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    startFinalProofPatch
+  );
+
+
+})();
