@@ -689,11 +689,32 @@
         );
 
 
-      if(!rateInput.value){
+      const current =
+        Number(
+          rateInput.value
+        );
+
+
+      if(
+        !Number.isFinite(current) ||
+        current < category.minRate
+      ){
 
         rateInput.value =
           String(
             category.recommendedRate
+          );
+
+      }
+
+      else if(
+        current >
+        category.maxRate
+      ){
+
+        rateInput.value =
+          String(
+            category.maxRate
           );
 
       }
@@ -939,7 +960,590 @@
 
 
   /* ==========================================================
-     STYLES
+     RATE VALIDATION
+     ========================================================== */
+
+  function enforceRateRule(){
+
+    const serviceSelect =
+      findElement(
+        'partnerService'
+      );
+
+    const rateInput =
+      findElement(
+        'partnerRate'
+      );
+
+    if(
+      !serviceSelect ||
+      !rateInput
+    ){
+
+      return;
+
+    }
+
+
+    const category =
+      window.BAP_getCategory(
+        serviceSelect.value
+      );
+
+
+    if(!category){
+      return;
+    }
+
+
+    const current =
+      Number(
+        rateInput.value
+      );
+
+
+    if(
+      !Number.isFinite(current) ||
+      current < category.minRate
+    ){
+
+      rateInput.value =
+        String(
+          category.recommendedRate
+        );
+
+      return;
+
+    }
+
+
+    if(
+      current >
+      category.maxRate
+    ){
+
+      rateInput.value =
+        String(
+          category.maxRate
+        );
+
+    }
+
+  }
+
+
+  /* ==========================================================
+     SPECIALIZED PARTNER VALIDATION
+     ========================================================== */
+
+  function validateAndGetPartnerData(){
+
+    const serviceSelect =
+      findElement(
+        'partnerService'
+      );
+
+
+    if(!serviceSelect){
+      return true;
+    }
+
+
+    const category =
+      window.BAP_getCategory(
+        serviceSelect.value
+      );
+
+
+    if(!category){
+      return true;
+    }
+
+
+    const rateInput =
+      findElement(
+        'partnerRate'
+      );
+
+
+    const rate =
+      rateInput
+        ? Number(
+            rateInput.value
+          )
+        : NaN;
+
+
+    if(
+      !Number.isFinite(rate) ||
+      rate < category.minRate ||
+      rate > category.maxRate
+    ){
+
+      alert(
+        'Please enter a rate between ₹' +
+        category.minRate +
+        ' and ₹' +
+        category.maxRate +
+        ' per hour.'
+      );
+
+
+      if(rateInput){
+        rateInput.focus();
+      }
+
+
+      return false;
+
+    }
+
+
+    if(
+      category.type !==
+      'specialized'
+    ){
+
+      return true;
+
+    }
+
+
+    const experienceYearsInput =
+      findElement(
+        'partnerExperienceYears'
+      );
+
+
+    const experienceDetailsInput =
+      findElement(
+        'partnerExperienceDetails'
+      );
+
+
+    const qualificationInput =
+      findElement(
+        'partnerQualification'
+      );
+
+
+    const proofInput =
+      findElement(
+        'partnerExperienceProof'
+      );
+
+
+    const experienceYears =
+      experienceYearsInput
+        ? Number(
+            experienceYearsInput.value
+          )
+        : NaN;
+
+
+    const experienceDetails =
+      experienceDetailsInput
+        ? experienceDetailsInput.value.trim()
+        : '';
+
+
+    const qualification =
+      qualificationInput
+        ? qualificationInput.value.trim()
+        : '';
+
+
+    const proofFile =
+      proofInput &&
+      proofInput.files &&
+      proofInput.files[0]
+        ? proofInput.files[0]
+        : null;
+
+
+    if(
+      !Number.isFinite(
+        experienceYears
+      ) ||
+      experienceYears < 0
+    ){
+
+      alert(
+        'Please enter relevant experience in years.'
+      );
+
+
+      if(experienceYearsInput){
+        experienceYearsInput.focus();
+      }
+
+
+      return false;
+
+    }
+
+
+    if(!experienceDetails){
+
+      alert(
+        'Please describe your relevant experience.'
+      );
+
+
+      if(experienceDetailsInput){
+        experienceDetailsInput.focus();
+      }
+
+
+      return false;
+
+    }
+
+
+    if(
+      category.qualificationRequired &&
+      !qualification
+    ){
+
+      alert(
+        'Please enter your qualification/certification for this service.'
+      );
+
+
+      if(qualificationInput){
+        qualificationInput.focus();
+      }
+
+
+      return false;
+
+    }
+
+
+    if(
+      category.qualificationRequired &&
+      !proofFile
+    ){
+
+      alert(
+        'Please upload the required qualification/certificate proof.'
+      );
+
+
+      if(proofInput){
+        proofInput.focus();
+      }
+
+
+      return false;
+
+    }
+
+
+    return {
+      category,
+      experienceYears,
+      experienceDetails,
+      qualification,
+      proofFile
+    };
+
+  }
+
+
+  /* ==========================================================
+     SMALL FILE READER
+     ========================================================== */
+
+  async function bapReadSmallFileAsDataURL(file){
+
+    return new Promise(
+      (resolve,reject) => {
+
+        if(!file){
+
+          resolve('');
+
+          return;
+
+        }
+
+
+        const reader =
+          new FileReader();
+
+
+        reader.onload =
+          () => {
+
+            resolve(
+              reader.result
+            );
+
+          };
+
+
+        reader.onerror =
+          () => {
+
+            reject(
+              reader.error
+            );
+
+          };
+
+
+        reader.readAsDataURL(
+          file
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     PARTNER APPLY WRAPPER
+     ========================================================== */
+
+  function hookPartnerApplyValidation(){
+
+    if(
+      typeof window.partnerApply !==
+      'function'
+    ){
+
+      return;
+
+    }
+
+
+    if(
+      window.partnerApply.__bapWrapped
+    ){
+
+      return;
+
+    }
+
+
+    const originalPartnerApply =
+      window.partnerApply;
+
+
+    async function wrappedPartnerApply(){
+
+      const partnerData =
+        validateAndGetPartnerData();
+
+
+      if(!partnerData){
+
+        return;
+
+      }
+
+
+      enforceRateRule();
+
+
+      await originalPartnerApply();
+
+
+      const saved =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profile'
+          ) ||
+          'null'
+        );
+
+
+      if(!saved){
+
+        return;
+
+      }
+
+
+      const category =
+        window.BAP_getCategory(
+          saved.service
+        );
+
+
+      if(
+        !category ||
+        category.type !==
+        'specialized'
+      ){
+
+        return;
+
+      }
+
+
+      saved.experienceRequired =
+        true;
+
+
+      saved.experienceYears =
+        partnerData.experienceYears;
+
+
+      saved.experienceDetails =
+        partnerData.experienceDetails;
+
+
+      saved.qualification =
+        partnerData.qualification;
+
+
+      if(
+        partnerData.proofFile
+      ){
+
+        try{
+
+          saved.experienceProofName =
+            partnerData.proofFile.name;
+
+
+          saved.experienceProofData =
+            await bapReadSmallFileAsDataURL(
+              partnerData.proofFile
+            );
+
+        }catch(error){
+
+          console.error(
+            'Experience proof save error:',
+            error
+          );
+
+        }
+
+      }
+
+
+      const partnerGender =
+        findElement(
+          'partnerGender'
+        );
+
+
+      if(partnerGender){
+
+        saved.gender =
+          partnerGender.value;
+
+      }
+
+
+      localStorage.setItem(
+        'bap_partner_profile',
+        JSON.stringify(saved)
+      );
+
+    }
+
+
+    wrappedPartnerApply.__bapWrapped =
+      true;
+
+
+    window.partnerApply =
+      wrappedPartnerApply;
+
+  }
+
+
+  /* ==========================================================
+     INPUT VALIDATION HOOK
+     ========================================================== */
+
+  function attachRateValidation(){
+
+    const rateInput =
+      findElement(
+        'partnerRate'
+      );
+
+
+    if(
+      rateInput &&
+      !rateInput.__bapRateHooked
+    ){
+
+      rateInput.__bapRateHooked =
+        true;
+
+
+      rateInput.addEventListener(
+        'change',
+        enforceRateRule
+      );
+
+
+      rateInput.addEventListener(
+        'blur',
+        enforceRateRule
+      );
+
+
+      rateInput.addEventListener(
+        'input',
+        function(){
+
+          const serviceSelect =
+            findElement(
+              'partnerService'
+            );
+
+
+          const category =
+            serviceSelect
+              ? window.BAP_getCategory(
+                  serviceSelect.value
+                )
+              : null;
+
+
+          if(!category){
+            return;
+          }
+
+
+          const value =
+            Number(
+              rateInput.value
+            );
+
+
+          if(
+            Number.isFinite(value) &&
+            value >
+            category.maxRate
+          ){
+
+            rateInput.value =
+              String(
+                category.maxRate
+              );
+
+          }
+
+        }
+      );
+
+    }
+
+  }
+
+
+  /* ==========================================================
+     EXTRA STYLES
      ========================================================== */
 
   function addInputStyles(){
@@ -1017,6 +1621,12 @@
 
     updateRateAndExperience();
 
+    attachRateValidation();
+
+    enforceRateRule();
+
+    hookPartnerApplyValidation();
+
   }
 
 
@@ -1035,6 +1645,12 @@
       ){
 
         updateRateAndExperience();
+
+        attachRateValidation();
+
+        enforceRateRule();
+
+        hookPartnerApplyValidation();
 
       }
 
@@ -1075,6 +1691,18 @@
       setTimeout(
         syncCategoryUI,
         1000
+      );
+
+
+      setTimeout(
+        hookPartnerApplyValidation,
+        1500
+      );
+
+
+      setTimeout(
+        hookPartnerApplyValidation,
+        2500
       );
 
     }
