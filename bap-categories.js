@@ -4539,3 +4539,767 @@
 
 
 })();
+/* ==========================================================
+   BOOK A PARTNER — ROBUST PROOF LINK PATCH
+   Saves selected verification proof immediately and
+   attaches its ID to the partner profile after submit.
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+
+  const DB_NAME =
+    'bap_partner_documents';
+
+  const DB_VERSION =
+    1;
+
+  const STORE_NAME =
+    'documents';
+
+
+  function openDB(){
+
+    return new Promise(
+      function(resolve,reject){
+
+        const request =
+          indexedDB.open(
+            DB_NAME,
+            DB_VERSION
+          );
+
+
+        request.onupgradeneeded =
+          function(event){
+
+            const db =
+              event.target.result;
+
+
+            if(
+              !db.objectStoreNames.contains(
+                STORE_NAME
+              )
+            ){
+
+              db.createObjectStore(
+                STORE_NAME,
+                {
+                  keyPath:'id'
+                }
+              );
+
+            }
+
+          };
+
+
+        request.onsuccess =
+          function(){
+
+            resolve(
+              request.result
+            );
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  async function saveFile(
+    id,
+    file
+  ){
+
+    const db =
+      await openDB();
+
+
+    return new Promise(
+      function(resolve,reject){
+
+        const tx =
+          db.transaction(
+            STORE_NAME,
+            'readwrite'
+          );
+
+
+        const store =
+          tx.objectStore(
+            STORE_NAME
+          );
+
+
+        const request =
+          store.put({
+
+            id:id,
+
+            name:
+              file.name,
+
+            type:
+              file.type ||
+              'application/octet-stream',
+
+            blob:
+              file
+
+          });
+
+
+        request.onsuccess =
+          function(){
+
+            resolve(id);
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  async function getFile(
+    id
+  ){
+
+    const db =
+      await openDB();
+
+
+    return new Promise(
+      function(resolve,reject){
+
+        const tx =
+          db.transaction(
+            STORE_NAME,
+            'readonly'
+          );
+
+
+        const store =
+          tx.objectStore(
+            STORE_NAME
+          );
+
+
+        const request =
+          store.get(id);
+
+
+        request.onsuccess =
+          function(){
+
+            resolve(
+              request.result ||
+              null
+            );
+
+          };
+
+
+        request.onerror =
+          function(){
+
+            reject(
+              request.error
+            );
+
+          };
+
+      }
+    );
+
+  }
+
+
+  window.BAP_openProof =
+    async function(id){
+
+      if(!id){
+
+        alert(
+          'Proof document is not available.'
+        );
+
+        return;
+
+      }
+
+
+      try{
+
+        const record =
+          await getFile(id);
+
+
+        if(
+          !record ||
+          !record.blob
+        ){
+
+          alert(
+            'Proof document is not available. Please ask the partner to upload it again.'
+          );
+
+          return;
+
+        }
+
+
+        const blob =
+          record.blob instanceof Blob
+            ? record.blob
+            : new Blob(
+                [
+                  record.blob
+                ],
+                {
+                  type:
+                    record.type ||
+                    'application/octet-stream'
+                }
+              );
+
+
+        const url =
+          URL.createObjectURL(
+            blob
+          );
+
+
+        window.open(
+          url,
+          '_blank',
+          'noopener,noreferrer'
+        );
+
+
+        setTimeout(
+          function(){
+
+            URL.revokeObjectURL(
+              url
+            );
+
+          },
+          60000
+        );
+
+
+      }catch(error){
+
+        console.error(
+          'Proof open error:',
+          error
+        );
+
+
+        alert(
+          'Could not open the verification proof.'
+        );
+
+      }
+
+    };
+
+
+  let currentProofId =
+    null;
+
+
+  /* ==========================================================
+     WATCH PROOF FILE INPUT
+     ========================================================== */
+
+  function watchProofInput(){
+
+    const input =
+      document.getElementById(
+        'partnerExperienceProof'
+      );
+
+
+    if(
+      !input ||
+      input.__BAP_ROBUST_PROOF_WATCH
+    ){
+
+      return;
+
+    }
+
+
+    input.__BAP_ROBUST_PROOF_WATCH =
+      true;
+
+
+    input.addEventListener(
+      'change',
+      async function(){
+
+        const file =
+          input.files &&
+          input.files[0]
+            ? input.files[0]
+            : null;
+
+
+        if(!file){
+
+          currentProofId =
+            null;
+
+          return;
+
+        }
+
+
+        const id =
+          'proof_' +
+          Date.now() +
+          '_' +
+          Math.random()
+            .toString(36)
+            .slice(2);
+
+
+        try{
+
+          await saveFile(
+            id,
+            file
+          );
+
+
+          currentProofId =
+            id;
+
+
+          window.BAP_currentProofId =
+            id;
+
+
+          window.BAP_currentProofName =
+            file.name;
+
+
+        }catch(error){
+
+          console.error(
+            'Proof save failed:',
+            error
+          );
+
+
+          currentProofId =
+            null;
+
+
+          alert(
+            'Proof could not be stored. Please choose the file again.'
+          );
+
+        }
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     ATTACH PROOF ID AFTER PARTNER PROFILE SAVE
+     ========================================================== */
+
+  async function attachProofToPartnerProfile(){
+
+    if(!currentProofId){
+
+      return;
+
+    }
+
+
+    try{
+
+      const profile =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profile'
+          ) ||
+          'null'
+        );
+
+
+      if(!profile){
+
+        return;
+
+      }
+
+
+      profile.experienceProofId =
+        currentProofId;
+
+
+      profile.experienceProofName =
+        window.BAP_currentProofName ||
+        profile.experienceProofName ||
+        '';
+
+
+      delete profile.experienceProofData;
+
+
+      localStorage.setItem(
+        'bap_partner_profile',
+        JSON.stringify(
+          profile
+        )
+      );
+
+
+      window.BAP_currentProofId =
+        currentProofId;
+
+
+    }catch(error){
+
+      console.error(
+        'Proof profile link error:',
+        error
+      );
+
+    }
+
+  }
+
+
+  /* ==========================================================
+     WATCH CREATE PARTNER PROFILE BUTTON
+     ========================================================== */
+
+  function watchCreateButton(){
+
+    const buttons =
+      document.querySelectorAll(
+        'button'
+      );
+
+
+    buttons.forEach(
+      function(button){
+
+        const text =
+          String(
+            button.textContent ||
+            ''
+          ).trim();
+
+
+        if(
+          text !==
+          'Create Partner Profile'
+        ){
+
+          return;
+
+        }
+
+
+        if(
+          button.__BAP_ROBUST_PROOF_BUTTON
+        ){
+
+          return;
+
+        }
+
+
+        button.__BAP_ROBUST_PROOF_BUTTON =
+          true;
+
+
+        button.addEventListener(
+          'click',
+          function(){
+
+            setTimeout(
+              attachProofToPartnerProfile,
+              1500
+            );
+
+
+            setTimeout(
+              attachProofToPartnerProfile,
+              3000
+            );
+
+
+            setTimeout(
+              attachProofToPartnerProfile,
+              5000
+            );
+
+          },
+          true
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ==========================================================
+     ADMIN OPEN PROOF BUTTON
+     ========================================================== */
+
+  function addAdminProofButton(){
+
+    let partner =
+      null;
+
+
+    try{
+
+      partner =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profile'
+          ) ||
+          'null'
+        );
+
+    }catch(error){
+
+      return;
+
+    }
+
+
+    if(
+      !partner ||
+      !partner.experienceProofId
+    ){
+
+      return;
+
+    }
+
+
+    const cards =
+      document.querySelectorAll(
+        '.card'
+      );
+
+
+    let target =
+      null;
+
+
+    for(
+      const card of cards
+    ){
+
+      const text =
+        String(
+          card.textContent ||
+          ''
+        );
+
+
+      if(
+        text.includes(
+          String(
+            partner.name ||
+            ''
+          )
+        ) &&
+        text.includes(
+          String(
+            partner.service ||
+            ''
+          )
+        )
+      ){
+
+        target =
+          card;
+
+        break;
+
+      }
+
+    }
+
+
+    if(!target){
+
+      return;
+
+    }
+
+
+    if(
+      target.querySelector(
+        '#bapRobustOpenProof'
+      )
+    ){
+
+      return;
+
+    }
+
+
+    const button =
+      document.createElement(
+        'button'
+      );
+
+
+    button.id =
+      'bapRobustOpenProof';
+
+
+    button.type =
+      'button';
+
+
+    button.className =
+      'light';
+
+
+    button.style.cssText =
+      'margin-top:10px;font-weight:700;display:block;';
+
+
+    button.textContent =
+      '📄 Open Proof / Certificate';
+
+
+    button.onclick =
+      function(){
+
+        window.BAP_openProof(
+          partner.experienceProofId
+        );
+
+      };
+
+
+    const details =
+      target.querySelector(
+        '#bapAdminSpecializedDetails'
+      );
+
+
+    if(details){
+
+      details.appendChild(
+        button
+      );
+
+    }else{
+
+      target.appendChild(
+        button
+      );
+
+    }
+
+  }
+
+
+  function startRobustProofPatch(){
+
+    watchProofInput();
+
+    watchCreateButton();
+
+    attachProofToPartnerProfile();
+
+    addAdminProofButton();
+
+
+    setTimeout(
+      watchProofInput,
+      500
+    );
+
+
+    setTimeout(
+      watchCreateButton,
+      500
+    );
+
+
+    setTimeout(
+      watchCreateButton,
+      1500
+    );
+
+
+    setTimeout(
+      watchCreateButton,
+      3000
+    );
+
+
+    setTimeout(
+      addAdminProofButton,
+      1000
+    );
+
+
+    setTimeout(
+      addAdminProofButton,
+      2500
+    );
+
+
+    setTimeout(
+      addAdminProofButton,
+      5000
+    );
+
+  }
+
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    startRobustProofPatch
+  );
+
+
+})();
