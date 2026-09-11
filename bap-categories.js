@@ -2732,3 +2732,389 @@
 
 
 })();
+/* ==========================================================
+   BOOK A PARTNER — ADMIN SPECIALIZED DETAILS DISPLAY
+   Shows experience, qualification, proof and gender in
+   the Admin Partner Applications card.
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+
+  function getSavedPartner(){
+
+    try{
+
+      return JSON.parse(
+        localStorage.getItem(
+          'bap_partner_profile'
+        ) || 'null'
+      );
+
+    }catch(error){
+
+      console.warn(
+        'Could not read partner profile:',
+        error
+      );
+
+      return null;
+
+    }
+
+  }
+
+
+  function findPartnerCard(partner){
+
+    if(!partner){
+      return null;
+    }
+
+
+    const cards =
+      document.querySelectorAll(
+        '.card'
+      );
+
+
+    for(
+      const card of cards
+    ){
+
+      const text =
+        String(
+          card.textContent || ''
+        );
+
+
+      if(
+        text.includes(
+          String(
+            partner.name || ''
+          )
+        ) &&
+        text.includes(
+          'Service: ' +
+          String(
+            partner.service || ''
+          )
+        )
+      ){
+
+        return card;
+
+      }
+
+    }
+
+
+    return null;
+
+  }
+
+
+  function addSpecializedDetails(){
+
+    const partner =
+      getSavedPartner();
+
+
+    if(!partner){
+      return;
+    }
+
+
+    if(
+      partner.verification !==
+      'Pending Review'
+    ){
+
+      return;
+
+    }
+
+
+    const category =
+      window.BAP_getCategory
+        ? window.BAP_getCategory(
+            partner.service
+          )
+        : null;
+
+
+    if(
+      !category ||
+      category.type !==
+      'specialized'
+    ){
+
+      return;
+
+    }
+
+
+    const card =
+      findPartnerCard(
+        partner
+      );
+
+
+    if(!card){
+      return;
+    }
+
+
+    if(
+      card.querySelector(
+        '#bapAdminSpecializedDetails'
+      )
+    ){
+
+      return;
+
+    }
+
+
+    const box =
+      document.createElement(
+        'div'
+      );
+
+
+    box.id =
+      'bapAdminSpecializedDetails';
+
+
+    box.style.cssText = [
+
+      'margin-top:16px',
+      'padding:14px',
+      'border:1px solid #ddd6fe',
+      'border-radius:14px',
+      'background:#faf5ff',
+      'line-height:1.6'
+
+    ].join(';');
+
+
+    const experienceYears =
+      partner.experienceYears ??
+      'Not provided';
+
+
+    const experienceDetails =
+      partner.experienceDetails ||
+      'Not provided';
+
+
+    const qualification =
+      partner.qualification ||
+      'Not provided';
+
+
+    const proofName =
+      partner.experienceProofName ||
+      'Not uploaded';
+
+
+    const gender =
+      partner.gender ||
+      'Not provided';
+
+
+    box.innerHTML = `
+
+      <div style="
+        font-size:16px;
+        font-weight:800;
+        margin-bottom:10px;
+      ">
+        🛡 Specialized Verification Details
+      </div>
+
+      <div>
+        <b>Partner Gender:</b>
+        ${gender}
+      </div>
+
+      <div>
+        <b>Relevant Experience:</b>
+        ${experienceYears} years
+      </div>
+
+      <div>
+        <b>Experience Details:</b>
+        ${experienceDetails}
+      </div>
+
+      <div>
+        <b>Qualification / Certification:</b>
+        ${qualification}
+      </div>
+
+      <div>
+        <b>Proof / Certificate:</b>
+        ${proofName}
+      </div>
+
+      <div style="
+        margin-top:10px;
+        padding:9px 10px;
+        border-radius:10px;
+        background:#fff;
+        border:1px solid #e2e8f0;
+        font-size:12px;
+      ">
+        ⚠ Specialized service — verify experience,
+        qualification and proof before approval.
+      </div>
+
+    `;
+
+
+    const buttons =
+      card.querySelector(
+        'button'
+      );
+
+
+    if(buttons){
+
+      buttons.parentNode.insertBefore(
+        box,
+        buttons.parentNode
+          .firstChild
+      );
+
+    }else{
+
+      card.appendChild(
+        box
+      );
+
+    }
+
+  }
+
+
+  function installAdminRenderHook(){
+
+    if(
+      typeof window.renderAdmin !==
+      'function'
+    ){
+
+      return false;
+
+    }
+
+
+    if(
+      window.renderAdmin
+        .__BAP_ADMIN_DETAILS_HOOK
+    ){
+
+      return true;
+
+    }
+
+
+    const originalRenderAdmin =
+      window.renderAdmin;
+
+
+    function wrappedRenderAdmin(){
+
+      const result =
+        originalRenderAdmin.apply(
+          this,
+          arguments
+        );
+
+
+      setTimeout(
+        addSpecializedDetails,
+        50
+      );
+
+
+      setTimeout(
+        addSpecializedDetails,
+        300
+      );
+
+
+      setTimeout(
+        addSpecializedDetails,
+        1000
+      );
+
+
+      return result;
+
+    }
+
+
+    wrappedRenderAdmin
+      .__BAP_ADMIN_DETAILS_HOOK =
+      true;
+
+
+    window.renderAdmin =
+      wrappedRenderAdmin;
+
+
+    return true;
+
+  }
+
+
+  function startAdminDetailsSystem(){
+
+    addSpecializedDetails();
+
+    installAdminRenderHook();
+
+
+    setTimeout(
+      addSpecializedDetails,
+      500
+    );
+
+
+    setTimeout(
+      installAdminRenderHook,
+      1000
+    );
+
+
+    setTimeout(
+      addSpecializedDetails,
+      1500
+    );
+
+
+    setTimeout(
+      installAdminRenderHook,
+      2000
+    );
+
+
+    setTimeout(
+      addSpecializedDetails,
+      3000
+    );
+
+  }
+
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    startAdminDetailsSystem
+  );
+
+
+})();
