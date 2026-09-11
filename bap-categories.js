@@ -6414,3 +6414,177 @@
 
 
 })();
+/* ==========================================================
+   BOOK A PARTNER — PERMANENT DUPLICATE PROOF CLEANUP
+   Keeps exactly ONE "Open Proof / Certificate" button
+   inside each partner card.
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+
+  function cleanupDuplicateProofButtons(){
+
+    const buttons =
+      Array.from(
+        document.querySelectorAll(
+          'button'
+        )
+      ).filter(
+        function(button){
+
+          return String(
+            button.textContent || ''
+          ).trim()
+          ===
+          '📄 Open Proof / Certificate';
+
+        }
+      );
+
+
+    const groups =
+      new Map();
+
+
+    buttons.forEach(
+      function(button){
+
+        const card =
+          button.closest(
+            '.card'
+          );
+
+
+        const key =
+          card ||
+          button.parentElement ||
+          document.body;
+
+
+        if(
+          !groups.has(
+            key
+          )
+        ){
+
+          groups.set(
+            key,
+            []
+          );
+
+        }
+
+
+        groups.get(
+          key
+        ).push(
+          button
+        );
+
+      }
+    );
+
+
+    groups.forEach(
+      function(group){
+
+        /*
+          Keep the first button and remove
+          every duplicate from the same card.
+        */
+
+        for(
+          let i = 1;
+          i < group.length;
+          i++
+        ){
+
+          group[i].remove();
+
+        }
+
+      }
+    );
+
+  }
+
+
+  function startPermanentProofCleanup(){
+
+    cleanupDuplicateProofButtons();
+
+
+    /*
+      Clean repeatedly because the Admin panel
+      can re-render its cards after actions.
+    */
+
+    setTimeout(
+      cleanupDuplicateProofButtons,
+      250
+    );
+
+
+    setTimeout(
+      cleanupDuplicateProofButtons,
+      750
+    );
+
+
+    setTimeout(
+      cleanupDuplicateProofButtons,
+      1500
+    );
+
+
+    setTimeout(
+      cleanupDuplicateProofButtons,
+      3000
+    );
+
+
+    /*
+      Watch for newly rendered Admin content.
+    */
+
+    if(
+      !window.__BAP_PROOF_OBSERVER
+    ){
+
+      const observer =
+        new MutationObserver(
+          function(){
+
+            cleanupDuplicateProofButtons();
+
+          }
+        );
+
+
+      observer.observe(
+        document.body,
+        {
+          childList:true,
+          subtree:true
+        }
+      );
+
+
+      window.__BAP_PROOF_OBSERVER =
+        observer;
+
+    }
+
+  }
+
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    startPermanentProofCleanup
+  );
+
+
+})();
