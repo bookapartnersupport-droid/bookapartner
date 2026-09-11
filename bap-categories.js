@@ -6306,3 +6306,111 @@
 
 
 })();
+/* ==========================================================
+   BOOK A PARTNER — DUPLICATE PROOF BUTTON CLEANUP
+   Keeps only one Open Proof / Certificate button per
+   specialized partner card.
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+
+  function removeDuplicateProofButtons(){
+
+    const buttons =
+      document.querySelectorAll(
+        'button'
+      );
+
+
+    const seenCards =
+      new Set();
+
+
+    buttons.forEach(
+      function(button){
+
+        const text =
+          String(
+            button.textContent || ''
+          ).trim();
+
+
+        if(
+          !text.includes(
+            'Open Proof / Certificate'
+          )
+        ){
+
+          return;
+
+        }
+
+
+        const card =
+          button.closest(
+            '.card'
+          );
+
+
+        if(!card){
+
+          return;
+
+        }
+
+
+        if(
+          seenCards.has(
+            card
+          )
+        ){
+
+          button.remove();
+
+          return;
+
+        }
+
+
+        seenCards.add(
+          card
+        );
+
+      }
+    );
+
+  }
+
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    function(){
+
+      removeDuplicateProofButtons();
+
+
+      setTimeout(
+        removeDuplicateProofButtons,
+        500
+      );
+
+
+      setTimeout(
+        removeDuplicateProofButtons,
+        1500
+      );
+
+
+      setTimeout(
+        removeDuplicateProofButtons,
+        3000
+      );
+
+    }
+  );
+
+
+})();
