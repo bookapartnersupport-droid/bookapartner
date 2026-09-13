@@ -3252,3 +3252,192 @@
   );
 
 })();
+/* BAP v8 — FIX ACTUAL CUSTOMER MATCH() */
+(function(){
+
+  window.match = function(){
+
+    const service =
+      document.getElementById('svc')?.value || '';
+
+    const age =
+      document.getElementById('age')?.value || '';
+
+    const location =
+      document.getElementById('loc')?.value ||
+      'Gurgaon NCR';
+
+    const results =
+      document.getElementById('results');
+
+    if(!results){
+      return;
+    }
+
+    let partners = [];
+
+    try{
+
+      partners =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profiles'
+          ) || '[]'
+        );
+
+    }catch(e){
+
+      partners = [];
+    }
+
+    if(!Array.isArray(partners)){
+      partners = [];
+    }
+
+    const approved =
+      partners.filter(function(p){
+
+        if(
+          String(p.verification || '')
+            .toLowerCase() !== 'approved'
+        ){
+          return false;
+        }
+
+        const services =
+          Array.isArray(p.services) &&
+          p.services.length
+            ? p.services
+            : [p.service];
+
+        const serviceOK =
+          services.includes(service);
+
+        const a =
+          Number(p.age || 0);
+
+        let ageOK = true;
+
+        if(age === '21–25'){
+          ageOK = a >= 21 && a <= 25;
+        }else if(age === '26–30'){
+          ageOK = a >= 26 && a <= 30;
+        }else if(age === '31–35'){
+          ageOK = a >= 31 && a <= 35;
+        }else if(age === '36–45'){
+          ageOK = a >= 36 && a <= 45;
+        }else if(age === '46+'){
+          ageOK = a >= 46;
+        }
+
+        return serviceOK && ageOK;
+      });
+
+    let html =
+      '<h2>Available Partners</h2>' +
+      '<p class="muted">' +
+      service +
+      ' • ' +
+      location +
+      ' • Preferred age: ' +
+      age +
+      '</p>' +
+      '<div class="partners">';
+
+    approved.forEach(function(p){
+
+      html +=
+        '<div class="card">' +
+
+        '<div class="partner">' +
+
+        '<div class="avatar">' +
+        String(p.name || 'P').charAt(0) +
+        '</div>' +
+
+        '<div>' +
+
+        '<b>' +
+        String(p.name || 'Partner') +
+        '</b> ' +
+
+        '<span class="verified">' +
+        '✓ VERIFIED' +
+        '</span>' +
+
+        '<div class="muted">' +
+        'Age ' +
+        String(p.age || '-') +
+        ' • ' +
+        String(p.area || '-') +
+        '</div>' +
+
+        '<div class="rating">' +
+        '★★★★★ ' +
+        String(p.rating || 'New') +
+        ' (' +
+        String(p.reviews || 0) +
+        ')' +
+        '</div>' +
+
+        '<span class="available">' +
+        '● AVAILABLE' +
+        '</span>' +
+
+        '</div>' +
+
+        '</div>' +
+
+        '<div class="price">' +
+        '₹' +
+        String(p.rate || '-') +
+        ' <small>/ hour</small>' +
+        '</div>' +
+
+        '<div>' +
+
+        (
+          Array.isArray(p.services)
+            ? p.services
+            : [p.service]
+        ).map(function(s){
+
+          return (
+            '<span class="pill">' +
+            String(s) +
+            '</span>'
+          );
+
+        }).join('') +
+
+        '</div>' +
+
+        '<div class="transportBox">' +
+        '🚗 <b>Transport:</b> Free up to 10 km. ' +
+        'Beyond 10 km, maximum ₹150.' +
+        '</div>' +
+
+        '<button class="pink full" ' +
+        'onclick="BAP_multiSelectPartner(\'' +
+        String(p.name).replace(/'/g,"\\'") +
+        '\')">' +
+        'Request Booking' +
+        '</button>' +
+
+        '</div>';
+    });
+
+    if(!approved.length){
+
+      html +=
+        '<div class="card">' +
+        'No matching verified/available partners found.' +
+        '</div>';
+    }
+
+    html += '</div>';
+
+    results.innerHTML = html;
+  };
+
+})();
