@@ -3441,3 +3441,254 @@
   };
 
 })();
+/* BAP FINAL — FORCE CUSTOMER SEARCH BUTTON */
+
+(function(){
+
+  function runMultiPartnerSearch(){
+
+    const service =
+      document.getElementById('svc')?.value || '';
+
+    const age =
+      document.getElementById('age')?.value || '';
+
+    const location =
+      document.getElementById('loc')?.value ||
+      'Gurgaon NCR';
+
+    const results =
+      document.getElementById('results');
+
+    if(!results){
+      return;
+    }
+
+    let partners = [];
+
+    try{
+
+      partners =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profiles'
+          ) || '[]'
+        );
+
+    }catch(e){
+
+      partners = [];
+    }
+
+    const list =
+      (Array.isArray(partners) ? partners : [])
+      .filter(function(p){
+
+        if(
+          String(p.verification || '')
+            .toLowerCase() !== 'approved'
+        ){
+          return false;
+        }
+
+        const services =
+          Array.isArray(p.services)
+            ? p.services
+            : [p.service];
+
+        if(
+          !services.includes(service)
+        ){
+          return false;
+        }
+
+        const a =
+          Number(p.age || 0);
+
+        if(age === '21–25'){
+          return a >= 21 && a <= 25;
+        }
+
+        if(age === '26–30'){
+          return a >= 26 && a <= 30;
+        }
+
+        if(age === '31–35'){
+          return a >= 31 && a <= 35;
+        }
+
+        if(age === '36–45'){
+          return a >= 36 && a <= 45;
+        }
+
+        if(age === '46+'){
+          return a >= 46;
+        }
+
+        return true;
+      });
+
+    let html =
+      '<h2>Available Partners</h2>' +
+      '<p class="muted">' +
+      service +
+      ' • ' +
+      location +
+      ' • Preferred age: ' +
+      age +
+      '</p>' +
+      '<div class="partners">';
+
+    list.forEach(function(p){
+
+      html +=
+        '<div class="card">' +
+
+        '<div class="partner">' +
+
+        '<div class="avatar">' +
+        String(p.name || 'P').charAt(0) +
+        '</div>' +
+
+        '<div>' +
+
+        '<b>' +
+        String(p.name || 'Partner') +
+        '</b> ' +
+
+        '<span class="verified">' +
+        '✓ VERIFIED' +
+        '</span>' +
+
+        '<div class="muted">' +
+        'Age ' +
+        String(p.age || '-') +
+        ' • ' +
+        String(p.area || '-') +
+        '</div>' +
+
+        '<div class="rating">' +
+        '★★★★★ ' +
+        String(p.rating || 'New') +
+        ' (' +
+        String(p.reviews || 0) +
+        ')' +
+        '</div>' +
+
+        '<span class="available">' +
+        '● AVAILABLE' +
+        '</span>' +
+
+        '</div>' +
+
+        '</div>' +
+
+        '<div class="price">' +
+        '₹' +
+        String(p.rate || '-') +
+        ' <small>/ hour</small>' +
+        '</div>' +
+
+        '<div>' +
+
+        (
+          Array.isArray(p.services)
+            ? p.services
+            : [p.service]
+        ).map(function(s){
+
+          return (
+            '<span class="pill">' +
+            String(s) +
+            '</span>'
+          );
+
+        }).join('') +
+
+        '</div>' +
+
+        '<div class="transportBox">' +
+        '🚗 <b>Transport:</b> Free up to 10 km. ' +
+        'Beyond 10 km, maximum ₹150.' +
+        '</div>' +
+
+        '<button class="pink full" ' +
+        'data-bap-partner="' +
+        String(p.id || '') +
+        '">' +
+        'Request Booking' +
+        '</button>' +
+
+        '</div>';
+    });
+
+    if(!list.length){
+
+      html +=
+        '<div class="card">' +
+        'No matching verified/available partners found.' +
+        '</div>';
+    }
+
+    html += '</div>';
+
+    results.innerHTML = html;
+  }
+
+  function installFinalSearch(){
+
+    const buttons =
+      Array.from(
+        document.querySelectorAll('button')
+      ).filter(function(button){
+
+        return String(
+          button.textContent || ''
+        ).trim()
+        .toLowerCase()
+        .includes(
+          'find available partners'
+        );
+      });
+
+    buttons.forEach(function(button){
+
+      button.onclick =
+        function(event){
+
+          if(event){
+            event.preventDefault();
+            event.stopPropagation();
+          }
+
+          runMultiPartnerSearch();
+          return false;
+        };
+    });
+  }
+
+  if(
+    document.readyState === 'loading'
+  ){
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      function(){
+
+        setTimeout(
+          installFinalSearch,
+          500
+        );
+
+      }
+    );
+
+  }else{
+
+    setTimeout(
+      installFinalSearch,
+      500
+    );
+  }
+
+})();
