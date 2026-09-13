@@ -2556,3 +2556,270 @@
   );
 
 })();
+/* ==========================================================
+   BAP v5 — DIRECT IMAGE RENDER FIX
+   Reads photoData / selfieData directly
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+  function esc(v){
+
+    return String(
+      v == null ? '' : v
+    )
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+  }
+
+  function renderAdminPartnersV5(){
+
+    const box =
+      document.getElementById(
+        'partnerApplications'
+      );
+
+    if(!box){
+      return false;
+    }
+
+    let partners = [];
+
+    try{
+
+      partners =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profiles'
+          ) || '[]'
+        );
+
+    }catch(e){
+
+      partners = [];
+    }
+
+    if(!Array.isArray(partners)){
+      partners = [];
+    }
+
+    box.innerHTML =
+      '<div style="font-weight:700;margin-bottom:14px;">' +
+      'Total Partners: ' +
+      partners.length +
+      '</div>';
+
+    partners.forEach(function(p){
+
+      const photo =
+        p.photoData ||
+        p.photo ||
+        '';
+
+      const selfie =
+        p.selfieData ||
+        p.selfie ||
+        '';
+
+      const photoHTML =
+        photo ?
+
+        '<img src="' +
+        photo +
+        '" style="' +
+        'width:95px;' +
+        'height:95px;' +
+        'object-fit:cover;' +
+        'border-radius:12px;' +
+        'display:block;' +
+        '">' :
+
+        '<div style="' +
+        'width:95px;' +
+        'height:95px;' +
+        'background:#eee;' +
+        'border-radius:12px;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'justify-content:center;' +
+        '">No Photo</div>';
+
+      const selfieHTML =
+        selfie ?
+
+        '<img src="' +
+        selfie +
+        '" style="' +
+        'width:95px;' +
+        'height:95px;' +
+        'object-fit:cover;' +
+        'border-radius:12px;' +
+        'display:block;' +
+        '">' :
+
+        '<div style="' +
+        'width:95px;' +
+        'height:95px;' +
+        'background:#eee;' +
+        'border-radius:12px;' +
+        'display:flex;' +
+        'align-items:center;' +
+        'justify-content:center;' +
+        '">No Selfie</div>';
+
+      const card =
+        document.createElement('div');
+
+      card.style.cssText =
+        'border:1px solid #ddd;' +
+        'border-radius:16px;' +
+        'padding:16px;' +
+        'margin-bottom:16px;' +
+        'background:#fff;' +
+        'box-shadow:0 4px 16px rgba(0,0,0,.06);';
+
+      card.innerHTML =
+
+        '<div style="' +
+        'display:flex;' +
+        'gap:16px;' +
+        'flex-wrap:wrap;' +
+        'align-items:flex-start;' +
+        '">' +
+
+        '<div>' +
+        photoHTML +
+        '<div style="margin-top:6px;">' +
+        'Profile Photo' +
+        '</div>' +
+        '</div>' +
+
+        '<div>' +
+        selfieHTML +
+        '<div style="margin-top:6px;">' +
+        'Selfie' +
+        '</div>' +
+        '</div>' +
+
+        '<div style="' +
+        'flex:1;' +
+        'min-width:260px;' +
+        '">' +
+
+        '<h3 style="margin:0 0 8px 0;">' +
+        esc(p.name || '-') +
+        '</h3>' +
+
+        '<div style="line-height:1.7;">' +
+
+        '<div><b>Status:</b> ' +
+        esc(
+          p.verification ||
+          'Pending Review'
+        ) +
+        '</div>' +
+
+        '<div><b>Age:</b> ' +
+        esc(p.age || '-') +
+        '</div>' +
+
+        '<div><b>Gender:</b> ' +
+        esc(p.gender || '-') +
+        '</div>' +
+
+        '<div><b>Mobile:</b> ' +
+        esc(p.mobile || '-') +
+        '</div>' +
+
+        '<div><b>Area:</b> ' +
+        esc(p.area || '-') +
+        '</div>' +
+
+        '<div><b>Service:</b> ' +
+        esc(p.service || '-') +
+        '</div>' +
+
+        '<div><b>Rate:</b> ₹' +
+        esc(p.rate || '-') +
+        '</div>' +
+
+        '<div><b>Availability:</b> ' +
+        esc(p.availability || '-') +
+        '</div>' +
+
+        '<div><b>Experience:</b> ' +
+        esc(p.experience || '-') +
+        '</div>' +
+
+        '<div><b>Qualification:</b> ' +
+        esc(p.qualification || '-') +
+        '</div>' +
+
+        '</div>' +
+
+        '<div style="margin-top:10px;">' +
+
+        '<b>Proof:</b> ' +
+
+        (
+          p.proofId ?
+
+          '<button type="button" ' +
+          'onclick="BAP_openPartnerProof(\'' +
+          esc(p.id) +
+          '\')" ' +
+          'style="margin-left:6px;">' +
+          'Open Proof' +
+          '</button>' :
+
+          '<span style="color:#777;">No proof</span>'
+        ) +
+
+        '</div>' +
+
+        '<div style="margin-top:14px;">' +
+
+        '<button type="button" ' +
+        'onclick="BAP_adminApprovePartner(\'' +
+        esc(p.id) +
+        '\')">' +
+        'Approve' +
+        '</button>' +
+
+        '<button type="button" ' +
+        'onclick="BAP_adminRejectPartner(\'' +
+        esc(p.id) +
+        '\')" ' +
+        'style="margin-left:8px;">' +
+        'Reject' +
+        '</button>' +
+
+        '</div>' +
+
+        '</div>' +
+
+        '</div>';
+
+      box.appendChild(card);
+
+    });
+
+    return true;
+  }
+
+  window.renderAllPartnerApplications =
+    renderAdminPartnersV5;
+
+  setTimeout(
+    function(){
+      renderAdminPartnersV5();
+    },
+    500
+  );
+
+})();
