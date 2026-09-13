@@ -2086,3 +2086,473 @@
   }
 
 })();
+/* ==========================================================
+   BOOK A PARTNER — v4 IMAGE COMPATIBILITY FIX
+   Supports old image fields:
+   photoData / profilePhoto / profilePhotoData / imageData
+   selfieData / selfiePhoto / selfiePhotoData
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+  const PARTNER_LIST_KEY = 'bap_partner_profiles';
+
+  function getRawPartners(){
+
+    try{
+
+      const data =
+        JSON.parse(
+          localStorage.getItem(
+            PARTNER_LIST_KEY
+          ) || '[]'
+        );
+
+      return Array.isArray(data)
+        ? data
+        : [];
+
+    }catch(e){
+
+      console.error(
+        'v4 partner data error',
+        e
+      );
+
+      return [];
+    }
+  }
+
+  function firstImage(){
+
+    for(
+      let i = 0;
+      i < arguments.length;
+      i++
+    ){
+
+      const value =
+        arguments[i];
+
+      if(
+        typeof value === 'string' &&
+        value.trim()
+      ){
+
+        return value;
+      }
+    }
+
+    return '';
+  }
+
+  function renderWithOldImages(){
+
+    const box =
+      document.getElementById(
+        'partnerApplications'
+      );
+
+    if(!box){
+      return false;
+    }
+
+    const partners =
+      getRawPartners();
+
+    if(!partners.length){
+      return false;
+    }
+
+    /*
+      Temporarily create the new photo/selfie fields
+      from the old saved fields.
+
+      We restore the original data immediately after
+      rendering so localStorage size does not increase.
+    */
+
+    const originalJSON =
+      JSON.stringify(partners);
+
+    const tempPartners =
+      partners.map(function(p){
+
+        const copy =
+          Object.assign({}, p);
+
+        copy.photo =
+          firstImage(
+            p.photo,
+            p.photoData,
+            p.profilePhoto,
+            p.profilePhotoData,
+            p.profile_photo,
+            p.image,
+            p.imageData
+          );
+
+        copy.selfie =
+          firstImage(
+            p.selfie,
+            p.selfieData,
+            p.selfiePhoto,
+            p.selfiePhotoData,
+            p.selfie_photo,
+            p.selfieImage,
+            p.selfieImageData
+          );
+
+        return copy;
+      });
+
+    try{
+
+      localStorage.setItem(
+        PARTNER_LIST_KEY,
+        JSON.stringify(
+          tempPartners
+        )
+      );
+
+      /*
+        Call the v3 renderer already installed
+        on the page.
+      */
+
+      if(
+        typeof window.renderAllPartnerApplications ===
+        'function'
+      ){
+
+        window.renderAllPartnerApplications();
+      }
+
+      /*
+        Restore original storage so we don't duplicate
+        large base64 images.
+      */
+
+      localStorage.setItem(
+        PARTNER_LIST_KEY,
+        originalJSON
+      );
+
+      return true;
+
+    }catch(error){
+
+      console.error(
+        'v4 image render error',
+        error
+      );
+
+      try{
+
+        localStorage.setItem(
+          PARTNER_LIST_KEY,
+          originalJSON
+        );
+
+      }catch(e){}
+
+      return false;
+    }
+  }
+
+  /*
+    Replace the global renderer with the v4 renderer.
+  */
+
+  const oldRenderer =
+    window.renderAllPartnerApplications;
+
+  window.renderAllPartnerApplications =
+    function(){
+
+      const box =
+        document.getElementById(
+          'partnerApplications'
+        );
+
+      if(!box){
+        return false;
+      }
+
+      const partners =
+        getRawPartners();
+
+      if(!partners.length){
+
+        box.innerHTML =
+          '<div style="padding:20px;color:#777;">' +
+          'No partner applications found.' +
+          '</div>';
+
+        return true;
+      }
+
+      const tempPartners =
+        partners.map(function(p){
+
+          const copy =
+            Object.assign({}, p);
+
+          copy.photo =
+            firstImage(
+              p.photo,
+              p.photoData,
+              p.profilePhoto,
+              p.profilePhotoData,
+              p.profile_photo,
+              p.image,
+              p.imageData
+            );
+
+          copy.selfie =
+            firstImage(
+              p.selfie,
+              p.selfieData,
+              p.selfiePhoto,
+              p.selfiePhotoData,
+              p.selfie_photo,
+              p.selfieImage,
+              p.selfieImageData
+            );
+
+          return copy;
+        });
+
+      /*
+        Render temporarily through the existing v3 card
+        renderer by temporarily updating storage.
+      */
+
+      const originalJSON =
+        JSON.stringify(partners);
+
+      try{
+
+        localStorage.setItem(
+          PARTNER_LIST_KEY,
+          JSON.stringify(
+            tempPartners
+          )
+        );
+
+        if(
+          typeof oldRenderer ===
+          'function'
+        ){
+
+          oldRenderer();
+
+        }else{
+
+          /*
+            Fallback renderer if the old renderer
+            isn't available.
+          */
+
+          box.innerHTML =
+            '<div style="font-weight:700;margin-bottom:14px;">' +
+            'Total Partners: ' +
+            tempPartners.length +
+            '</div>' +
+
+            tempPartners.map(
+              function(p){
+
+                const photo =
+                  p.photo ?
+                  '<img src="' +
+                  p.photo +
+                  '" style="width:95px;height:95px;object-fit:cover;border-radius:12px;">' :
+                  '<div style="width:95px;height:95px;background:#eee;border-radius:12px;display:flex;align-items:center;justify-content:center;">No Photo</div>';
+
+                const selfie =
+                  p.selfie ?
+                  '<img src="' +
+                  p.selfie +
+                  '" style="width:95px;height:95px;object-fit:cover;border-radius:12px;">' :
+                  '<div style="width:95px;height:95px;background:#eee;border-radius:12px;display:flex;align-items:center;justify-content:center;">No Selfie</div>';
+
+                return (
+                  '<div style="border:1px solid #ddd;border-radius:16px;padding:16px;margin-bottom:16px;">' +
+
+                  '<div style="display:flex;gap:16px;flex-wrap:wrap;">' +
+
+                  '<div>' +
+                  photo +
+                  '<div>Profile Photo</div>' +
+                  '</div>' +
+
+                  '<div>' +
+                  selfie +
+                  '<div>Selfie</div>' +
+                  '</div>' +
+
+                  '<div>' +
+
+                  '<h3>' +
+                  String(p.name || '-') +
+                  '</h3>' +
+
+                  '<div><b>Status:</b> ' +
+                  String(
+                    p.verification ||
+                    'Pending Review'
+                  ) +
+                  '</div>' +
+
+                  '<div><b>Age:</b> ' +
+                  String(p.age || '-') +
+                  '</div>' +
+
+                  '<div><b>Gender:</b> ' +
+                  String(p.gender || '-') +
+                  '</div>' +
+
+                  '<div><b>Mobile:</b> ' +
+                  String(p.mobile || '-') +
+                  '</div>' +
+
+                  '<div><b>Area:</b> ' +
+                  String(p.area || '-') +
+                  '</div>' +
+
+                  '<div><b>Service:</b> ' +
+                  String(p.service || '-') +
+                  '</div>' +
+
+                  '<div><b>Rate:</b> ₹' +
+                  String(p.rate || '-') +
+                  '</div>' +
+
+                  '<div style="margin-top:12px;">' +
+
+                  '<button type="button" onclick="BAP_adminApprovePartner(\'' +
+                  String(p.id) +
+                  '\')">' +
+                  'Approve' +
+                  '</button> ' +
+
+                  '<button type="button" onclick="BAP_adminRejectPartner(\'' +
+                  String(p.id) +
+                  '\')">' +
+                  'Reject' +
+                  '</button>' +
+
+                  '</div>' +
+
+                  '</div>' +
+
+                  '</div>' +
+
+                  '</div>'
+                );
+              }
+            ).join('');
+        }
+
+      }catch(error){
+
+        console.error(
+          'v4 renderer error',
+          error
+        );
+
+      }finally{
+
+        try{
+
+          localStorage.setItem(
+            PARTNER_LIST_KEY,
+            originalJSON
+          );
+
+        }catch(e){}
+      }
+
+      return true;
+    };
+
+  /*
+    Re-hook Admin so after the old admin renderer runs,
+    the v4 image-compatible renderer runs once.
+  */
+
+  if(
+    typeof window.renderAdmin ===
+    'function' &&
+    !window.renderAdmin.__BAP_V4_IMAGE_HOOK
+  ){
+
+    const previousAdmin =
+      window.renderAdmin;
+
+    function v4RenderAdmin(){
+
+      let result;
+
+      try{
+
+        result =
+          previousAdmin.apply(
+            this,
+            arguments
+          );
+
+      }catch(error){
+
+        console.error(
+          'v4 admin wrapper error',
+          error
+        );
+      }
+
+      setTimeout(
+        function(){
+
+          window.renderAllPartnerApplications();
+
+        },
+        100
+      );
+
+      return result;
+    }
+
+    v4RenderAdmin.__BAP_V4_IMAGE_HOOK =
+      true;
+
+    v4RenderAdmin.__BAP_V4_ORIGINAL =
+      previousAdmin;
+
+    window.renderAdmin =
+      v4RenderAdmin;
+  }
+
+  /*
+    Give the page a small final refresh after loading.
+  */
+
+  setTimeout(
+    function(){
+
+      if(
+        document.getElementById(
+          'partnerApplications'
+        )
+      ){
+
+        window.renderAllPartnerApplications();
+      }
+
+    },
+    800
+  );
+
+})();
