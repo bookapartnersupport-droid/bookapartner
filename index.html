@@ -7652,3 +7652,173 @@ initGooglePlaces();
 </div>
 </body>
 </html>
+<script>
+(function(){
+
+  function finalPartnerSearch(){
+
+    const service =
+      document.getElementById('service')?.value || '';
+
+    const gender =
+      document.getElementById('customerGenderPreference')?.value || '';
+
+    const age =
+      document.getElementById('age')?.value || '';
+
+    const results =
+      document.getElementById('results');
+
+    if(!results) return;
+
+    let partners = [];
+
+    try{
+      partners = JSON.parse(
+        localStorage.getItem('bap_partner_profiles') || '[]'
+      );
+    }catch(e){
+      partners = [];
+    }
+
+    if(!Array.isArray(partners)){
+      partners = [];
+    }
+
+    const matched = partners.filter(function(p){
+
+      if(String(p.verification || '').toLowerCase() !== 'approved'){
+        return false;
+      }
+
+      const services =
+        Array.isArray(p.services) && p.services.length
+          ? p.services
+          : [p.service];
+
+      if(!services.includes(service)){
+        return false;
+      }
+
+      const pg =
+        String(p.gender || '').toLowerCase();
+
+      const wg =
+        String(gender || '').toLowerCase()
+          .replace(' partner','');
+
+      if(
+        wg &&
+        wg !== 'any' &&
+        !pg.includes(wg)
+      ){
+        return false;
+      }
+
+      const a = Number(p.age || 0);
+
+      if(age === '21–25' && !(a >= 21 && a <= 25)) return false;
+      if(age === '26–30' && !(a >= 26 && a <= 30)) return false;
+      if(age === '31–35' && !(a >= 31 && a <= 35)) return false;
+      if(age === '36–45' && !(a >= 36 && a <= 45)) return false;
+      if(age === '46+' && a < 46) return false;
+
+      return true;
+    });
+
+    let html =
+      '<h2>Available Partners</h2>' +
+      '<p class="muted">' +
+      service + ' • ' + gender +
+      ' • Preferred age: ' + age +
+      '</p>' +
+      '<div class="partners">';
+
+    matched.forEach(function(p){
+
+      html +=
+        '<div class="card">' +
+          '<div class="partner">' +
+            '<div class="avatar">' +
+              String(p.name || 'P').charAt(0) +
+            '</div>' +
+            '<div>' +
+              '<b>' + String(p.name || 'Partner') + '</b> ' +
+              '<span class="verified">✓ VERIFIED</span>' +
+              '<div class="muted">Age ' +
+                String(p.age || '-') +
+                ' • ' +
+                String(p.area || '-') +
+              '</div>' +
+              '<div class="rating">★★★★★ ' +
+                String(p.rating || 'New') +
+                ' (' + String(p.reviews || 0) + ')' +
+              '</div>' +
+              '<span class="available">● AVAILABLE</span>' +
+            '</div>' +
+          '</div>' +
+
+          '<div class="price">₹' +
+            String(p.rate || '-') +
+            ' <small>/ hour</small>' +
+          '</div>' +
+
+          '<div>' +
+            (
+              Array.isArray(p.services)
+                ? p.services
+                : [p.service]
+            ).map(function(s){
+              return '<span class="pill">' +
+                String(s) +
+                '</span>';
+            }).join('') +
+          '</div>' +
+
+          '<div class="transportBox">' +
+            '🚗 <b>Transport:</b> Free up to 10 km. ' +
+            'Beyond 10 km, maximum ₹150.' +
+          '</div>' +
+
+          '<button class="pink full" ' +
+            'onclick="alert(\'Booking request for ' +
+            String(p.name).replace(/'/g,"\\'") +
+            '\')">' +
+            'Request Booking' +
+          '</button>' +
+
+        '</div>';
+    });
+
+    if(!matched.length){
+      html +=
+        '<div class="card">' +
+        'No matching verified/available partners found.' +
+        '</div>';
+    }
+
+    html += '</div>';
+
+    results.innerHTML = html;
+  }
+
+  function installFinalButton(){
+
+    document
+      .querySelectorAll('button')
+      .forEach(function(btn){
+
+        if(
+          String(btn.textContent || '').trim() ===
+          'Find Available Partners'
+        ){
+
+          btn.onclick = finalPartnerSearch;
+        }
+      });
+  }
+
+  installFinalButton();
+
+})();
+</script>
