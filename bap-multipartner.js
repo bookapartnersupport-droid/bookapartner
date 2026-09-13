@@ -1,9 +1,20 @@
 /* ==========================================================
-   BOOK A PARTNER — MULTI PARTNER SYSTEM
+   BOOK A PARTNER — MULTI PARTNER SYSTEM v2
    ----------------------------------------------------------
    Converts the prototype from one partner record to an array
    of partner profiles while keeping old localStorage keys
    working for compatibility.
+
+   v2 fixes:
+   - Multi-partner storage
+   - Admin renders ALL partners
+   - Admin hook reinforced after main page script loads
+   - Customer partner search uses all approved partners
+   - Selected/current partner support
+   - Partner dashboard filtering
+   - Proof document support
+   - Repeated hook reinforcement
+   - MutationObserver for Admin re-render
    ========================================================== */
 
 (function(){
@@ -25,722 +36,2147 @@
   }
 
   function safeJsonParse(value, fallback){
-    try{ return JSON.parse(value); }catch(e){ return fallback; }
+    try{
+      return JSON.parse(value);
+    }catch(e){
+      return fallback;
+    }
   }
 
-  function slugId(){
-    return 'BAP' + Date.now() + Math.random().toString(36).slice(2,8);
+  function uid(prefix){
+    return prefix + '_' +
+      Date.now().toString(36) + '_' +
+      Math.random().toString(36).slice(2,10);
   }
 
-  function migratePartners(){
-    let list = safeJsonParse(localStorage.getItem(PARTNER_LIST_KEY) || '[]', []);
-    if(!Array.isArray(list)) list = [];
+  function getPartners(){
+    let list = safeJsonParse(
+      localStorage.getItem(PARTNER_LIST_KEY) || '[]',
+      []
+    );
 
-    let changed = false;
+    if(!Array.isArray(list)){
+      list = [];
+    }
 
     list = list.map(function(p){
-      if(p && !p.id){
-        p.id = slugId();
-        changed = true;
+      if(!p.id){
+        p.id = uid('partner');
       }
       return p;
-    }).filter(Boolean);
+    });
 
-    const legacy = safeJsonParse(localStorage.getItem(LEGACY_KEY) || 'null', null);
+    localStorage.setItem(PARTNER_LIST_KEY, JSON.stringify(list));
 
-    if(legacy){
-      const exists = list.some(function(p){
-        return p.id === legacy.id ||
-          (p.mobile && legacy.mobile && p.mobile === legacy.mobile);
-      });
+    return list;
+  }
 
-      if(!exists){
-        if(!legacy.id) legacy.id = slugId();
-        list.push(legacy);
-        changed = true;
+  function savePartners(list){
+    localStorage.setItem(PARTNER_LIST_KEY, JSON.stringify(list));
+    return list;
+  }
+
+  function findPartner(id){
+    if(!id){
+      return null;
+    }
+
+    return getPartners().find(function(p){
+      return String(p.id) === String(id);
+    }) || null;
+  }
+
+  function getCurrentPartnerId(){
+    return localStorage.getItem(CURRENT_KEY) || '';
+  }
+
+  function setCurrentPartner(id){
+    if(id){
+      localStorage.setItem(CURRENT_KEY, String(id));
+    }else{
+      localStorage.removeItem(CURRENT_KEY);
+    }
+  }
+
+  function getCurrentPartner(){
+    const id = getCurrentPartnerId();
+
+    if(id){
+      const p = findPartner(id);
+      if(p){
+        return p;
       }
     }
 
-    if(changed || localStorage.getItem(PARTNER_LIST_KEY) === null){
-      try{
-        localStorage.setItem(PARTNER_LIST_KEY, JSON.stringify(list));
-      }catch(e){
-        console.warn('Multi partner list save warning:', e);
+    const list = getPartners();
+
+    if(list.length){
+      return list[list.length - 1];
+    }
+
+    return null;
+  }
+
+  /* ----------------------------------------------------------
+     MIGRATION
+     ---------------------------------------------------------- */
+
+  function migratePartners(){
+    let list = safeJsonParse(
+      localStorage.getItem(PARTNER_LIST_KEY) || '[]',
+      []
+    );
+
+    if(!Array.isArray(list)){
+      list = [];
+    }
+
+    const legacy = safeJsonParse(
+      localStorage.getItem(LEGACY_KEY) || 'null',
+      null
+    );
+
+    if(legacy && typeof legacy === 'object'){
+      const alreadyExists = list.some(function(p){
+        if(legacy.id && p.id){
+          return String(p.id) === String(legacy.id);
+        }
+
+        return (
+          String(p.mobile || '') === String(legacy.mobile || '') &&
+          String(p.name || '').trim().toLowerCase() ===
+          String(legacy.name || '').trim().toLowerCase()
+        );
+      });
+
+      if(!alreadyExists){
+        if(!legacy.id){
+          legacy.id = uid('partner');
+        }
+
+        list.push(legacy);
       }
+    }
+
+    list = list.map(function(p){
+      if(!p.id){
+        p.id = uid('partner');
+      }
+
+      if(!p.verification){
+        p.verification = 'Pending Review';
+      }
+
+      return p;
+    });
+
+    savePartners(list);
+
+    if(!getCurrentPartnerId() && list.length){
+      setCurrentPartner(list[list.length - 1].id);
     }
 
     return list;
   }
 
-  function getPartners(){
-    return migratePartners();
-  }
+  /* ----------------------------------------------------------
+     INDEXED DB FOR PROOF DOCUMENTS
+     ---------------------------------------------------------- */
 
-  function savePartners(list){
-    localStorage.setItem(PARTNER_LIST_KEY, JSON.stringify(list));
+  function openProofDB(){
+    return new Promise(function(resolve, reject){
 
-    const latest = list.length ? list[list.length - 1] : null;
-    if(latest){
-      localStorage.setItem(LEGACY_KEY, JSON.stringify(latest));
-    }
-  }
-
-  function findPartner(id){
-    return getPartners().find(function(p){ return String(p.id) === String(id); }) || null;
-  }
-
-  function setCurrentPartner(id){
-    if(id) localStorage.setItem(CURRENT_KEY, String(id));
-  }
-
-  function getCurrentPartner(){
-    const id = localStorage.getItem(CURRENT_KEY);
-    if(id){
-      const found = findPartner(id);
-      if(found) return found;
-    }
-
-    const list = getPartners();
-    return list.length ? list[list.length - 1] : null;
-  }
-
-  /* ========================================================
-     PROOF DOCUMENT DATABASE
-     ======================================================== */
-
-  function openDocDB(){
-    return new Promise(function(resolve,reject){
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-
-      req.onupgradeneeded = function(e){
-        const db = e.target.result;
-        if(!db.objectStoreNames.contains(DOC_STORE)){
-          db.createObjectStore(DOC_STORE, {keyPath:'id'});
-        }
-      };
-
-      req.onsuccess = function(){ resolve(req.result); };
-      req.onerror = function(){ reject(req.error); };
-    });
-  }
-
-  async function saveDocument(file){
-    if(!file) return null;
-
-    const id = 'doc_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
-    const db = await openDocDB();
-
-    return new Promise(function(resolve,reject){
-      const tx = db.transaction(DOC_STORE,'readwrite');
-      const store = tx.objectStore(DOC_STORE);
-      const req = store.put({
-        id:id,
-        name:file.name,
-        type:file.type || 'application/octet-stream',
-        blob:file
-      });
-      req.onsuccess = function(){ resolve({id:id,name:file.name}); };
-      req.onerror = function(){ reject(req.error); };
-    });
-  }
-
-  async function getDocument(id){
-    if(!id) return null;
-    const db = await openDocDB();
-
-    return new Promise(function(resolve,reject){
-      const tx = db.transaction(DOC_STORE,'readonly');
-      const req = tx.objectStore(DOC_STORE).get(id);
-      req.onsuccess = function(){ resolve(req.result || null); };
-      req.onerror = function(){ reject(req.error); };
-    });
-  }
-
-  window.BAP_openPartnerProof = async function(id){
-    try{
-      const record = await getDocument(id);
-      if(!record || !record.blob){
-        alert('Proof document is not available. Please ask the partner to upload it again.');
+      if(!window.indexedDB){
+        reject(new Error('IndexedDB not supported'));
         return;
       }
 
-      const blob = record.blob instanceof Blob
-        ? record.blob
-        : new Blob([record.blob], {type:record.type || 'application/octet-stream'});
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank', 'noopener,noreferrer');
+      request.onupgradeneeded = function(event){
+        const db = event.target.result;
 
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
-    }catch(e){
-      console.error('Proof open error:', e);
-      alert('Could not open the verification proof.');
+        if(!db.objectStoreNames.contains(DOC_STORE)){
+          db.createObjectStore(DOC_STORE, {
+            keyPath: 'id'
+          });
+        }
+      };
+
+      request.onsuccess = function(event){
+        resolve(event.target.result);
+      };
+
+      request.onerror = function(){
+        reject(request.error || new Error('IndexedDB error'));
+      };
+    });
+  }
+
+  function saveProofDocument(file){
+    return new Promise(function(resolve, reject){
+
+      if(!file){
+        resolve(null);
+        return;
+      }
+
+      openProofDB().then(function(db){
+
+        const id = uid('proof');
+
+        const tx = db.transaction(
+          DOC_STORE,
+          'readwrite'
+        );
+
+        const store = tx.objectStore(DOC_STORE);
+
+        store.put({
+          id: id,
+          name: file.name || 'proof',
+          type: file.type || 'application/octet-stream',
+          blob: file
+        });
+
+        tx.oncomplete = function(){
+          resolve({
+            id: id,
+            name: file.name || 'proof'
+          });
+        };
+
+        tx.onerror = function(){
+          reject(
+            tx.error ||
+            new Error('Unable to save proof document')
+          );
+        };
+
+      }).catch(reject);
+    });
+  }
+
+  function readProofDocument(id){
+    return new Promise(function(resolve, reject){
+
+      if(!id){
+        reject(new Error('Proof id missing'));
+        return;
+      }
+
+      openProofDB().then(function(db){
+
+        const tx = db.transaction(
+          DOC_STORE,
+          'readonly'
+        );
+
+        const store = tx.objectStore(DOC_STORE);
+        const request = store.get(id);
+
+        request.onsuccess = function(){
+          resolve(request.result || null);
+        };
+
+        request.onerror = function(){
+          reject(
+            request.error ||
+            new Error('Unable to read proof')
+          );
+        };
+
+      }).catch(reject);
+    });
+  }
+
+  function deleteProofDocument(id){
+    if(!id){
+      return Promise.resolve();
     }
+
+    return openProofDB().then(function(db){
+
+      return new Promise(function(resolve, reject){
+
+        const tx = db.transaction(
+          DOC_STORE,
+          'readwrite'
+        );
+
+        tx.objectStore(DOC_STORE).delete(id);
+
+        tx.oncomplete = function(){
+          resolve();
+        };
+
+        tx.onerror = function(){
+          reject(tx.error);
+        };
+      });
+
+    });
+  }
+
+  window.BAP_openPartnerProof = function(partnerId){
+    const partner = findPartner(partnerId);
+
+    if(!partner){
+      alert('Partner record not found.');
+      return;
+    }
+
+    const proofId =
+      partner.proofId ||
+      partner.qualificationProofId ||
+      partner.documentId;
+
+    if(!proofId){
+      alert('No proof document available for this partner.');
+      return;
+    }
+
+    readProofDocument(proofId)
+      .then(function(doc){
+
+        if(!doc || !doc.blob){
+          alert('Proof document not found.');
+          return;
+        }
+
+        const url = URL.createObjectURL(doc.blob);
+
+        const win = window.open(
+          url,
+          '_blank'
+        );
+
+        if(!win){
+          const a = document.createElement('a');
+          a.href = url;
+          a.target = '_blank';
+          a.rel = 'noopener';
+          a.click();
+        }
+
+        setTimeout(function(){
+          URL.revokeObjectURL(url);
+        }, 60000);
+
+      })
+      .catch(function(err){
+        console.error(err);
+        alert('Unable to open proof document.');
+      });
   };
 
-  /* ========================================================
-     IMAGE COMPRESSION
-     ======================================================== */
+  /* ----------------------------------------------------------
+     FILE HELPERS
+     ---------------------------------------------------------- */
 
-  function compressImage(file){
-    return new Promise(function(resolve){
-      if(!file || !file.type || !file.type.startsWith('image/')){
-        resolve(file);
+  function fileToDataURL(file){
+    return new Promise(function(resolve, reject){
+
+      if(!file){
+        resolve('');
         return;
       }
 
       const reader = new FileReader();
+
+      reader.onload = function(){
+        resolve(reader.result || '');
+      };
+
+      reader.onerror = function(){
+        reject(
+          reader.error ||
+          new Error('Unable to read file')
+        );
+      };
+
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function compressImage(file, maxSize, quality){
+    return new Promise(function(resolve, reject){
+
+      if(!file){
+        resolve('');
+        return;
+      }
+
+      if(!file.type || file.type.indexOf('image/') !== 0){
+        fileToDataURL(file)
+          .then(resolve)
+          .catch(reject);
+        return;
+      }
+
+      const reader = new FileReader();
+
       reader.onload = function(){
         const img = new Image();
 
         img.onload = function(){
-          const max = 700;
-          let w = img.width;
-          let h = img.height;
-          const scale = Math.min(1, max / w, max / h);
-          w = Math.max(1, Math.round(w * scale));
-          h = Math.max(1, Math.round(h * scale));
+
+          let width = img.width || maxSize;
+          let height = img.height || maxSize;
+
+          if(width > height && width > maxSize){
+            height = Math.round(
+              height * maxSize / width
+            );
+            width = maxSize;
+          }else if(height > maxSize){
+            width = Math.round(
+              width * maxSize / height
+            );
+            height = maxSize;
+          }
 
           const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
+
+          canvas.width = width;
+          canvas.height = height;
 
           const ctx = canvas.getContext('2d');
-          if(!ctx){ resolve(file); return; }
 
-          ctx.drawImage(img,0,0,w,h);
+          if(!ctx){
+            resolve(reader.result || '');
+            return;
+          }
 
-          canvas.toBlob(function(blob){
-            if(!blob){ resolve(file); return; }
+          ctx.drawImage(
+            img,
+            0,
+            0,
+            width,
+            height
+          );
 
-            resolve(new File(
-              [blob],
-              'compressed_' + file.name.replace(/\.[^/.]+$/,'') + '.jpg',
-              {type:'image/jpeg',lastModified:Date.now()}
-            ));
-          }, 'image/jpeg', 0.65);
+          let data = '';
+
+          try{
+            data = canvas.toDataURL(
+              'image/jpeg',
+              quality
+            );
+          }catch(e){
+            data = reader.result || '';
+          }
+
+          resolve(data);
         };
 
-        img.onerror = function(){ resolve(file); };
+        img.onerror = function(){
+          resolve(reader.result || '');
+        };
+
         img.src = reader.result;
       };
 
-      reader.onerror = function(){ resolve(file); };
+      reader.onerror = function(){
+        reject(
+          reader.error ||
+          new Error('Unable to compress image')
+        );
+      };
+
       reader.readAsDataURL(file);
     });
   }
 
-  function fileToDataURL(file){
-    return new Promise(function(resolve,reject){
-      const reader = new FileReader();
-      reader.onload = function(){ resolve(reader.result); };
-      reader.onerror = function(){ reject(reader.error); };
-      reader.readAsDataURL(file);
+  /* ----------------------------------------------------------
+     SPECIALIZED SERVICES
+     ---------------------------------------------------------- */
+
+  function getSpecializedServices(){
+    return [
+      'Elder Care / Senior Companion',
+      'Medical Assistance',
+      'Fitness / Walking Partner',
+      'Professional Networking',
+      'Technical Assistance',
+      'Special Event Support'
+    ];
+  }
+
+  function isSpecializedService(service){
+    return getSpecializedServices().some(function(s){
+      return String(s).trim().toLowerCase() ===
+             String(service || '').trim().toLowerCase();
     });
   }
 
-  /* ========================================================
+  function validateSpecializedPartnerData(data){
+    if(!isSpecializedService(data.service)){
+      return true;
+    }
+
+    const exp =
+      String(data.experience || '').trim();
+
+    const qual =
+      String(data.qualification || '').trim();
+
+    if(!exp && !qual){
+      alert(
+        'This service requires relevant experience or qualification details.'
+      );
+      return false;
+    }
+
+    if(
+      data.proofRequired &&
+      !data.proofFile &&
+      !data.proofId
+    ){
+      alert(
+        'Please upload the required experience/qualification proof.'
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /* ----------------------------------------------------------
+     GET FORM VALUE HELPERS
+     ---------------------------------------------------------- */
+
+  function val(id){
+    const el = byId(id);
+    return el ? String(el.value || '').trim() : '';
+  }
+
+  function checked(id){
+    const el = byId(id);
+    return !!(el && el.checked);
+  }
+
+  function firstExisting(ids){
+    for(let i=0;i<ids.length;i++){
+      const el = byId(ids[i]);
+
+      if(el){
+        return String(
+          el.value ||
+          el.textContent ||
+          ''
+        ).trim();
+      }
+    }
+
+    return '';
+  }
+
+  function getPartnerService(){
+    const ids = [
+      'partnerService',
+      'pService',
+      'servicePartner',
+      'partnerCategory',
+      'partner_service',
+      'service'
+    ];
+
+    const value = firstExisting(ids);
+
+    if(value){
+      return value;
+    }
+
+    const select = document.querySelector(
+      'select[id*="service" i]'
+    );
+
+    if(select){
+      return String(
+        select.value || ''
+      ).trim();
+    }
+
+    return '';
+  }
+
+  function getPartnerGender(){
+    const ids = [
+      'partnerGender',
+      'pGender',
+      'genderPartner',
+      'partner_gender'
+    ];
+
+    const value = firstExisting(ids);
+
+    if(value){
+      return value;
+    }
+
+    const radio =
+      document.querySelector(
+        'input[name="partnerGender"]:checked'
+      ) ||
+      document.querySelector(
+        'input[name="gender"]:checked'
+      );
+
+    return radio ?
+      String(radio.value || '').trim() :
+      '';
+  }
+
+  /* ----------------------------------------------------------
+     MULTI PARTNER APPLY
+     ---------------------------------------------------------- */
+
+  async function multiPartnerApply(){
+
+    try{
+
+      const name =
+        firstExisting([
+          'partnerName',
+          'pName',
+          'partner_name',
+          'namePartner'
+        ]);
+
+      const age =
+        firstExisting([
+          'partnerAge',
+          'pAge',
+          'partner_age',
+          'agePartner'
+        ]);
+
+      const mobile =
+        firstExisting([
+          'partnerMobile',
+          'pMobile',
+          'partner_mobile',
+          'mobilePartner'
+        ]);
+
+      const area =
+        firstExisting([
+          'partnerArea',
+          'pArea',
+          'partnerLocation',
+          'partner_location',
+          'areaPartner'
+        ]);
+
+      const service =
+        getPartnerService();
+
+      const rate =
+        firstExisting([
+          'partnerRate',
+          'pRate',
+          'hourlyRate',
+          'partner_rate',
+          'ratePartner'
+        ]);
+
+      const availability =
+        firstExisting([
+          'partnerAvailability',
+          'pAvailability',
+          'availabilityPartner',
+          'partner_availability'
+        ]);
+
+      const gender =
+        getPartnerGender();
+
+      const experience =
+        firstExisting([
+          'partnerExperience',
+          'pExperience',
+          'experience',
+          'partner_experience'
+        ]);
+
+      const qualification =
+        firstExisting([
+          'partnerQualification',
+          'pQualification',
+          'qualification',
+          'partner_qualification'
+        ]);
+
+      const proofRequired =
+        isSpecializedService(service);
+
+      const photoInput =
+        byId('partnerPhoto') ||
+        byId('pPhoto') ||
+        byId('profilePhoto');
+
+      const selfieInput =
+        byId('partnerSelfie') ||
+        byId('pSelfie') ||
+        byId('selfiePhoto');
+
+      const proofInput =
+        byId('partnerProof') ||
+        byId('pProof') ||
+        byId('qualificationProof') ||
+        byId('proofDocument');
+
+      if(!name){
+        alert('Please enter partner name.');
+        return;
+      }
+
+      if(!age){
+        alert('Please enter partner age.');
+        return;
+      }
+
+      if(!mobile){
+        alert('Please enter mobile number.');
+        return;
+      }
+
+      if(!service){
+        alert('Please select a service.');
+        return;
+      }
+
+      const ageNum = Number(age);
+
+      if(
+        !Number.isFinite(ageNum) ||
+        ageNum < 18 ||
+        ageNum > 80
+      ){
+        alert('Partner age must be between 18 and 80.');
+        return;
+      }
+
+      const proofFile =
+        proofInput &&
+        proofInput.files &&
+        proofInput.files[0] ?
+        proofInput.files[0] :
+        null;
+
+      const specializedOk =
+        validateSpecializedPartnerData({
+          service: service,
+          experience: experience,
+          qualification: qualification,
+          proofRequired: proofRequired,
+          proofFile: proofFile
+        });
+
+      if(!specializedOk){
+        return;
+      }
+
+      let photo = '';
+      let selfie = '';
+
+      if(
+        photoInput &&
+        photoInput.files &&
+        photoInput.files[0]
+      ){
+        photo =
+          await compressImage(
+            photoInput.files[0],
+            900,
+            0.78
+          );
+      }
+
+      if(
+        selfieInput &&
+        selfieInput.files &&
+        selfieInput.files[0]
+      ){
+        selfie =
+          await compressImage(
+            selfieInput.files[0],
+            900,
+            0.78
+          );
+      }
+
+      let proofMeta = null;
+
+      if(proofFile){
+
+        try{
+          proofMeta =
+            await saveProofDocument(
+              proofFile
+            );
+        }catch(err){
+          console.error(
+            'Proof save failed',
+            err
+          );
+
+          alert(
+            'Proof document could not be saved. Please try again.'
+          );
+
+          return;
+        }
+      }
+
+      const partner = {
+        id: uid('partner'),
+
+        name: name,
+        age: ageNum,
+        gender: gender,
+
+        mobile: mobile,
+        area: area,
+
+        service: service,
+        services: [service],
+
+        rate: rate,
+        availability: availability,
+
+        experience: experience,
+        qualification: qualification,
+
+        proofRequired: proofRequired,
+
+        proofId:
+          proofMeta ?
+          proofMeta.id :
+          '',
+
+        proofName:
+          proofMeta ?
+          proofMeta.name :
+          '',
+
+        verification: 'Pending Review',
+
+        photo: photo || '',
+        selfie: selfie || '',
+
+        rating: 'New',
+        reviews: 0,
+
+        createdAt:
+          new Date().toISOString(),
+
+        approvedAt: '',
+        rejectedAt: '',
+
+        active: true
+      };
+
+      const list = getPartners();
+
+      list.push(partner);
+
+      savePartners(list);
+
+      setCurrentPartner(partner.id);
+
+      /* Compatibility: latest partner remains available
+         to older single-partner portions of the page. */
+      try{
+        localStorage.setItem(
+          LEGACY_KEY,
+          JSON.stringify(partner)
+        );
+      }catch(e){}
+
+      alert(
+        'Partner application submitted successfully.'
+      );
+
+      if(typeof window.go === 'function'){
+        window.go('partnerDashboard');
+      }else{
+        const dashboard =
+          byId('partnerDashboard');
+
+        if(dashboard){
+          dashboard.scrollIntoView({
+            behavior: 'smooth'
+          });
+        }
+      }
+
+      setTimeout(function(){
+        try{
+          installPartnerDashboard();
+          renderAllPartnerApplications();
+        }catch(e){
+          console.error(e);
+        }
+      }, 300);
+
+    }catch(err){
+
+      console.error(
+        'multiPartnerApply error',
+        err
+      );
+
+      alert(
+        'Something went wrong while submitting the partner application.'
+      );
+    }
+  }
+
+  /* ----------------------------------------------------------
      CUSTOMER SEARCH
-     ======================================================== */
+     ---------------------------------------------------------- */
 
   function approvedDynamicPartners(){
     return getPartners()
-      .filter(function(p){ return p && p.verification === 'Approved'; })
+      .filter(function(p){
+        return String(
+          p.verification || ''
+        ).toLowerCase() === 'approved';
+      })
       .map(function(p){
+
+        const services =
+          Array.isArray(p.services) &&
+          p.services.length ?
+          p.services :
+          [p.service];
+
         return {
-          id:p.id,
-          name:p.name,
-          age:Number(p.age),
-          mobile:p.mobile,
-          area:p.area,
-          rate:Number(p.rate),
-          rating:p.rating ?? 'New',
-          reviews:p.reviews ?? 0,
-          gender:p.gender || 'Any',
-          services:[p.service],
-          availability:p.availability,
-          partnerId:p.id
+          id: p.id,
+
+          name: p.name,
+
+          age: Number(p.age) || 0,
+
+          gender: p.gender || '',
+
+          city:
+            p.area ||
+            p.city ||
+            'Gurgaon',
+
+          area:
+            p.area ||
+            p.city ||
+            'Gurgaon',
+
+          services: services,
+
+          service:
+            p.service ||
+            services[0] ||
+            '',
+
+          rate:
+            p.rate ||
+            '',
+
+          availability:
+            p.availability ||
+            '',
+
+          rating:
+            p.rating ||
+            'New',
+
+          reviews:
+            Number(p.reviews) || 0,
+
+          photo:
+            p.photo ||
+            '',
+
+          verification:
+            p.verification,
+
+          experience:
+            p.experience ||
+            '',
+
+          qualification:
+            p.qualification ||
+            '',
+
+          dynamicPartner: true
         };
       });
   }
 
-  function genderOK(preference,p){
-    if(!preference || preference === 'Any') return true;
-    return String(p.gender || '').toLowerCase() === String(preference).toLowerCase();
+  function matchesGender(
+    partner,
+    desired
+  ){
+    if(!desired){
+      return true;
+    }
+
+    const d =
+      String(desired)
+      .trim()
+      .toLowerCase();
+
+    if(
+      d === 'any' ||
+      d === 'any partner' ||
+      d === 'all'
+    ){
+      return true;
+    }
+
+    const g =
+      String(partner.gender || '')
+      .trim()
+      .toLowerCase();
+
+    if(!g){
+      return false;
+    }
+
+    return (
+      g === d ||
+      g.indexOf(d) !== -1 ||
+      d.indexOf(g) !== -1
+    );
+  }
+
+  function matchesService(
+    partner,
+    desired
+  ){
+    if(!desired){
+      return true;
+    }
+
+    const d =
+      String(desired)
+      .trim()
+      .toLowerCase();
+
+    const services =
+      Array.isArray(partner.services) ?
+      partner.services :
+      [partner.service];
+
+    return services.some(function(s){
+      return String(s || '')
+        .trim()
+        .toLowerCase()
+        .indexOf(d) !== -1 ||
+        d.indexOf(
+          String(s || '')
+            .trim()
+            .toLowerCase()
+        ) !== -1;
+    });
+  }
+
+  function matchesAge(
+    partner,
+    minAge,
+    maxAge
+  ){
+    const age =
+      Number(partner.age) || 0;
+
+    if(!age){
+      return false;
+    }
+
+    if(
+      minAge !== null &&
+      minAge !== undefined &&
+      minAge !== '' &&
+      age < Number(minAge)
+    ){
+      return false;
+    }
+
+    if(
+      maxAge !== null &&
+      maxAge !== undefined &&
+      maxAge !== '' &&
+      age > Number(maxAge)
+    ){
+      return false;
+    }
+
+    return true;
+  }
+
+  function matchesLocation(
+    partner,
+    location
+  ){
+    if(!location){
+      return true;
+    }
+
+    const wanted =
+      String(location)
+        .trim()
+        .toLowerCase();
+
+    if(!wanted){
+      return true;
+    }
+
+    const actual = (
+      String(partner.area || '') +
+      ' ' +
+      String(partner.city || '')
+    ).toLowerCase();
+
+    return (
+      actual.indexOf(wanted) !== -1 ||
+      wanted.indexOf(actual) !== -1
+    );
+  }
+
+  function filterDynamicPartners(
+    service,
+    gender,
+    minAge,
+    maxAge,
+    location
+  ){
+    return approvedDynamicPartners()
+      .filter(function(p){
+
+        return (
+          matchesService(p, service) &&
+          matchesGender(p, gender) &&
+          matchesAge(p, minAge, maxAge) &&
+          matchesLocation(p, location)
+        );
+      });
   }
 
   function installFindPartners(){
-    window.findPartners = function(){
-      const service = byId('service')?.value || '';
-      const age = byId('age')?.value || 'Any age';
-      const area = byId('area')?.value || 'Gurgaon NCR';
-      const location = typeof getLocationValue === 'function' ? getLocationValue() : '';
-      const preference = byId('customerGenderPreference')?.value || 'Any';
 
-      if(!location){
-        alert('Please enter/select the meeting location.');
-        return;
-      }
-
-      let staticPartners = [];
-      try{
-        staticPartners = Array.isArray(window.partners) ? window.partners : [];
-      }catch(e){ staticPartners = []; }
-
-      const dynamic = approvedDynamicPartners();
-
-      const pool = [
-        ...staticPartners.map(function(p){
-          return {...p, gender:p.gender || 'Any', partnerId:p.id || ('static_' + p.name)};
-        }),
-        ...dynamic
-      ];
-
-      const list = pool.filter(function(p){
-        const services = Array.isArray(p.services) ? p.services : [];
-        const agePass = typeof ageOK === 'function' ? ageOK(age,p) : true;
-        return services.includes(service) && agePass && genderOK(preference,p);
-      });
-
-      let html =
-        '<h2>Available Partners</h2>' +
-        '<p class="muted">' +
-        service + ' • ' + area + ' • Preferred age: ' + age +
-        '</p>' +
-        '<div class="partners">';
-
-      list.forEach(function(p){
-        const selectKey = String(p.partnerId).replace(/'/g,"\\'");
-        html += `
-          <div class="card">
-            <div class="partner">
-              <div class="avatar">${String(p.name || 'P')[0]}</div>
-              <div>
-                <b>${p.name}</b>
-                <span class="pill verified">✓ VERIFIED</span>
-                <div class="muted">Age ${p.age} • ${p.area}</div>
-                <div>
-                  <span class="rating">★★★★★</span>
-                  <b>${p.rating ?? 'New'}</b>
-                  (${p.reviews ?? 0})
-                </div>
-                <span class="pill available">● AVAILABLE</span>
-              </div>
-            </div>
-            <div class="price">₹${p.rate}<small>/ hour</small></div>
-            <div>${(p.services || []).map(function(x){return '<span class="pill">'+x+'</span>';}).join('')}</div>
-            <div class="transportBox">🚗 <b>Transport:</b> Free up to 10 km. Beyond 10 km, maximum ₹150.</div>
-            <button class="pink full" onclick="selectPartner('${selectKey}')">Request Booking</button>
-          </div>
-        `;
-      });
-
-      if(!list.length){
-        html += '<div class="card">No matching partners found. Try another service, gender or age preference.</div>';
-      }
-
-      html += '</div><div class="notice"><b>Next:</b> Select a partner → review booking → continue to payment.</div>';
-      byId('results').innerHTML = html;
-    };
-  }
-
-  /* ========================================================
-     SELECT PARTNER
-     ======================================================== */
-
-  function installSelectPartner(){
-    window.selectPartner = function(identifier){
-      let p = null;
-      const dynamic = approvedDynamicPartners();
-      const staticPartners = Array.isArray(window.partners) ? window.partners : [];
-
-      p = dynamic.find(function(x){ return String(x.partnerId) === String(identifier); }) ||
-          staticPartners.find(function(x){ return String(x.id || ('static_' + x.name)) === String(identifier); }) ||
-          dynamic.find(function(x){ return x.name === identifier; }) ||
-          staticPartners.find(function(x){ return x.name === identifier; });
-
-      if(!p){
-        alert('Partner profile could not be found.');
-        return;
-      }
-
-      window.selected = {
-        ...p,
-        partnerId:p.partnerId,
-        service:byId('service')?.value || p.services?.[0] || '',
-        age:byId('age')?.value || '',
-        area:byId('area')?.value || 'Gurgaon NCR',
-        date:byId('date')?.value || '',
-        time:byId('time')?.value || '',
-        location:typeof getLocationValue === 'function' ? getLocationValue() : '',
-        locationLat:byId('locationLat')?.value || '',
-        locationLng:byId('locationLng')?.value || ''
-      };
-
-      const summary = byId('bookingSummary');
-      if(summary){
-        summary.innerHTML = `
-          <div class="summary">
-            <b>${p.name}</b>
-            <span class="pill verified">✓ VERIFIED</span>
-            <p>${window.selected.service}</p>
-            <p>📅 ${window.selected.date || 'Date to be selected'} &nbsp; 🕐 ${window.selected.time || 'Time to be selected'}</p>
-            <p>📍 ${window.selected.location}</p>
-            <p>Area: ${window.selected.area}</p>
-            <p><strong>₹${p.rate} / hour</strong></p>
-          </div>`;
-      }
-
-      if(typeof go === 'function') go('details');
-    };
-  }
-
-  /* ========================================================
-     PARTNER APPLY — MULTIPLE PROFILES
-     ======================================================== */
-
-  async function multiPartnerApply(){
-    const n = byId('partnerName')?.value.trim() || '';
-    const age = Number(byId('partnerAge')?.value);
-    const m = byId('partnerMobile')?.value.trim() || '';
-    const area = byId('partnerArea')?.value.trim() || '';
-    const service = byId('partnerService')?.value || '';
-    const rate = Number(byId('partnerRate')?.value);
-    const availability = byId('partnerAvailability')?.value || '';
-    const photo = byId('partnerPhoto')?.files?.[0] || null;
-    const selfie = byId('partnerSelfie')?.files?.[0] || null;
-    const gender = byId('partnerGender')?.value || 'Any';
-
-    if(!n || !Number.isFinite(age) || age < 18 || m.length !== 10 || !area || !service || !Number.isFinite(rate) || rate <= 0 || !photo || !selfie){
-      alert('Please complete all partner details, including profile photo and selfie.');
-      return;
+    if(
+      typeof window.findPartners !== 'function'
+    ){
+      return false;
     }
 
-    const category = window.BAP_getCategory ? window.BAP_getCategory(service) : null;
+    if(
+      window.findPartners.__BAP_MULTI_WRAPPED
+    ){
+      return true;
+    }
 
-    if(category){
-      if(rate < category.minRate || rate > category.maxRate){
-        alert('Please enter a rate between ₹' + category.minRate + ' and ₹' + category.maxRate + ' per hour.');
+    const original =
+      window.findPartners;
+
+    function wrappedFindPartners(){
+
+      let result = [];
+
+      try{
+        result =
+          original.apply(
+            this,
+            arguments
+          );
+
+        if(!Array.isArray(result)){
+          result = [];
+        }
+      }catch(e){
+        console.error(
+          'Original findPartners error',
+          e
+        );
+        result = [];
+      }
+
+      let service = '';
+      let gender = '';
+      let minAge = '';
+      let maxAge = '';
+      let location = '';
+
+      try{
+        const args =
+          Array.prototype.slice.call(
+            arguments
+          );
+
+        if(args.length >= 1){
+          service = args[0] || '';
+        }
+
+        if(args.length >= 2){
+          gender = args[1] || '';
+        }
+
+        if(args.length >= 3){
+          minAge = args[2] || '';
+        }
+
+        if(args.length >= 4){
+          maxAge = args[3] || '';
+        }
+
+        if(args.length >= 5){
+          location = args[4] || '';
+        }
+      }catch(e){}
+
+      /* Read current UI fields too */
+      if(!service){
+
+        service =
+          firstExisting([
+            'customerService',
+            'searchService',
+            'serviceSelect',
+            'service'
+          ]);
+      }
+
+      if(!gender){
+
+        gender =
+          firstExisting([
+            'customerGenderPreference',
+            'genderPreference',
+            'searchGender',
+            'customerGender'
+          ]);
+
+        if(!gender){
+
+          const r =
+            document.querySelector(
+              'input[name="genderPreference"]:checked'
+            ) ||
+            document.querySelector(
+              'input[name="customerGenderPreference"]:checked'
+            );
+
+          if(r){
+            gender =
+              String(r.value || '');
+          }
+        }
+      }
+
+      const dynamic =
+        filterDynamicPartners(
+          service,
+          gender,
+          minAge,
+          maxAge,
+          location
+        );
+
+      const existingIds =
+        new Set(
+          result.map(function(p){
+            return String(
+              p.id ||
+              p.partnerId ||
+              ''
+            );
+          })
+        );
+
+      dynamic.forEach(function(p){
+
+        const id =
+          String(p.id);
+
+        if(!existingIds.has(id)){
+          result.push(p);
+          existingIds.add(id);
+        }
+      });
+
+      return result;
+    }
+
+    wrappedFindPartners.__BAP_MULTI_WRAPPED = true;
+    wrappedFindPartners.__BAP_ORIGINAL = original;
+
+    window.findPartners =
+      wrappedFindPartners;
+
+    return true;
+  }
+
+  /* ----------------------------------------------------------
+     SELECT PARTNER
+     ---------------------------------------------------------- */
+
+  function installSelectPartner(){
+
+    if(
+      typeof window.selectPartner !== 'function'
+    ){
+      return false;
+    }
+
+    if(
+      window.selectPartner.__BAP_MULTI_WRAPPED
+    ){
+      return true;
+    }
+
+    const original =
+      window.selectPartner;
+
+    function wrappedSelectPartner(partner){
+
+      try{
+
+        if(partner){
+
+          const id =
+            partner.id ||
+            partner.partnerId ||
+            partner._id;
+
+          if(id){
+
+            const found =
+              findPartner(id);
+
+            if(found){
+              setCurrentPartner(
+                found.id
+              );
+            }
+          }
+        }
+
+      }catch(e){
+        console.error(
+          'Multi selectPartner error',
+          e
+        );
+      }
+
+      return original.apply(
+        this,
+        arguments
+      );
+    }
+
+    wrappedSelectPartner.__BAP_MULTI_WRAPPED = true;
+    wrappedSelectPartner.__BAP_ORIGINAL = original;
+
+    window.selectPartner =
+      wrappedSelectPartner;
+
+    return true;
+  }
+
+  /* ----------------------------------------------------------
+     PARTNER DASHBOARD
+     ---------------------------------------------------------- */
+
+  function installPartnerDashboard(){
+
+    if(
+      typeof window.renderPartnerDashboard !== 'function'
+    ){
+      return false;
+    }
+
+    if(
+      window.renderPartnerDashboard.__BAP_MULTI_WRAPPED
+    ){
+      return true;
+    }
+
+    const original =
+      window.renderPartnerDashboard;
+
+    function wrappedPartnerDashboard(){
+
+      const current =
+        getCurrentPartner();
+
+      if(current){
+
+        try{
+          localStorage.setItem(
+            LEGACY_KEY,
+            JSON.stringify(current)
+          );
+        }catch(e){}
+      }
+
+      const result =
+        original.apply(
+          this,
+          arguments
+        );
+
+      setTimeout(function(){
+
+        try{
+
+          const partner =
+            getCurrentPartner();
+
+          if(!partner){
+            return;
+          }
+
+          /* Update common dashboard texts */
+          const selectors = [
+            'partnerDashboardName',
+            'pDashboardName',
+            'partnerCurrentName'
+          ];
+
+          selectors.forEach(function(id){
+
+            const el = byId(id);
+
+            if(el){
+              el.textContent =
+                partner.name || '';
+            }
+          });
+
+        }catch(e){
+          console.error(e);
+        }
+
+      }, 0);
+
+      return result;
+    }
+
+    wrappedPartnerDashboard.__BAP_MULTI_WRAPPED = true;
+    wrappedPartnerDashboard.__BAP_ORIGINAL = original;
+
+    window.renderPartnerDashboard =
+      wrappedPartnerDashboard;
+
+    return true;
+  }
+
+  /* ----------------------------------------------------------
+     ADMIN HTML HELPERS
+     ---------------------------------------------------------- */
+
+  function escapeHtml(value){
+
+    return String(
+      value === undefined ||
+      value === null ?
+      '' :
+      value
+    )
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+  }
+
+  function partnerStatusClass(status){
+
+    const s =
+      String(status || '')
+        .toLowerCase();
+
+    if(s === 'approved'){
+      return 'approved';
+    }
+
+    if(s === 'rejected'){
+      return 'rejected';
+    }
+
+    return 'pending';
+  }
+
+  /* ----------------------------------------------------------
+     ADMIN PARTNER ACTIONS
+     ---------------------------------------------------------- */
+
+  window.BAP_adminApprovePartner =
+    function(partnerId){
+
+      const list = getPartners();
+
+      const index =
+        list.findIndex(function(p){
+          return String(p.id) ===
+            String(partnerId);
+        });
+
+      if(index === -1){
+        alert('Partner not found.');
         return;
       }
 
-      if(category.type === 'specialized'){
-        const years = Number(byId('partnerExperienceYears')?.value);
-        const details = byId('partnerExperienceDetails')?.value.trim() || '';
-        const qualification = byId('partnerQualification')?.value.trim() || '';
-        const proof = byId('partnerExperienceProof')?.files?.[0] || null;
+      list[index].verification =
+        'Approved';
 
-        if(!Number.isFinite(years) || years < 0){
-          alert('Please enter relevant experience in years.');
-          return;
-        }
+      list[index].approvedAt =
+        new Date().toISOString();
 
-        if(!details){
-          alert('Please describe your relevant experience.');
-          return;
-        }
+      list[index].rejectedAt = '';
 
-        if(category.qualificationRequired && !qualification){
-          alert('Please enter your qualification/certification for this service.');
-          return;
-        }
+      savePartners(list);
 
-        if(category.qualificationRequired && !proof){
-          alert('Please upload the required qualification/certificate proof.');
-          return;
-        }
+      if(
+        typeof window.renderAllPartnerApplications ===
+        'function'
+      ){
+        window.renderAllPartnerApplications();
       }
+
+      alert(
+        'Partner approved successfully.'
+      );
+    };
+
+  window.BAP_adminRejectPartner =
+    function(partnerId){
+
+      const list = getPartners();
+
+      const index =
+        list.findIndex(function(p){
+          return String(p.id) ===
+            String(partnerId);
+        });
+
+      if(index === -1){
+        alert('Partner not found.');
+        return;
+      }
+
+      list[index].verification =
+        'Rejected';
+
+      list[index].rejectedAt =
+        new Date().toISOString();
+
+      savePartners(list);
+
+      if(
+        typeof window.renderAllPartnerApplications ===
+        'function'
+      ){
+        window.renderAllPartnerApplications();
+      }
+
+      alert(
+        'Partner rejected.'
+      );
+    };
+
+  /* ----------------------------------------------------------
+     ADMIN RENDER
+     ---------------------------------------------------------- */
+
+  function renderPartnerCard(partner){
+
+    const id =
+      escapeHtml(partner.id);
+
+    const name =
+      escapeHtml(partner.name || '-');
+
+    const age =
+      escapeHtml(partner.age || '-');
+
+    const gender =
+      escapeHtml(partner.gender || '-');
+
+    const mobile =
+      escapeHtml(partner.mobile || '-');
+
+    const area =
+      escapeHtml(partner.area || '-');
+
+    const service =
+      escapeHtml(partner.service || '-');
+
+    const rate =
+      escapeHtml(partner.rate || '-');
+
+    const availability =
+      escapeHtml(partner.availability || '-');
+
+    const experience =
+      escapeHtml(
+        partner.experience || '-'
+      );
+
+    const qualification =
+      escapeHtml(
+        partner.qualification || '-'
+      );
+
+    const status =
+      escapeHtml(
+        partner.verification ||
+        'Pending Review'
+      );
+
+    const proofName =
+      escapeHtml(
+        partner.proofName ||
+        ''
+      );
+
+    const photoHtml =
+      partner.photo ?
+      (
+        '<img src="' +
+        partner.photo +
+        '" alt="Profile" ' +
+        'style="width:95px;height:95px;' +
+        'object-fit:cover;border-radius:12px;' +
+        'display:block;">'
+      ) :
+      (
+        '<div style="' +
+        'width:95px;height:95px;' +
+        'border-radius:12px;' +
+        'background:#eee;' +
+        'display:flex;align-items:center;' +
+        'justify-content:center;' +
+        'font-size:12px;">' +
+        'No Photo' +
+        '</div>'
+      );
+
+    const selfieHtml =
+      partner.selfie ?
+      (
+        '<img src="' +
+        partner.selfie +
+        '" alt="Selfie" ' +
+        'style="width:95px;height:95px;' +
+        'object-fit:cover;border-radius:12px;' +
+        'display:block;">'
+      ) :
+      (
+        '<div style="' +
+        'width:95px;height:95px;' +
+        'border-radius:12px;' +
+        'background:#eee;' +
+        'display:flex;align-items:center;' +
+        'justify-content:center;' +
+        'font-size:12px;">' +
+        'No Selfie' +
+        '</div>'
+      );
+
+    const proofHtml =
+      partner.proofId ?
+      (
+        '<button type="button" ' +
+        'onclick="BAP_openPartnerProof(\'' +
+        id +
+        '\')" ' +
+        'style="margin-top:8px;cursor:pointer;">' +
+        'Open Proof' +
+        '</button>' +
+        (
+          proofName ?
+          '<div style="font-size:12px;margin-top:5px;">' +
+          proofName +
+          '</div>' :
+          ''
+        )
+      ) :
+      '<div style="font-size:12px;color:#888;">No proof</div>';
+
+    const cls =
+      partnerStatusClass(
+        partner.verification
+      );
+
+    const actionHtml =
+      (
+        '<div style="' +
+        'display:flex;gap:8px;flex-wrap:wrap;' +
+        'margin-top:14px;">' +
+
+        '<button type="button" ' +
+        'onclick="BAP_adminApprovePartner(\'' +
+        id +
+        '\')" ' +
+        'style="padding:8px 12px;' +
+        'border-radius:8px;cursor:pointer;">' +
+        'Approve' +
+        '</button>' +
+
+        '<button type="button" ' +
+        'onclick="BAP_adminRejectPartner(\'' +
+        id +
+        '\')" ' +
+        'style="padding:8px 12px;' +
+        'border-radius:8px;cursor:pointer;">' +
+        'Reject' +
+        '</button>' +
+
+        '</div>'
+      );
+
+    return (
+      '<div class="bap-multi-partner-card" ' +
+      'data-partner-id="' +
+      id +
+      '" ' +
+      'style="' +
+      'border:1px solid #ddd;' +
+      'border-radius:16px;' +
+      'padding:16px;' +
+      'margin-bottom:16px;' +
+      'background:#fff;' +
+      'box-shadow:0 4px 18px rgba(0,0,0,.06);' +
+      '">' +
+
+      '<div style="' +
+      'display:flex;' +
+      'gap:16px;' +
+      'flex-wrap:wrap;' +
+      'align-items:flex-start;">' +
+
+      '<div>' +
+      photoHtml +
+      '<div style="margin-top:8px;font-weight:600;">' +
+      'Profile Photo' +
+      '</div>' +
+      '</div>' +
+
+      '<div>' +
+      selfieHtml +
+      '<div style="margin-top:8px;font-weight:600;">' +
+      'Selfie' +
+      '</div>' +
+      '</div>' +
+
+      '<div style="flex:1;min-width:260px;">' +
+
+      '<div style="display:flex;' +
+      'justify-content:space-between;' +
+      'gap:10px;align-items:center;' +
+      'flex-wrap:wrap;">' +
+
+      '<h3 style="margin:0;">' +
+      name +
+      '</h3>' +
+
+      '<span style="' +
+      'padding:5px 9px;' +
+      'border-radius:999px;' +
+      'background:#f2f2f2;' +
+      'font-size:12px;">' +
+      escapeHtml(cls) +
+      ': ' +
+      status +
+      '</span>' +
+
+      '</div>' +
+
+      '<div style="margin-top:10px;line-height:1.7;">' +
+
+      '<div><strong>Age:</strong> ' +
+      age +
+      '</div>' +
+
+      '<div><strong>Gender:</strong> ' +
+      gender +
+      '</div>' +
+
+      '<div><strong>Mobile:</strong> ' +
+      mobile +
+      '</div>' +
+
+      '<div><strong>Area:</strong> ' +
+      area +
+      '</div>' +
+
+      '<div><strong>Service:</strong> ' +
+      service +
+      '</div>' +
+
+      '<div><strong>Hourly Rate:</strong> ₹' +
+      rate +
+      '</div>' +
+
+      '<div><strong>Availability:</strong> ' +
+      availability +
+      '</div>' +
+
+      '<div><strong>Experience:</strong> ' +
+      experience +
+      '</div>' +
+
+      '<div><strong>Qualification:</strong> ' +
+      qualification +
+      '</div>' +
+
+      '</div>' +
+
+      '<div style="margin-top:10px;">' +
+      '<strong>Proof:</strong><br>' +
+      proofHtml +
+      '</div>' +
+
+      actionHtml +
+
+      '</div>' +
+
+      '</div>' +
+
+      '</div>'
+    );
+  }
+
+  function renderAllPartnerApplications(){
+
+    const box =
+      byId('partnerApplications');
+
+    if(!box){
+      return false;
+    }
+
+    const list =
+      getPartners();
+
+    currentAdminPartnerId = null;
+
+    if(!list.length){
+
+      box.innerHTML =
+        '<div style="padding:20px;color:#777;">' +
+        'No partner applications found.' +
+        '</div>';
+
+      return true;
+    }
+
+    box.innerHTML =
+      '<div style="margin-bottom:14px;' +
+      'font-weight:700;">' +
+      'Total Partners: ' +
+      list.length +
+      '</div>' +
+
+      list.map(function(partner){
+        return renderPartnerCard(partner);
+      }).join('');
+
+    return true;
+  }
+
+  window.renderAllPartnerApplications =
+    renderAllPartnerApplications;
+
+  /* ----------------------------------------------------------
+     ADMIN WRAPPER
+     ---------------------------------------------------------- */
+
+  function installAdmin(){
+
+    if(
+      typeof window.renderAdmin !== 'function'
+    ){
+      return false;
+    }
+
+    if(
+      window.renderAdmin.__BAP_MULTI_ADMIN_WRAPPER
+    ){
+      return true;
+    }
+
+    const originalRenderAdmin =
+      window.renderAdmin;
+
+    function wrappedRenderAdmin(){
+
+      let result;
+
+      try{
+        result =
+          originalRenderAdmin.apply(
+            this,
+            arguments
+          );
+      }catch(e){
+        console.error(
+          'Original renderAdmin error',
+          e
+        );
+      }
+
+      setTimeout(
+        renderAllPartnerApplications,
+        0
+      );
+
+      setTimeout(
+        renderAllPartnerApplications,
+        150
+      );
+
+      setTimeout(
+        renderAllPartnerApplications,
+        500
+      );
+
+      setTimeout(
+        renderAllPartnerApplications,
+        1000
+      );
+
+      return result;
+    }
+
+    wrappedRenderAdmin.__BAP_MULTI_ADMIN_WRAPPER = true;
+    wrappedRenderAdmin.__BAP_ORIGINAL = originalRenderAdmin;
+
+    window.renderAdmin =
+      wrappedRenderAdmin;
+
+    return true;
+  }
+
+  /* ----------------------------------------------------------
+     HOOK REINFORCEMENT
+     ---------------------------------------------------------- */
+
+  function reinforceHooks(){
+
+    try{
+      installFindPartners();
+    }catch(e){
+      console.error(
+        'findPartners hook failed',
+        e
+      );
     }
 
     try{
-      const compressedPhoto = await compressImage(photo);
-      const compressedSelfie = await compressImage(selfie);
-      const photoData = await fileToDataURL(compressedPhoto);
-      const selfieData = await fileToDataURL(compressedSelfie);
-
-      let proofInfo = null;
-      let years = null;
-      let details = '';
-      let qualification = '';
-
-      if(category && category.type === 'specialized'){
-        years = Number(byId('partnerExperienceYears')?.value);
-        details = byId('partnerExperienceDetails')?.value.trim() || '';
-        qualification = byId('partnerQualification')?.value.trim() || '';
-        const proof = byId('partnerExperienceProof')?.files?.[0] || null;
-        if(proof) proofInfo = await saveDocument(proof);
-      }
-
-      const partner = {
-        id:slugId(),
-        name:n,
-        age:age,
-        mobile:m,
-        area:area,
-        service:service,
-        rate:rate,
-        availability:availability,
-        gender:gender,
-        verification:'Pending Review',
-        verificationNote:'Photo + selfie submitted for admin review',
-        photoName:compressedPhoto.name,
-        photoData:photoData,
-        selfieName:compressedSelfie.name,
-        selfieData:selfieData,
-        experienceRequired:category?.type === 'specialized',
-        experienceYears:years,
-        experienceDetails:details,
-        qualification:qualification,
-        experienceProofId:proofInfo?.id || '',
-        experienceProofName:proofInfo?.name || ''
-      };
-
-      const list = getPartners();
-      list.push(partner);
-      savePartners(list);
-      setCurrentPartner(partner.id);
-
-      alert('Partner application saved for demo. Real mobile OTP, identity verification and admin approval will be connected in the backend stage.');
-      if(typeof go === 'function') go('partnerDashboard');
-
-    }catch(error){
-      console.error('Multi partner application error:', error);
-      alert('Partner application could not be saved. Please try again.');
+      installSelectPartner();
+    }catch(e){
+      console.error(
+        'selectPartner hook failed',
+        e
+      );
     }
+
+    try{
+      installPartnerDashboard();
+    }catch(e){
+      console.error(
+        'partner dashboard hook failed',
+        e
+      );
+    }
+
+    try{
+      installAdmin();
+    }catch(e){
+      console.error(
+        'admin hook failed',
+        e
+      );
+    }
+
+    try{
+      renderAllPartnerApplications();
+    }catch(e){
+      console.error(
+        'admin render failed',
+        e
+      );
+    }
+
+    try{
+      window.partnerApply =
+        multiPartnerApply;
+    }catch(e){}
   }
 
-  /* ========================================================
-     PARTNER DASHBOARD — CURRENT PARTNER
-     ======================================================== */
+  /* ----------------------------------------------------------
+     INSTALL
+     ---------------------------------------------------------- */
 
-  function installPartnerDashboard(){
-    window.renderPartnerDashboard = function(){
-      const p = getCurrentPartner();
-      const profile = byId('partnerProfileCard');
-      const req = byId('partnerRequests');
+  function install(){
 
-      if(!profile || !req) return;
-
-      if(!p){
-        profile.innerHTML = '<b>No partner profile yet.</b><p>Create your profile from Start Earning.</p><button class="pink" onclick="go(\'join\')">Create Partner Profile</button>';
-        req.innerHTML = '';
-        return;
-      }
-
-      profile.innerHTML = `
-        <b>${p.name}</b>
-        <span class="pill">${p.verification}</span>
-        <p>Age ${p.age} • ${p.area}</p>
-        <p>${p.service} • ₹${p.rate}/hour • ${p.availability}</p>
-        <p>📸 ${p.photoName || '—'}<br>🤳 ${p.selfieName || '—'}</p>
-        <p><span class="pill">💰 Payout rule: customer approval required</span></p>
-      `;
-
-      const bookings = safeJsonParse(localStorage.getItem('bap_bookings') || '[]', []);
-      const partnerArea = String(p.area || '').toLowerCase().trim();
-
-      const matching = bookings.filter(function(b){
-        if(b.status !== 'Awaiting Partner' && b.status !== 'Confirmed') return false;
-        if(b.partnerStatus === 'Rejected') return false;
-        if(b.partnerId && String(b.partnerId) !== String(p.id)) return false;
-        if(!b.partnerId && b.name !== p.name) return false;
-        if(b.service !== p.service) return false;
-        if(p.availability !== 'Available') return false;
-
-        const customerArea = String(b.area || '').toLowerCase().trim();
-        const meetingLocation = String(b.location || '').toLowerCase().trim();
-
-        if(!partnerArea) return true;
-
-        return !!(
-          customerArea.includes('gurgaon') ||
-          customerArea.includes('gurugram') ||
-          meetingLocation.includes('gurgaon') ||
-          meetingLocation.includes('gurugram') ||
-          partnerArea.includes(customerArea) ||
-          customerArea.includes(partnerArea) ||
-          meetingLocation.includes(partnerArea) ||
-          partnerArea.includes(meetingLocation)
-        );
-      });
-
-      if(!matching.length){
-        req.innerHTML = '<p class="muted">No matching booking requests are waiting right now.</p>';
-        return;
-      }
-
-      req.innerHTML = matching.map(function(b){
-        const statusText = b.status === 'Confirmed' ? 'Accepted / Confirmed' : 'Waiting for your response';
-        const canAct = b.status === 'Awaiting Partner' && b.partnerStatus !== 'Rejected';
-
-        return `
-          <div class="card" style="margin-top:10px">
-            <b>${b.service}</b>
-            <p>${b.date} • ${b.time}<br>📍 ${b.location}<br>Area: ${b.area || '—'}</p>
-            <span class="pill">${statusText}</span>
-            <div style="margin-top:8px">
-              ${canAct ? `
-                <button class="green" onclick="partnerAcceptBooking('${String(b.id).replace(/'/g,"\\'")}')">Accept</button>
-                <button class="light" onclick="partnerRejectBooking('${String(b.id).replace(/'/g,"\\'")}')">Reject</button>
-              ` : ''}
-            </div>
-          </div>`;
-      }).join('');
-    };
-  }
-
-  window.multiPartnerSetCurrent = function(id){
-    setCurrentPartner(id);
-    if(typeof renderPartnerDashboard === 'function') renderPartnerDashboard();
-  };
-
-  /* ========================================================
-     ADMIN PARTNER APPLICATIONS
-     ======================================================== */
-
-  function renderAllPartnerApplications(){
-    const box = byId('partnerApplications');
-    if(!box) return;
-
-    const list = getPartners();
-
-    if(!list.length){
-      box.innerHTML = '<p class="muted">No partner applications yet.</p>';
+    if(installed){
       return;
     }
 
-    box.innerHTML = list.slice().reverse().map(function(p){
-      const buttonId = String(p.id).replace(/'/g,"\\'");
-      const status = p.verification || 'Pending Review';
-      const specialized = !!p.experienceRequired || !!(window.BAP_isSpecialized && window.BAP_isSpecialized(p.service));
-
-      const proofHtml = p.experienceProofId
-        ? `<button class="light" type="button" onclick="BAP_openPartnerProof('${buttonId}')">📄 Open Proof / Certificate</button>`
-        : (p.experienceProofName ? `<span class="muted">Proof: ${p.experienceProofName}</span>` : '');
-
-      const specializedHtml = specialized ? `
-        <div class="card" style="margin-top:14px;background:#faf5ff;border-color:#ddd6fe">
-          <b>🛡 Specialized Verification Details</b>
-          <p>
-            <b>Partner Gender:</b> ${p.gender || '—'}<br>
-            <b>Relevant Experience:</b> ${p.experienceYears ?? '—'} years<br>
-            <b>Experience Details:</b> ${p.experienceDetails || '—'}<br>
-            <b>Qualification / Certification:</b> ${p.qualification || '—'}<br>
-            <b>Proof / Certificate:</b> ${p.experienceProofName || '—'}
-          </p>
-          <div class="notice">⚠ Specialized service — verify experience, qualification and proof before approval.</div>
-          ${proofHtml}
-        </div>` : proofHtml;
-
-      return `
-        <div class="card" style="margin-top:10px">
-          <span class="pill">${status}</span>
-          <h4 style="margin-top:12px">${p.name || 'Partner'}</h4>
-          <p>
-            📱 ${p.mobile || '—'}<br>
-            🎂 Age: ${p.age || '—'}<br>
-            📍 ${p.area || '—'}<br>
-            🛎️ Service: ${p.service || '—'}<br>
-            👤 Gender: ${p.gender || '—'}<br>
-            💰 ₹${p.rate || '—'} / hour<br>
-            🕐 Availability: ${p.availability || '—'}
-          </p>
-
-          <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:15px">
-            <div>
-              <small style="display:block;font-weight:700;margin-bottom:6px;color:#334155">📷 Profile Photo</small>
-              ${p.photoData ? `<img src="${p.photoData}" alt="Partner profile photo" style="width:140px;height:140px;object-fit:cover;border-radius:14px;border:1px solid #e2e8f0">` : `<p class="muted">Photo not available</p>`}
-            </div>
-            <div>
-              <small style="display:block;font-weight:700;margin-bottom:6px;color:#334155">🤳 Selfie</small>
-              ${p.selfieData ? `<img src="${p.selfieData}" alt="Partner selfie" style="width:140px;height:140px;object-fit:cover;border-radius:14px;border:1px solid #e2e8f0">` : `<p class="muted">Selfie not available</p>`}
-            </div>
-          </div>
-
-          <p class="muted">${p.verificationNote || ''}</p>
-
-          ${specializedHtml}
-
-          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-            ${status !== 'Approved' ? `<button class="green" onclick="adminApprovePartner('${buttonId}')">✓ Approve</button>` : `<span class="pill available">✓ APPROVED</span>`}
-            ${status !== 'Rejected' ? `<button class="light" onclick="adminRejectPartner('${buttonId}')">Reject</button>` : `<span class="pill">REJECTED</span>`}
-          </div>
-        </div>`;
-    }).join('');
-  }
-
-  function installAdmin(){
-    const originalRenderAdmin = window.renderAdmin;
-
-    window.renderAdmin = function(){
-      if(typeof originalRenderAdmin === 'function'){
-        try{ originalRenderAdmin.apply(this, arguments); }catch(e){ console.warn('Legacy renderAdmin warning:',e); }
-      }
-      setTimeout(renderAllPartnerApplications, 0);
-      setTimeout(renderAllPartnerApplications, 150);
-      setTimeout(renderAllPartnerApplications, 500);
-    };
-
-    window.adminApprovePartner = function(id){
-      const list = getPartners();
-      const index = list.findIndex(function(p){ return String(p.id) === String(id); });
-      if(index < 0){ alert('Partner application not found.'); return; }
-
-      list[index].verification = 'Approved';
-      list[index].verificationNote = 'Partner approved by admin.';
-      savePartners(list);
-      setCurrentPartner(list[index].id);
-
-      alert('Partner approved successfully.');
-      renderAllPartnerApplications();
-    };
-
-    window.adminRejectPartner = function(id){
-      const list = getPartners();
-      const index = list.findIndex(function(p){ return String(p.id) === String(id); });
-      if(index < 0){ alert('Partner application not found.'); return; }
-
-      list[index].verification = 'Rejected';
-      list[index].verificationNote = 'Partner application rejected by admin.';
-      savePartners(list);
-
-      alert('Partner application rejected.');
-      renderAllPartnerApplications();
-    };
-  }
-
-  /* ========================================================
-     INSTALL MULTI PARTNER BEHAVIOUR
-     ======================================================== */
-
-  function install(){
-    if(installed) return;
     installed = true;
 
-    migratePartners();
-    installFindPartners();
-    installSelectPartner();
-    installPartnerDashboard();
-    installAdmin();
+    try{
+      migratePartners();
+    }catch(e){
+      console.error(
+        'Migration failed',
+        e
+      );
+    }
 
-    /* Override partnerApply after the existing category/validation
-       scripts have had a chance to install their wrappers. */
+    /* Initial attempt */
+    reinforceHooks();
+
+    /*
+      The main index.html has a very large inline script.
+      Some legacy functions are defined AFTER this external
+      JavaScript loads. Therefore we reinforce hooks several
+      times so the final legacy functions are wrapped.
+    */
+
+    setTimeout(
+      reinforceHooks,
+      500
+    );
+
+    setTimeout(
+      reinforceHooks,
+      1500
+    );
+
+    setTimeout(
+      reinforceHooks,
+      3000
+    );
+
+    setTimeout(
+      reinforceHooks,
+      5000
+    );
+
+    setTimeout(
+      reinforceHooks,
+      8000
+    );
+
+    /*
+      Keep partnerApply on the multi-partner implementation
+      after the original page script has finished loading.
+    */
+
     setTimeout(function(){
-      window.partnerApply = multiPartnerApply;
+      window.partnerApply =
+        multiPartnerApply;
     }, 3200);
 
     setTimeout(function(){
-      window.partnerApply = multiPartnerApply;
+      window.partnerApply =
+        multiPartnerApply;
     }, 5000);
 
     setTimeout(function(){
-      renderAllPartnerApplications();
-    }, 700);
+      window.partnerApply =
+        multiPartnerApply;
+    }, 8000);
+
+    /*
+      Observe DOM changes.
+      Legacy renderAdmin may rebuild partnerApplications,
+      so render the complete multi-partner list again.
+    */
+
+    if(
+      !window.__BAP_MULTI_PARTNER_OBSERVER &&
+      window.MutationObserver
+    ){
+
+      const observer =
+        new MutationObserver(
+          function(){
+
+            const box =
+              byId(
+                'partnerApplications'
+              );
+
+            if(box){
+              renderAllPartnerApplications();
+            }
+          }
+        );
+
+      if(document.body){
+
+        observer.observe(
+          document.body,
+          {
+            childList: true,
+            subtree: true
+          }
+        );
+
+        window.__BAP_MULTI_PARTNER_OBSERVER =
+          observer;
+      }
+    }
+
+    window.__BAP_MULTI_PARTNER_INSTALLED = true;
   }
 
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', install);
+  /* ----------------------------------------------------------
+     DEBUG HELPERS
+     ---------------------------------------------------------- */
+
+  window.BAP_getPartners =
+    function(){
+      return getPartners();
+    };
+
+  window.BAP_getCurrentPartner =
+    function(){
+      return getCurrentPartner();
+    };
+
+  window.BAP_setCurrentPartner =
+    function(id){
+      setCurrentPartner(id);
+      return getCurrentPartner();
+    };
+
+  window.BAP_renderPartners =
+    function(){
+      return renderAllPartnerApplications();
+    };
+
+  /* ----------------------------------------------------------
+     START
+     ---------------------------------------------------------- */
+
+  if(
+    document.readyState === 'loading'
+  ){
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      install
+    );
+
   }else{
+
     install();
   }
 
