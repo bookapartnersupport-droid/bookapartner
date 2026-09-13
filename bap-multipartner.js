@@ -2987,3 +2987,268 @@
   );
 
 })();
+/* BAP v7 — CUSTOMER MULTI-PARTNER SEARCH FIX */
+(function(){
+
+  function getApprovedPartners(){
+
+    try{
+
+      const list =
+        JSON.parse(
+          localStorage.getItem(
+            'bap_partner_profiles'
+          ) || '[]'
+        );
+
+      return Array.isArray(list)
+        ? list.filter(
+            p =>
+              String(p.verification || '')
+                .toLowerCase() === 'approved'
+          )
+        : [];
+
+    }catch(e){
+
+      return [];
+    }
+  }
+
+  function ageMatch(age, p){
+
+    const a = Number(p.age || 0);
+
+    if(age === 'Any age'){
+      return true;
+    }
+
+    if(age === '21–25'){
+      return a >= 21 && a <= 25;
+    }
+
+    if(age === '26–30'){
+      return a >= 26 && a <= 30;
+    }
+
+    if(age === '31–35'){
+      return a >= 31 && a <= 35;
+    }
+
+    if(age === '36–45'){
+      return a >= 36 && a <= 45;
+    }
+
+    if(age === '46+'){
+      return a >= 46;
+    }
+
+    return true;
+  }
+
+  function renderCustomerPartners(){
+
+    const service =
+      document.getElementById('svc')?.value || '';
+
+    const age =
+      document.getElementById('age')?.value || '';
+
+    const location =
+      document.getElementById('loc')?.value ||
+      'Gurgaon NCR';
+
+    const results =
+      document.getElementById('results');
+
+    if(!results){
+      return;
+    }
+
+    const approved =
+      getApprovedPartners();
+
+    const list =
+      approved.filter(function(p){
+
+        const services =
+          Array.isArray(p.services) &&
+          p.services.length
+            ? p.services
+            : [p.service];
+
+        return (
+          services.includes(service) &&
+          ageMatch(age,p)
+        );
+
+      });
+
+    let html =
+      '<h2>Available Partners</h2>' +
+      '<p class="muted">' +
+      service +
+      ' • ' +
+      location +
+      ' • Preferred age: ' +
+      age +
+      '</p>' +
+      '<div class="partners">';
+
+    list.forEach(function(p){
+
+      html +=
+        '<div class="card">' +
+
+        '<div class="partner">' +
+
+        '<div class="avatar">' +
+        String(p.name || 'P').charAt(0) +
+        '</div>' +
+
+        '<div>' +
+
+        '<b>' +
+        String(p.name || 'Partner') +
+        '</b> ' +
+
+        '<span class="verified">' +
+        '✓ VERIFIED' +
+        '</span>' +
+
+        '<div class="muted">' +
+        'Age ' +
+        String(p.age || '-') +
+        ' • ' +
+        String(p.area || '-') +
+        '</div>' +
+
+        '<div class="rating">' +
+        '★★★★★ ' +
+        String(p.rating || 'New') +
+        ' (' +
+        String(p.reviews || 0) +
+        ')' +
+        '</div>' +
+
+        '<span class="available">' +
+        '● AVAILABLE' +
+        '</span>' +
+
+        '</div>' +
+
+        '</div>' +
+
+        '<div class="price">' +
+        '₹' +
+        String(p.rate || '-') +
+        ' <small>/ hour</small>' +
+        '</div>' +
+
+        '<div>';
+
+      const services =
+        Array.isArray(p.services) &&
+        p.services.length
+          ? p.services
+          : [p.service];
+
+      services.forEach(function(s){
+
+        html +=
+          '<span class="pill">' +
+          String(s) +
+          '</span>';
+
+      });
+
+      html +=
+        '</div>' +
+
+        '<div class="transportBox">' +
+        '🚗 <b>Transport:</b> Free up to 10 km. ' +
+        'Beyond 10 km, maximum ₹150.' +
+        '</div>' +
+
+        '<button class="pink full" ' +
+        'onclick="BAP_multiSelectPartner(\'' +
+        String(p.name).replace(/'/g,"\\'") +
+        '\')">' +
+        'Request Booking' +
+        '</button>' +
+
+        '</div>';
+
+    });
+
+    if(!list.length){
+
+      html +=
+        '<div class="card">' +
+        'No matching verified/available partners found.' +
+        '</div>';
+    }
+
+    html += '</div>';
+
+    results.innerHTML = html;
+  }
+
+  window.BAP_multiSelectPartner =
+    function(name){
+
+      const partner =
+        getApprovedPartners().find(
+          p =>
+            String(p.name) ===
+            String(name)
+        );
+
+      if(!partner){
+        alert('Partner not found.');
+        return;
+      }
+
+      /*
+        Keep old booking flow compatible by temporarily
+        placing the selected approved partner in the
+        legacy key.
+      */
+
+      try{
+
+        localStorage.setItem(
+          'bap_partner_profile',
+          JSON.stringify(partner)
+        );
+
+      }catch(e){}
+
+      if(
+        typeof window.selectPartner ===
+        'function'
+      ){
+
+        window.selectPartner(name);
+      }
+    };
+
+  window.findPartners =
+    function(){
+
+      renderCustomerPartners();
+
+      return true;
+    };
+
+  setTimeout(
+    function(){
+
+      window.findPartners =
+        window.findPartners;
+
+    },
+    300
+  );
+
+})();
