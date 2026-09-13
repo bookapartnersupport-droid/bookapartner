@@ -2823,3 +2823,167 @@
   );
 
 })();
+/* ==========================================================
+   BAP v6 — FINAL ADMIN LOAD/TIMING FIX
+   Re-hooks renderAdmin after main index.html loads
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+  let hooked = false;
+  let attempts = 0;
+
+  function tryHookAdmin(){
+
+    if(hooked){
+      return;
+    }
+
+    if(
+      typeof window.renderAdmin !==
+      'function'
+    ){
+      return;
+    }
+
+    const original =
+      window.renderAdmin;
+
+    if(
+      original.__BAP_V6_ADMIN_HOOK
+    ){
+      hooked = true;
+      return;
+    }
+
+    function wrappedAdmin(){
+
+      let result;
+
+      try{
+
+        result =
+          original.apply(
+            this,
+            arguments
+          );
+
+      }catch(error){
+
+        console.error(
+          'BAP v6 admin error:',
+          error
+        );
+      }
+
+      /*
+        Let the original admin UI finish rendering,
+        then apply the direct photoData/selfieData renderer.
+      */
+
+      setTimeout(
+        function(){
+
+          if(
+            typeof window.renderAllPartnerApplications ===
+            'function'
+          ){
+
+            window.renderAllPartnerApplications();
+          }
+
+        },
+        100
+      );
+
+      return result;
+    }
+
+    wrappedAdmin.__BAP_V6_ADMIN_HOOK = true;
+    wrappedAdmin.__BAP_V6_ORIGINAL = original;
+
+    window.renderAdmin =
+      wrappedAdmin;
+
+    hooked = true;
+
+    /*
+      Also render once if Admin section is already visible.
+    */
+
+    setTimeout(
+      function(){
+
+        if(
+          document.getElementById(
+            'partnerApplications'
+          ) &&
+          typeof window.renderAllPartnerApplications ===
+          'function'
+        ){
+
+          window.renderAllPartnerApplications();
+        }
+
+      },
+      150
+    );
+  }
+
+  /*
+    Main page script may define renderAdmin after this file.
+    Check periodically for a short time.
+    No MutationObserver, so no memory loop.
+  */
+
+  const timer =
+    setInterval(
+      function(){
+
+        attempts++;
+
+        tryHookAdmin();
+
+        if(
+          hooked ||
+          attempts >= 50
+        ){
+
+          clearInterval(timer);
+        }
+
+      },
+      200
+    );
+
+  /*
+    Extra safe checks after page parsing/loading.
+  */
+
+  document.addEventListener(
+    'DOMContentLoaded',
+    function(){
+
+      setTimeout(
+        tryHookAdmin,
+        100
+      );
+
+    }
+  );
+
+  window.addEventListener(
+    'load',
+    function(){
+
+      setTimeout(
+        tryHookAdmin,
+        100
+      );
+
+    }
+  );
+
+})();
