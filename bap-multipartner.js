@@ -3692,3 +3692,535 @@
   }
 
 })();
+/* ==========================================================
+   BAP FINAL CUSTOMER SEARCH
+   One-time clean fix for multi-partner customer matching
+   ========================================================== */
+
+(function(){
+
+  'use strict';
+
+  const LIST_KEY = 'bap_partner_profiles';
+  const CURRENT_KEY = 'bap_current_partner_id';
+  const LEGACY_KEY = 'bap_partner_profile';
+
+  function getPartners(){
+
+    try{
+
+      const list =
+        JSON.parse(
+          localStorage.getItem(LIST_KEY) || '[]'
+        );
+
+      return Array.isArray(list) ? list : [];
+
+    }catch(e){
+
+      return [];
+    }
+  }
+
+  function normalize(value){
+
+    return String(value || '')
+      .trim()
+      .toLowerCase();
+  }
+
+  function getService(){
+
+    const el =
+      document.getElementById('service') ||
+      document.getElementById('svc');
+
+    return el ? el.value : '';
+  }
+
+  function getGender(){
+
+    const el =
+      document.getElementById(
+        'customerGenderPreference'
+      );
+
+    return el ? el.value : '';
+  }
+
+  function getAge(){
+
+    const el =
+      document.getElementById('age');
+
+    return el ? el.value : '';
+  }
+
+  function ageMatches(age, partnerAge){
+
+    const a =
+      Number(partnerAge || 0);
+
+    if(age === 'Any age' || !age){
+      return true;
+    }
+
+    if(age === '21–25'){
+      return a >= 21 && a <= 25;
+    }
+
+    if(age === '26–30'){
+      return a >= 26 && a <= 30;
+    }
+
+    if(age === '31–35'){
+      return a >= 31 && a <= 35;
+    }
+
+    if(age === '36–45'){
+      return a >= 36 && a <= 45;
+    }
+
+    if(age === '46+'){
+      return a >= 46;
+    }
+
+    return true;
+  }
+
+  function genderMatches(gender, partnerGender){
+
+    const wanted =
+      normalize(gender)
+        .replace(' partner','');
+
+    if(
+      !wanted ||
+      wanted === 'any' ||
+      wanted === 'all'
+    ){
+      return true;
+    }
+
+    const actual =
+      normalize(partnerGender);
+
+    return actual.includes(wanted);
+  }
+
+  function serviceMatches(service, partner){
+
+    const services =
+      Array.isArray(partner.services) &&
+      partner.services.length
+        ? partner.services
+        : [partner.service];
+
+    const wanted =
+      normalize(service);
+
+    return services.some(function(s){
+
+      return normalize(s) === wanted;
+
+    });
+  }
+
+  function getApprovedMatches(){
+
+    const service =
+      getService();
+
+    const gender =
+      getGender();
+
+    const age =
+      getAge();
+
+    return getPartners()
+      .filter(function(partner){
+
+        if(
+          normalize(
+            partner.verification
+          ) !== 'approved'
+        ){
+          return false;
+        }
+
+        if(
+          partner.active === false
+        ){
+          return false;
+        }
+
+        if(
+          !serviceMatches(
+            service,
+            partner
+          )
+        ){
+          return false;
+        }
+
+        if(
+          !genderMatches(
+            gender,
+            partner.gender
+          )
+        ){
+          return false;
+        }
+
+        if(
+          !ageMatches(
+            age,
+            partner.age
+          )
+        ){
+          return false;
+        }
+
+        return true;
+      });
+  }
+
+  function escapeHtml(value){
+
+    return String(
+      value == null ? '' : value
+    )
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+
+  }
+
+  function renderResults(){
+
+    const results =
+      document.getElementById(
+        'results'
+      );
+
+    if(!results){
+      return;
+    }
+
+    const service =
+      getService();
+
+    const gender =
+      getGender();
+
+    const age =
+      getAge();
+
+    const matches =
+      getApprovedMatches();
+
+    let html =
+
+      '<h2>Available Partners</h2>' +
+
+      '<p class="muted">' +
+      escapeHtml(service) +
+      ' • ' +
+      escapeHtml(gender) +
+      ' • Preferred age: ' +
+      escapeHtml(age) +
+      '</p>';
+
+    if(!matches.length){
+
+      html +=
+        '<div class="card">' +
+        'No matching verified/available partners found.' +
+        '</div>';
+
+      results.innerHTML =
+        html;
+
+      return;
+    }
+
+    html +=
+      '<div class="partners">';
+
+    matches.forEach(function(p){
+
+      const photo =
+        p.photo ||
+        p.photoData ||
+        '';
+
+      const imageHTML =
+        photo ?
+
+        '<img src="' +
+        photo +
+        '" alt="' +
+        escapeHtml(p.name) +
+        '" style="' +
+        'width:82px;' +
+        'height:82px;' +
+        'object-fit:cover;' +
+        'border-radius:12px;' +
+        'display:block;' +
+        '">' :
+
+        '<div class="avatar">' +
+        escapeHtml(
+          String(
+            p.name || 'P'
+          ).charAt(0)
+        ) +
+        '</div>';
+
+      const services =
+        Array.isArray(p.services) &&
+        p.services.length
+          ? p.services
+          : [p.service];
+
+      html +=
+
+        '<div class="card">' +
+
+        '<div style="' +
+        'display:flex;' +
+        'gap:14px;' +
+        'align-items:center;' +
+        'margin-bottom:12px;' +
+        '">' +
+
+        imageHTML +
+
+        '<div>' +
+
+        '<div style="font-size:18px;font-weight:800;">' +
+        escapeHtml(
+          p.name || 'Partner'
+        ) +
+        ' ' +
+
+        '<span class="verified">' +
+        '✓ VERIFIED' +
+        '</span>' +
+
+        '</div>' +
+
+        '<div class="muted">' +
+        'Age ' +
+        escapeHtml(p.age) +
+        ' • ' +
+        escapeHtml(p.area || p.city || '-') +
+        '</div>' +
+
+        '<div class="rating">' +
+        '★★★★★ ' +
+        escapeHtml(p.rating || 'New') +
+        ' (' +
+        escapeHtml(p.reviews || 0) +
+        ')' +
+        '</div>' +
+
+        '</div>' +
+
+        '</div>' +
+
+        '<div class="price">' +
+        '₹' +
+        escapeHtml(p.rate || '-') +
+        ' <small>/ hour</small>' +
+        '</div>' +
+
+        '<div>';
+
+      services.forEach(function(s){
+
+        html +=
+          '<span class="pill">' +
+          escapeHtml(s) +
+          '</span>';
+
+      });
+
+      html +=
+
+        '</div>' +
+
+        '<div class="transportBox">' +
+        '🚗 <b>Transport:</b> Free up to 10 km. ' +
+        'Beyond 10 km, maximum ₹150.' +
+        '</div>' +
+
+        '<button ' +
+        'class="pink full" ' +
+        'data-bap-partner-id="' +
+        escapeHtml(p.id) +
+        '">' +
+        'Request Booking' +
+        '</button>' +
+
+        '</div>';
+
+    });
+
+    html +=
+      '</div>';
+
+    results.innerHTML =
+      html;
+  }
+
+  function selectPartner(partnerId){
+
+    const partner =
+      getPartners().find(function(p){
+
+        return String(p.id) ===
+          String(partnerId);
+
+      });
+
+    if(!partner){
+      alert('Partner not found.');
+      return;
+    }
+
+    try{
+
+      localStorage.setItem(
+        CURRENT_KEY,
+        String(partner.id)
+      );
+
+      localStorage.setItem(
+        LEGACY_KEY,
+        JSON.stringify(partner)
+      );
+
+    }catch(e){}
+
+    if(
+      typeof window.selectPartner ===
+      'function'
+    ){
+
+      try{
+
+        window.selectPartner(
+          partner.name
+        );
+
+        return;
+
+      }catch(e){
+
+        console.error(e);
+      }
+    }
+
+    if(
+      typeof window.go ===
+      'function'
+    ){
+
+      window.go('bookings');
+
+    }
+
+  }
+
+  function install(){
+
+    if(
+      document.body.dataset
+        .bapFinalSearchInstalled === '1'
+    ){
+      return;
+    }
+
+    document.body.dataset
+      .bapFinalSearchInstalled = '1';
+
+    /*
+      Capture phase is intentional.
+      It stops the old inline onclick="match()"
+      before the old function can overwrite results.
+    */
+
+    document.addEventListener(
+      'click',
+      function(event){
+
+        const button =
+          event.target.closest(
+            'button'
+          );
+
+        if(!button){
+          return;
+        }
+
+        const text =
+          String(
+            button.textContent || ''
+          ).trim();
+
+        if(
+          text ===
+          'Find Available Partners'
+        ){
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          renderResults();
+
+          return false;
+        }
+
+        const partnerId =
+          button.getAttribute(
+            'data-bap-partner-id'
+          );
+
+        if(partnerId){
+
+          event.preventDefault();
+          event.stopImmediatePropagation();
+
+          selectPartner(
+            partnerId
+          );
+
+          return false;
+        }
+
+      },
+      true
+    );
+
+  }
+
+  if(
+    document.readyState ===
+    'loading'
+  ){
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      install,
+      {once:true}
+    );
+
+  }else{
+
+    install();
+  }
+
+})();
