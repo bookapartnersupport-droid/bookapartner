@@ -4224,3 +4224,1150 @@
   }
 
 })();
+/* =========================================================
+   BAP REAL PARTNER BACKEND
+   Supabase Auth + Partner Application + Storage
+   ========================================================= */
+
+(function(){
+
+  'use strict';
+
+  const SUPABASE_URL =
+    'https://wmawmdwjibvlqsugthhe.supabase.co';
+
+  const SUPABASE_KEY =
+    'sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI';
+
+  let sbClient = null;
+  let sbLoader = null;
+  let fieldTimer = null;
+
+  function loadSupabase(){
+
+    if(window.supabase &&
+       typeof window.supabase.createClient === 'function'){
+
+      if(!sbClient){
+        sbClient =
+          window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+          );
+      }
+
+      return Promise.resolve(sbClient);
+    }
+
+    if(sbLoader){
+      return sbLoader;
+    }
+
+    sbLoader = new Promise(function(resolve,reject){
+
+      const existing =
+        document.querySelector(
+          'script[data-bap-supabase="1"]'
+        );
+
+      if(existing){
+        existing.addEventListener(
+          'load',
+          function(){
+
+            sbClient =
+              window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_KEY
+              );
+
+            resolve(sbClient);
+          }
+        );
+
+        existing.addEventListener(
+          'error',
+          reject
+        );
+
+        return;
+      }
+
+      const script =
+        document.createElement('script');
+
+      script.src =
+        'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+
+      script.async = true;
+
+      script.dataset.bapSupabase = '1';
+
+      script.onload = function(){
+
+        try{
+
+          sbClient =
+            window.supabase.createClient(
+              SUPABASE_URL,
+              SUPABASE_KEY
+            );
+
+          resolve(sbClient);
+
+        }catch(error){
+
+          reject(error);
+        }
+      };
+
+      script.onerror = reject;
+
+      document.head.appendChild(script);
+
+    });
+
+    return sbLoader;
+  }
+
+  function el(id){
+    return document.getElementById(id);
+  }
+
+  function val(id){
+    return String(
+      el(id)?.value || ''
+    ).trim();
+  }
+
+  function makeId(prefix){
+    if(
+      window.crypto &&
+      typeof window.crypto.randomUUID === 'function'
+    ){
+      return prefix + '-' +
+        window.crypto.randomUUID();
+    }
+
+    return prefix + '-' +
+      Date.now() + '-' +
+      Math.random()
+        .toString(36)
+        .slice(2);
+  }
+
+  function escapeHTML(value){
+
+    return String(
+      value == null ? '' : value
+    )
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
+  }
+
+  function fileToDataURL(file){
+
+    return new Promise(function(resolve,reject){
+
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        function(){
+          resolve(
+            String(reader.result || '')
+          );
+        };
+
+      reader.onerror =
+        reject;
+
+      reader.readAsDataURL(file);
+
+    });
+  }
+
+  function compressForCache(file){
+
+    return new Promise(function(resolve){
+
+      if(!file ||
+         !file.type.startsWith('image/')){
+
+        resolve(file);
+        return;
+      }
+
+      const reader =
+        new FileReader();
+
+      reader.onload = function(){
+
+        const img =
+          new Image();
+
+        img.onload = function(){
+
+          const max =
+            900;
+
+          let width =
+            img.width;
+
+          let height =
+            img.height;
+
+          if(width > max){
+
+            height =
+              Math.round(
+                height * max / width
+              );
+
+            width = max;
+          }
+
+          const canvas =
+            document.createElement(
+              'canvas'
+            );
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx =
+            canvas.getContext('2d');
+
+          ctx.drawImage(
+            img,
+            0,
+            0,
+            width,
+            height
+          );
+
+          canvas.toBlob(
+            function(blob){
+
+              resolve(
+                blob || file
+              );
+            },
+            'image/jpeg',
+            0.75
+          );
+
+        };
+
+        img.onerror =
+          function(){
+            resolve(file);
+          };
+
+        img.src =
+          String(reader.result || '');
+      };
+
+      reader.onerror =
+        function(){
+          resolve(file);
+        };
+
+      reader.readAsDataURL(file);
+
+    });
+  }
+
+  async function uploadFile(
+    client,
+    bucket,
+    file,
+    userId
+  ){
+
+    if(!file){
+      return '';
+    }
+
+    const ext =
+      (
+        file.name.split('.').pop() ||
+        'bin'
+      )
+      .toLowerCase();
+
+    const path =
+      userId +
+      '/' +
+      makeId('file') +
+      '.' +
+      ext;
+
+    const result =
+      await client.storage
+        .from(bucket)
+        .upload(
+          path,
+          file,
+          {
+            cacheControl:'3600',
+            upsert:false,
+            contentType:file.type
+          }
+        );
+
+    if(result.error){
+      throw result.error;
+    }
+
+    return path;
+  }
+
+  function installPartnerFields(){
+
+    const join =
+      document.getElementById('join');
+
+    if(!join){
+      return false;
+    }
+
+    if(
+      document.getElementById(
+        'bapPartnerEmail'
+      )
+    ){
+      return true;
+    }
+
+    const button =
+      Array.from(
+        join.querySelectorAll(
+          'button'
+        )
+      ).find(function(btn){
+
+        return (
+          String(
+            btn.getAttribute(
+              'onclick'
+            ) || ''
+          ).includes(
+            'partnerApply'
+          )
+        );
+      });
+
+    if(!button){
+      return false;
+    }
+
+    const box =
+      document.createElement('div');
+
+    box.id =
+      'bapRealPartnerAccountFields';
+
+    box.style.marginTop =
+      '14px';
+
+    box.innerHTML =
+
+      '<div class="notice">' +
+      '<b>Partner Account</b><br>' +
+      'Create your secure login account. ' +
+      'Your profile will remain pending until manual verification call approval.' +
+      '</div>' +
+
+      '<label style="display:block;margin-top:10px;">' +
+      'Email Address' +
+      '</label>' +
+
+      '<input ' +
+      'id="bapPartnerEmail" ' +
+      'type="email" ' +
+      'placeholder="your@email.com" ' +
+      'autocomplete="email" ' +
+      'style="width:100%;padding:11px;margin-top:5px;"' +
+      '>' +
+
+      '<label style="display:block;margin-top:10px;">' +
+      'Password' +
+      '</label>' +
+
+      '<input ' +
+      'id="bapPartnerPassword" ' +
+      'type="password" ' +
+      'placeholder="Minimum 8 characters" ' +
+      'autocomplete="new-password" ' +
+      'style="width:100%;padding:11px;margin-top:5px;"' +
+      '>' +
+
+      '<label style="display:block;margin-top:10px;">' +
+      '<input id="bapPartnerTerms" type="checkbox">' +
+      ' I accept Book A Partner terms and verification process.' +
+      '</label>' +
+
+      '<label style="display:block;margin-top:8px;">' +
+      '<input id="bapPartnerSafety" type="checkbox">' +
+      ' I agree to follow the platform safety policy.' +
+      '</label>';
+
+    button.parentNode.insertBefore(
+      box,
+      button
+    );
+
+    return true;
+  }
+
+  async function realPartnerApply(){
+
+    const name =
+      val('partnerName');
+
+    const age =
+      Number(
+        el('partnerAge')?.value || 0
+      );
+
+    const mobile =
+      val('partnerMobile');
+
+    const area =
+      val('partnerArea');
+
+    const service =
+      val('partnerService');
+
+    const rate =
+      Number(
+        el('partnerRate')?.value || 0
+      );
+
+    const availability =
+      val('partnerAvailability');
+
+    const gender =
+      val('partnerGender') ||
+      'Any';
+
+    const photo =
+      el('partnerPhoto')
+        ?.files?.[0] || null;
+
+    const selfie =
+      el('partnerSelfie')
+        ?.files?.[0] || null;
+
+    const email =
+      val('bapPartnerEmail');
+
+    const password =
+      String(
+        el('bapPartnerPassword')
+          ?.value || ''
+      );
+
+    const terms =
+      !!el('bapPartnerTerms')
+        ?.checked;
+
+    const safety =
+      !!el('bapPartnerSafety')
+        ?.checked;
+
+    if(!name){
+      alert('Please enter your full name.');
+      return;
+    }
+
+    if(!age || age < 18){
+      alert('Partner must be 18+.');
+      return;
+    }
+
+    if(mobile.length !== 10){
+      alert('Please enter a valid 10 digit mobile number.');
+      return;
+    }
+
+    if(!area){
+      alert('Please enter your city / area.');
+      return;
+    }
+
+    if(!service){
+      alert('Please select a service.');
+      return;
+    }
+
+    if(!rate || rate <= 0){
+      alert('Please enter your hourly rate.');
+      return;
+    }
+
+    if(!availability){
+      alert('Please select availability.');
+      return;
+    }
+
+    if(!photo){
+      alert('Please upload your profile photo.');
+      return;
+    }
+
+    if(!selfie){
+      alert('Please upload your verification selfie.');
+      return;
+    }
+
+    if(!email ||
+       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    if(password.length < 8){
+
+      alert(
+        'Password must be at least 8 characters.'
+      );
+
+      return;
+    }
+
+    if(!terms){
+
+      alert(
+        'Please accept the platform terms.'
+      );
+
+      return;
+    }
+
+    if(!safety){
+
+      alert(
+        'Please accept the safety policy.'
+      );
+
+      return;
+    }
+
+    const category =
+      window.BAP_getCategory
+        ? window.BAP_getCategory(
+            service
+          )
+        : null;
+
+    let experienceYears = null;
+    let experienceDetails = '';
+    let qualification = '';
+    let proof = null;
+
+    if(
+      category &&
+      category.type === 'specialized'
+    ){
+
+      experienceYears =
+        Number(
+          el(
+            'partnerExperienceYears'
+          )?.value || 0
+        );
+
+      experienceDetails =
+        val(
+          'partnerExperienceDetails'
+        );
+
+      qualification =
+        val(
+          'partnerQualification'
+        );
+
+      proof =
+        el(
+          'partnerExperienceProof'
+        )?.files?.[0] || null;
+
+      if(
+        !Number.isFinite(
+          experienceYears
+        ) ||
+        experienceYears < 0
+      ){
+
+        alert(
+          'Please enter your relevant experience.'
+        );
+
+        return;
+      }
+
+      if(!experienceDetails){
+
+        alert(
+          'Please describe your relevant experience.'
+        );
+
+        return;
+      }
+
+      if(
+        category.qualificationRequired &&
+        !qualification
+      ){
+
+        alert(
+          'Please enter your qualification/certification.'
+        );
+
+        return;
+      }
+
+      if(
+        category.qualificationRequired &&
+        !proof
+      ){
+
+        alert(
+          'Please upload your qualification/certificate proof.'
+        );
+
+        return;
+      }
+
+    }
+
+    if(
+      category &&
+      (
+        rate < Number(category.minRate) ||
+        rate > Number(category.maxRate)
+      )
+    ){
+
+      alert(
+        'Rate should be between ₹' +
+        category.minRate +
+        ' and ₹' +
+        category.maxRate +
+        ' per hour.'
+      );
+
+      return;
+    }
+
+    const submitButton =
+      Array.from(
+        document.querySelectorAll(
+          '#join button'
+        )
+      ).find(function(btn){
+
+        return String(
+          btn.getAttribute(
+            'onclick'
+          ) || ''
+        ).includes(
+          'partnerApply'
+        );
+
+      });
+
+    if(submitButton){
+
+      submitButton.disabled =
+        true;
+
+      submitButton.textContent =
+        'Creating Partner Account...';
+    }
+
+    try{
+
+      const client =
+        await loadSupabase();
+
+      let sessionResult =
+        await client.auth.getSession();
+
+      let session =
+        sessionResult
+          ?.data
+          ?.session || null;
+
+      let user =
+        session
+          ?.user || null;
+
+      if(!user){
+
+        const signup =
+          await client.auth.signUp({
+            email:email,
+            password:password,
+            options:{
+              data:{
+                role:'partner',
+                full_name:name,
+                mobile:mobile
+              }
+            }
+          });
+
+        if(signup.error){
+          throw signup.error;
+        }
+
+        user =
+          signup.data?.user || null;
+
+        session =
+          signup.data?.session || null;
+
+        if(!user){
+
+          throw new Error(
+            'Account could not be created.'
+          );
+        }
+
+        if(!session){
+
+          throw new Error(
+            'Email confirmation is still enabled. Please turn Confirm email OFF in Supabase Auth settings for this MVP.'
+          );
+        }
+      }
+
+      const profileResult =
+        await client
+          .from('user_profiles')
+          .upsert(
+            {
+              id:user.id,
+              full_name:name,
+              phone:mobile,
+              city:area,
+              role:'partner'
+            },
+            {
+              onConflict:'id'
+            }
+          );
+
+      if(profileResult.error){
+        throw profileResult.error;
+      }
+
+      const photoPath =
+        await uploadFile(
+          client,
+          'partner-photos',
+          photo,
+          user.id
+        );
+
+      const selfiePath =
+        await uploadFile(
+          client,
+          'partner-selfies',
+          selfie,
+          user.id
+        );
+
+      let proofPath = '';
+
+      if(proof){
+
+        proofPath =
+          await uploadFile(
+            client,
+            'partner-proofs',
+            proof,
+            user.id
+          );
+      }
+
+      const application =
+        await client
+          .from('partner_applications')
+          .insert(
+            {
+              user_id:user.id,
+              full_name:name,
+              age:age,
+              gender:gender,
+              mobile:mobile,
+              city:area,
+              area:area,
+              services:[service],
+              hourly_rate:rate,
+              availability:availability,
+              experience:
+                experienceDetails ||
+                (
+                  experienceYears != null
+                    ? experienceYears + ' years'
+                    : ''
+                ),
+              qualification:qualification,
+
+              profile_photo_path:
+                photoPath,
+
+              selfie_path:
+                selfiePath,
+
+              proof_path:
+                proofPath,
+
+              verification_status:
+                'call_pending',
+
+              verification_call_completed:
+                false,
+
+              terms_accepted:
+                true,
+
+              safety_accepted:
+                true
+            }
+          )
+          .select()
+          .single();
+
+      if(application.error){
+        throw application.error;
+      }
+
+      /*
+        Temporary UI cache only.
+        Supabase remains the real backend record.
+      */
+
+      let photoCache = '';
+      let selfieCache = '';
+
+      try{
+
+        const compressedPhoto =
+          await compressForCache(
+            photo
+          );
+
+        const compressedSelfie =
+          await compressForCache(
+            selfie
+          );
+
+        photoCache =
+          await fileToDataURL(
+            compressedPhoto
+          );
+
+        selfieCache =
+          await fileToDataURL(
+            compressedSelfie
+          );
+
+      }catch(cacheError){
+
+        console.warn(
+          'Image cache warning:',
+          cacheError
+        );
+      }
+
+      let localList = [];
+
+      try{
+
+        localList =
+          JSON.parse(
+            localStorage.getItem(
+              'bap_partner_profiles'
+            ) || '[]'
+          );
+
+        if(
+          !Array.isArray(localList)
+        ){
+          localList = [];
+        }
+
+      }catch(e){
+
+        localList = [];
+      }
+
+      const localPartner = {
+
+        id:
+          'sb-' +
+          application.data.id,
+
+        supabaseApplicationId:
+          application.data.id,
+
+        supabaseUserId:
+          user.id,
+
+        name:name,
+
+        age:age,
+
+        mobile:mobile,
+
+        area:area,
+
+        service:service,
+
+        services:[service],
+
+        rate:rate,
+
+        availability:availability,
+
+        gender:gender,
+
+        verification:
+          'Pending Review',
+
+        backendVerificationStatus:
+          'call_pending',
+
+        verificationNote:
+          'Supabase application received. Verification call pending.',
+
+        photoName:
+          photo.name,
+
+        photoData:
+          photoCache,
+
+        selfieName:
+          selfie.name,
+
+        selfieData:
+          selfieCache,
+
+        experienceRequired:
+          category?.type === 'specialized',
+
+        experienceYears:
+          experienceYears,
+
+        experienceDetails:
+          experienceDetails,
+
+        qualification:
+          qualification,
+
+        experienceProofName:
+          proof?.name || '',
+
+        backendProfilePhotoPath:
+          photoPath,
+
+        backendSelfiePath:
+          selfiePath,
+
+        backendProofPath:
+          proofPath
+
+      };
+
+      localList =
+        localList.filter(function(p){
+
+          return String(
+            p.supabaseApplicationId || ''
+          ) !==
+          String(
+            application.data.id
+          );
+
+        });
+
+      localList.push(
+        localPartner
+      );
+
+      localStorage.setItem(
+        'bap_partner_profiles',
+        JSON.stringify(localList)
+      );
+
+      localStorage.setItem(
+        'bap_current_partner_id',
+        localPartner.id
+      );
+
+      alert(
+        'Application submitted successfully. Your account and application are saved securely. Verification call is pending.'
+      );
+
+      if(
+        typeof window.go ===
+        'function'
+      ){
+
+        window.go(
+          'partnerDashboard'
+        );
+
+      }
+
+      if(
+        typeof window.renderAllPartnerApplications ===
+        'function'
+      ){
+
+        setTimeout(
+          window.renderAllPartnerApplications,
+          300
+        );
+
+      }
+
+    }catch(error){
+
+      console.error(
+        'BAP Supabase partner signup error:',
+        error
+      );
+
+      alert(
+        'Could not submit application: ' +
+        String(
+          error.message ||
+          error
+        )
+      );
+
+    }finally{
+
+      if(submitButton){
+
+        submitButton.disabled =
+          false;
+
+        submitButton.textContent =
+          'Create Partner Profile';
+
+      }
+
+    }
+  }
+
+  function interceptPartnerButton(){
+
+    document.addEventListener(
+      'click',
+      function(event){
+
+        const button =
+          event.target.closest(
+            'button'
+          );
+
+        if(!button){
+          return;
+        }
+
+        const join =
+          document.getElementById(
+            'join'
+          );
+
+        if(
+          !join ||
+          !join.contains(button)
+        ){
+          return;
+        }
+
+        const onclick =
+          String(
+            button.getAttribute(
+              'onclick'
+            ) || ''
+          );
+
+        if(
+          onclick.includes(
+            'partnerApply'
+          )
+        ){
+
+          event.preventDefault();
+
+          event.stopImmediatePropagation();
+
+          realPartnerApply();
+
+          return false;
+        }
+
+      },
+      true
+    );
+  }
+
+  function start(){
+
+    installPartnerFields();
+
+    interceptPartnerButton();
+
+    fieldTimer =
+      setInterval(
+        function(){
+
+          installPartnerFields();
+
+        },
+        1000
+      );
+
+    setTimeout(
+      function(){
+
+        clearInterval(
+          fieldTimer
+        );
+
+      },
+      15000
+    );
+  }
+
+  if(
+    document.readyState ===
+    'loading'
+  ){
+
+    document.addEventListener(
+      'DOMContentLoaded',
+      start,
+      {once:true}
+    );
+
+  }else{
+
+    start();
+
+  }
+
+})();
