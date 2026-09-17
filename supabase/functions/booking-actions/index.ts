@@ -212,7 +212,7 @@ Deno.serve(async (req) => {
     const { data: updated, error } = await adminClient.from('bookings').update({ customer_meeting_ok: true, completion_confirmation_deadline: deadline.toISOString(), updated_at: iso }).eq('id', bookingId).select().maybeSingle();
     if (error || !updated) return fail('meeting_ok_failed');
     if (now >= endAt) {
-      const { data: completed, error: completeError } = await adminClient.from('bookings').update({ status: 'completed', completed_at: iso, payment_status: 'held', payout_status: 'locked', updated_at: iso }).eq('id', bookingId).eq('status','confirmed').select().maybeSingle();
+      const { data: completed, error: completeError } = await adminClient.from('bookings').update({ status: 'completed', completed_at: iso, payment_status: 'held', payout_status: 'locked', updated_at: iso }).eq('id', bookingId).in('status',['confirmed','accepted']).select().maybeSingle();
       if (completeError || !completed) return fail('completion_failed');
       await ensurePayout();
       await notify(partnerUserId, 'booking_completed', 'Booking completed', 'The customer confirmed the meeting. Payout is scheduled according to the platform payout window.');
@@ -257,6 +257,19 @@ Deno.serve(async (req) => {
     const { data: block, error } = await adminClient.from('blocked_users').upsert({ blocker_user_id: user.id, blocked_user_id: blockedUserId, reason: body?.reason || null }, { onConflict: 'blocker_user_id,blocked_user_id' }).select().maybeSingle();
     if (error) return fail(error.message, 400);
     return json({ ok: true, block });
+  }
+
+  if (action === 'request_deletion') {
+    const { data: partner } = await adminClient.from('partners').select('id').eq('user_id', user.id).maybeSingle();
+    const orParts = [`customer_id.eq.${user.id}`];
+    if (partner?.id) orParts.push(`partner_id.eq.${partner.id}`);
+    const { data: activeBookings } = await adminClient.from('bookings').select('id,status').or(orParts.join(',')).in('status',['requested','confirmed','accepted','disputed']);
+    const { data: openComplaints } = await adminClient.from('complaints').select('id,status').or(`reporter_user_id.eq.${user.id},reported_user_id.eq.${user.id}`).in('status',['open','under_review','escalated']);
+    const blockers = { active_bookings: activeBookings || [], open_complaints: openComplaints || [] };
+    const status = (activeBookings?.length || openComplaints?.length) ? 'blocked' : 'requested';
+    const { data: request, error } = await adminClient.from('account_deletion_requests').upsert({ user_id: user.id, status, reason: body?.reason || null, blocking_items: blockers }, { onConflict: 'user_id' }).select().maybeSingle();
+    if (error) return fail(error.message, 400);
+    return json({ ok: true, request });
   }
 
   if (action === 'admin_finalize_refund') {
