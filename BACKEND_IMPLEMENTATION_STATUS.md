@@ -14,112 +14,69 @@ PostgreSQL: 17.6
 Confirmed live entities include the original core tables plus:
 `audit_logs`, `notifications`, `chat_threads`, `chat_messages`, `reviews`, `complaints`, `financial_ledger`, `refunds`, `payout_accounts`, `payouts`, `booking_change_requests`, `booking_extensions`, `blocked_users`, `account_deletion_requests`, `action_idempotency`, `payment_transactions`, `payment_webhook_events`.
 
-Private storage buckets remain in place and RLS remains enabled. A private `chat-attachments` bucket is now provisioned with participant/admin read and owner/admin delete controls. Financial ledger, refund, payout, idempotency, payment-transaction and webhook-event writes are backend-controlled rather than exposed as direct authenticated-client writes.
+Private storage buckets remain in place and RLS remains enabled. A private `chat-attachments` bucket is provisioned with participant/admin access controls. Financial ledger, refund, payout, idempotency, payment-transaction and webhook-event writes are backend-controlled.
 
 ## Hardening applied live
-- Booking lifecycle timestamps and duration support added.
-- Database-side cancellation/refund percentage helper added with fixed search_path.
-- Direct booking state tampering is guarded by a database trigger; privileged state transitions go through backend actions.
-- Partner verification fields are protected from applicant-side edits.
-- Payout-account verification/processor fields are protected from client edits.
-- Reviews require an authenticated booking participant and a completed booking; self-review is blocked.
-- Partner rating/review count are refreshed from approved reviews by a backend trigger.
-- Complaint/dispute triggers place associated payout on hold.
-- Dispute status supports appeal/escalation states.
-- Refund percentage is stored with refund records and booking/reason uniqueness is enforced for safe queueing.
-- 2-hour partner response expiry is scheduled through Supabase Cron.
-- Completion auto-finalization and payout-eligibility checks are scheduled through Supabase Cron.
-- Payout calculation uses the locked 15% commission rule and a 6-hour minimum eligibility delay; actual money movement is still provider-dependent.
-- Backend foreign-key indexes were added for operational tables/relationships.
-- Realtime publication now includes chat messages, notifications, change requests and extensions.
-- Internal payment transaction and webhook-event ledgers are prepared without pretending an external gateway is configured.
+- Booking lifecycle timestamps and duration support.
+- Database-side cancellation/refund percentage helper.
+- Direct booking state tampering guard.
+- Partner verification and payout-account protected fields.
+- Review participant/completion/self-review controls.
+- Partner rating/review-count refresh trigger.
+- Complaint/dispute payout holds.
+- Refund uniqueness/idempotency safeguards.
+- 2-hour response expiry, completion finalization and payout-eligibility cron jobs.
+- 15% commission and 6-hour payout eligibility rule.
+- Foreign-key indexes and Realtime publication for communication/booking-support tables.
+- New booking overlap helper checks the full requested duration against existing requested/accepted/confirmed bookings, not just the start time.
+- New booking insert validation enforces 1–24 hour duration and a minimum 5-minute future booking time at database level.
 
 ## Edge Functions
-`booking-actions` is ACTIVE, JWT protected, and deployed at version 2.
+`booking-actions` is ACTIVE, JWT protected, version 2.
 
-A new `booking-create` Edge Function is ACTIVE and JWT protected. It is the frontend booking-request boundary and performs:
-- authenticated customer validation
-- approved/live partner validation
-- official partner-rate validation
-- 1–24 hour duration validation
-- locked duration discount calculation: 0%, 5%, 10%, 15%, then 20% max
-- total calculation with transport cap
-- 2-hour partner response deadline
-- idempotency protection through `action_idempotency`
-- booking creation as `requested`
-- demo payment transaction recorded as `captured` and booking payment held
-- financial ledger entry
-- customer + partner notifications
-- booking audit entry
-
-`booking-actions` current server actions include:
-- partner/admin accept → confirmed
-- partner/admin reject → full refund queue
-- customer/partner/admin cancellation with locked refund slabs
-- partner arrival / late-arrival reporting
-- no-show reporting with complaint/payout hold linkage
-- booking change request + response
-- booking extension request + partner response, with payment-required boundary
-- customer Meeting OK / completion handling
-- partner/admin completion
-- issue/complaint reporting
-- user blocking
-- account deletion request/blocker detection
-- admin refund state finalization
-- booking-scoped chat thread creation
-- durable notifications and audit records
+`booking-create` is ACTIVE, JWT protected, and is the frontend booking-request boundary. It validates customer role, partner status/service/rate, duration, datetime, pricing, idempotency, creates the requested booking, records the demo payment/ledger entry, and creates notifications/audit records.
 
 ## Frontend live integration
-The existing `index.html` now loads `bap-live-backend.js` after the existing demo scripts so the live adapter is the final handler.
+The existing `index.html` loads `bap-live-backend.js` after the existing demo scripts so the live adapter is the final handler.
 
-The live adapter now connects the existing UI to Supabase for:
-- email/password customer and partner login/signup while retaining the existing UI shell
-- authenticated customer profile creation
-- approved/live partner search from `partners`
-- duration selector and locked duration-discount pricing
+The live adapter connects the existing UI to Supabase for:
+- customer/partner email-password authentication
+- customer profile creation
+- approved/live partner search
+- duration pricing
 - live partner selection and booking review
-- booking request creation through `booking-create`
-- customer live booking list
-- partner live booking request list
+- booking request creation
+- customer booking list
+- partner booking request list
 - partner accept/reject
-- customer/partner cancellation through `booking-actions`
+- customer/partner cancellation
 - partner arrival
 - customer Meeting OK
 - booking issue/complaint reporting
-- booking-scoped chat read/send
-- live booking/chat refresh through Supabase Realtime
+- booking-scoped chat
+- Realtime booking/chat refresh
 
-The old demo/localStorage UI remains in place as a compatibility layer, but the live adapter is loaded last and overrides the booking/login actions used by the live flow.
+The existing demo/localStorage layer remains only as a compatibility layer; the live adapter is loaded last.
 
 ## Scheduled backend jobs
-- `bap-expire-bookings` — every minute — verified running successfully
-- `bap-finalize-due-bookings` — every 5 minutes — verified running successfully
-- `bap-release-due-payouts` — every 5 minutes — verified running successfully
+- `bap-expire-bookings` — every minute
+- `bap-finalize-due-bookings` — every 5 minutes
+- `bap-release-due-payouts` — every 5 minutes
 
-## Verification result
-- All current backend migrations applied successfully.
-- `booking-actions` deployment verified ACTIVE at version 2.
-- `booking-create` deployment verified ACTIVE at version 1.
-- GitHub Actions injection job completed successfully and the live adapter is now last in `index.html`.
-- Cron jobs are active and recent executions returned `succeeded`.
-- Security advisor no longer reports the mutable search_path warning for the new refund helper.
-- One remaining security warning is the existing `public.is_admin()` SECURITY DEFINER function being executable by authenticated users; it is retained because existing RLS policies depend on it.
-- Performance advisor still reports RLS init-plan and multiple-permissive-policy optimization opportunities; these are performance tuning items, not a failed security deployment.
-
-## Intentionally not production-live yet
-These require external provider credentials, configuration, or dedicated E2E testing:
-- payment gateway + webhook signing/provider integration
-- actual provider refund execution
-- actual payout processor/bank/UPI settlement
-- KYC/background-check provider
-- SMS/OTP
-- transactional email delivery
+## Remaining non-payment work
+- KYC/background-check provider integration
+- SMS/mobile OTP
+- transactional email delivery/fallback
 - complete notification delivery worker
-- chat attachment virus scanning/moderation workflow
+- chat attachment scanning/moderation
 - full dispute evidence workflow
-- full E2E customer/partner/admin test suite
+- full customer/partner/admin E2E test suite
+- final RLS performance/security review
+- final India-qualified legal review of policies
 
-## Git synchronization
-Backend migrations are checked into `supabase/migrations/`. The deployed booking action source is checked into `supabase/functions/booking-actions/index.ts`. The live frontend adapter is `bap-live-backend.js`. The booking creation Edge Function is deployed directly in Supabase. Status documentation is kept in this file.
+## Payment-dependent work intentionally deferred
+- real payment gateway + signed webhooks
+- provider refund execution
+- real partner bank/UPI payout settlement
 
-Important: the backend core and the customer/partner booking lifecycle frontend are now substantially integrated, but the project is not being labeled fully production-live until payment/payout/provider integrations and full E2E verification are completed.
+Important: the project is not being labeled fully production-live until provider integrations and full E2E verification are completed.
