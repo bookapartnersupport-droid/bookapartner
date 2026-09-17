@@ -1,6 +1,6 @@
 # Book A Partner — Backend Implementation Status
 
-Updated: 2026-09-17
+Updated: 2026-09-18
 
 ## Source of truth
 `BOOK_A_PARTNER_MASTER_HANDOFF.md` remains the canonical product/backend specification.
@@ -28,35 +28,23 @@ Private storage buckets remain in place and RLS remains enabled. A private `chat
 - 2-hour response expiry, completion finalization and payout-eligibility cron jobs.
 - 15% commission and 6-hour payout eligibility rule.
 - Foreign-key indexes and Realtime publication for communication/booking-support tables.
-- New booking overlap helper checks the full requested duration against existing requested/accepted/confirmed bookings, not just the start time.
-- New booking insert validation enforces 1–24 hour duration and a minimum 5-minute future booking time at database level.
+- Booking overlap helper checks the full requested duration against existing requested/accepted/confirmed bookings.
+- Booking insert validation enforces 1–24 hour duration and a minimum 5-minute future booking time.
+- `booking-actions` v3 now creates a durable complaint when late arrival is reported.
+- Account deletion blocker lookup now uses a direct partner-id lookup instead of unsupported nested PostgREST syntax.
+- Customer Meeting OK completion now safely handles both confirmed and accepted booking states.
 
 ## Edge Functions
-`booking-actions` is ACTIVE, JWT protected, version 2.
+`booking-actions` is ACTIVE, JWT protected, version 3.
 
 `booking-create` is ACTIVE, JWT protected, and is the frontend booking-request boundary. It validates customer role, partner status/service/rate, duration, datetime, pricing, idempotency, creates the requested booking, records the demo payment/ledger entry, and creates notifications/audit records.
 
 ## Frontend live integration
 The existing `index.html` loads `bap-live-backend.js` after the existing demo scripts so the live adapter is the final handler.
 
-The live adapter connects the existing UI to Supabase for:
-- customer/partner email-password authentication
-- customer profile creation
-- approved/live partner search
-- duration pricing
-- live partner selection and booking review
-- booking request creation
-- customer booking list
-- partner booking request list
-- partner accept/reject
-- customer/partner cancellation
-- partner arrival
-- customer Meeting OK
-- booking issue/complaint reporting
-- booking-scoped chat
-- Realtime booking/chat refresh
+The live adapter connects the existing UI to Supabase for customer/partner authentication, profile creation, approved/live partner search, duration pricing, partner selection, booking creation, booking lists, partner accept/reject, cancellation, arrival, Meeting OK, issue/complaint reporting, booking-scoped chat, and Realtime refresh.
 
-The existing demo/localStorage layer remains only as a compatibility layer; the live adapter is loaded last.
+The existing demo/localStorage layer remains as a compatibility layer; the live adapter is loaded last.
 
 ## Scheduled backend jobs
 - `bap-expire-bookings` — every minute
