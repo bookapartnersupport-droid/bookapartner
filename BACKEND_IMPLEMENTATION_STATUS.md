@@ -34,10 +34,25 @@ Private storage buckets remain in place and RLS remains enabled. A private `chat
 - Realtime publication now includes chat messages, notifications, change requests and extensions.
 - Internal payment transaction and webhook-event ledgers are prepared without pretending an external gateway is configured.
 
-## Edge Function
+## Edge Functions
 `booking-actions` is ACTIVE, JWT protected, and deployed at version 2.
 
-Current server actions include:
+A new `booking-create` Edge Function is ACTIVE and JWT protected. It is the frontend booking-request boundary and performs:
+- authenticated customer validation
+- approved/live partner validation
+- official partner-rate validation
+- 1–24 hour duration validation
+- locked duration discount calculation: 0%, 5%, 10%, 15%, then 20% max
+- total calculation with transport cap
+- 2-hour partner response deadline
+- idempotency protection through `action_idempotency`
+- booking creation as `requested`
+- demo payment transaction recorded as `captured` and booking payment held
+- financial ledger entry
+- customer + partner notifications
+- booking audit entry
+
+`booking-actions` current server actions include:
 - partner/admin accept → confirmed
 - partner/admin reject → full refund queue
 - customer/partner/admin cancellation with locked refund slabs
@@ -54,6 +69,28 @@ Current server actions include:
 - booking-scoped chat thread creation
 - durable notifications and audit records
 
+## Frontend live integration
+The existing `index.html` now loads `bap-live-backend.js` after the existing demo scripts so the live adapter is the final handler.
+
+The live adapter now connects the existing UI to Supabase for:
+- email/password customer and partner login/signup while retaining the existing UI shell
+- authenticated customer profile creation
+- approved/live partner search from `partners`
+- duration selector and locked duration-discount pricing
+- live partner selection and booking review
+- booking request creation through `booking-create`
+- customer live booking list
+- partner live booking request list
+- partner accept/reject
+- customer/partner cancellation through `booking-actions`
+- partner arrival
+- customer Meeting OK
+- booking issue/complaint reporting
+- booking-scoped chat read/send
+- live booking/chat refresh through Supabase Realtime
+
+The old demo/localStorage UI remains in place as a compatibility layer, but the live adapter is loaded last and overrides the booking/login actions used by the live flow.
+
 ## Scheduled backend jobs
 - `bap-expire-bookings` — every minute — verified running successfully
 - `bap-finalize-due-bookings` — every 5 minutes — verified running successfully
@@ -61,7 +98,9 @@ Current server actions include:
 
 ## Verification result
 - All current backend migrations applied successfully.
-- Edge Function deployment verified ACTIVE at version 2.
+- `booking-actions` deployment verified ACTIVE at version 2.
+- `booking-create` deployment verified ACTIVE at version 1.
+- GitHub Actions injection job completed successfully and the live adapter is now last in `index.html`.
 - Cron jobs are active and recent executions returned `succeeded`.
 - Security advisor no longer reports the mutable search_path warning for the new refund helper.
 - One remaining security warning is the existing `public.is_admin()` SECURITY DEFINER function being executable by authenticated users; it is retained because existing RLS policies depend on it.
@@ -81,6 +120,6 @@ These require external provider credentials, configuration, or dedicated E2E tes
 - full E2E customer/partner/admin test suite
 
 ## Git synchronization
-Backend migrations are checked into `supabase/migrations/`. The deployed booking action source is checked into `supabase/functions/booking-actions/index.ts`. Status documentation is kept in this file.
+Backend migrations are checked into `supabase/migrations/`. The deployed booking action source is checked into `supabase/functions/booking-actions/index.ts`. The live frontend adapter is `bap-live-backend.js`. The booking creation Edge Function is deployed directly in Supabase. Status documentation is kept in this file.
 
-Important: the backend core is substantially hardened, but the project is not being labeled fully production-live until payment/payout/provider integrations and full E2E verification are completed.
+Important: the backend core and the customer/partner booking lifecycle frontend are now substantially integrated, but the project is not being labeled fully production-live until payment/payout/provider integrations and full E2E verification are completed.
