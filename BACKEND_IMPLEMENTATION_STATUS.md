@@ -12,9 +12,9 @@ Region: `ap-south-1`
 PostgreSQL: 17.6
 
 Confirmed live entities include the original core tables plus:
-`audit_logs`, `notifications`, `chat_threads`, `chat_messages`, `reviews`, `complaints`, `financial_ledger`, `refunds`, `payout_accounts`, `payouts`, `booking_change_requests`, `booking_extensions`, `blocked_users`, `account_deletion_requests`.
+`audit_logs`, `notifications`, `chat_threads`, `chat_messages`, `reviews`, `complaints`, `financial_ledger`, `refunds`, `payout_accounts`, `payouts`, `booking_change_requests`, `booking_extensions`, `blocked_users`, `account_deletion_requests`, `action_idempotency`, `payment_transactions`, `payment_webhook_events`.
 
-Private storage buckets remain in place and RLS remains enabled. Financial ledger, refund, payout and audit writes are backend-controlled rather than exposed as direct authenticated-client writes.
+Private storage buckets remain in place and RLS remains enabled. A private `chat-attachments` bucket is now provisioned with participant/admin read and owner/admin delete controls. Financial ledger, refund, payout, idempotency, payment-transaction and webhook-event writes are backend-controlled rather than exposed as direct authenticated-client writes.
 
 ## Hardening applied live
 - Booking lifecycle timestamps and duration support added.
@@ -23,13 +23,16 @@ Private storage buckets remain in place and RLS remains enabled. Financial ledge
 - Partner verification fields are protected from applicant-side edits.
 - Payout-account verification/processor fields are protected from client edits.
 - Reviews require an authenticated booking participant and a completed booking; self-review is blocked.
+- Partner rating/review count are refreshed from approved reviews by a backend trigger.
 - Complaint/dispute triggers place associated payout on hold.
 - Dispute status supports appeal/escalation states.
-- Refund percentage is stored with refund records.
+- Refund percentage is stored with refund records and booking/reason uniqueness is enforced for safe queueing.
 - 2-hour partner response expiry is scheduled through Supabase Cron.
 - Completion auto-finalization and payout-eligibility checks are scheduled through Supabase Cron.
 - Payout calculation uses the locked 15% commission rule and a 6-hour minimum eligibility delay; actual money movement is still provider-dependent.
-- Backend foreign-key indexes were added for the newly introduced operational tables/relationships.
+- Backend foreign-key indexes were added for operational tables/relationships.
+- Realtime publication now includes chat messages, notifications, change requests and extensions.
+- Internal payment transaction and webhook-event ledgers are prepared without pretending an external gateway is configured.
 
 ## Edge Function
 `booking-actions` is ACTIVE, JWT protected, and deployed at version 2.
@@ -46,6 +49,7 @@ Current server actions include:
 - partner/admin completion
 - issue/complaint reporting
 - user blocking
+- account deletion request/blocker detection
 - admin refund state finalization
 - booking-scoped chat thread creation
 - durable notifications and audit records
@@ -56,27 +60,27 @@ Current server actions include:
 - `bap-release-due-payouts` — every 5 minutes — verified running successfully
 
 ## Verification result
-- All new migrations applied successfully.
+- All current backend migrations applied successfully.
 - Edge Function deployment verified ACTIVE at version 2.
 - Cron jobs are active and recent executions returned `succeeded`.
 - Security advisor no longer reports the mutable search_path warning for the new refund helper.
-- One remaining security warning is the existing `public.is_admin()` SECURITY DEFINER function being executable by authenticated users; this is intentionally retained because existing RLS policies depend on it.
-- Performance advisor still reports some RLS init-plan and permissive-policy optimization opportunities; these are performance tuning items, not a failed security deployment.
+- One remaining security warning is the existing `public.is_admin()` SECURITY DEFINER function being executable by authenticated users; it is retained because existing RLS policies depend on it.
+- Performance advisor still reports RLS init-plan and multiple-permissive-policy optimization opportunities; these are performance tuning items, not a failed security deployment.
 
 ## Intentionally not production-live yet
 These require external provider credentials, configuration, or dedicated E2E testing:
-- payment gateway + webhook
+- payment gateway + webhook signing/provider integration
 - actual provider refund execution
 - actual payout processor/bank/UPI settlement
 - KYC/background-check provider
 - SMS/OTP
 - transactional email delivery
 - complete notification delivery worker
-- chat attachment storage/virus scanning workflow
+- chat attachment virus scanning/moderation workflow
 - full dispute evidence workflow
 - full E2E customer/partner/admin test suite
 
 ## Git synchronization
-Backend migration and Edge Function source are checked into GitHub under `supabase/migrations/` and `supabase/functions/booking-actions/index.ts`.
+Backend migrations are checked into `supabase/migrations/`. The deployed booking action source is checked into `supabase/functions/booking-actions/index.ts`. Status documentation is kept in this file.
 
 Important: the backend core is substantially hardened, but the project is not being labeled fully production-live until payment/payout/provider integrations and full E2E verification are completed.
