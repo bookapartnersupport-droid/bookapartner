@@ -1,117 +1,274 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) return json({ error: 'unauthorized' }, 401);
 
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) return json({ error: "unauthorized" }, 401);
-
-  const url = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const url = Deno.env.get('SUPABASE_URL')!;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
   const adminClient = createClient(url, serviceKey);
-
   const { data: { user }, error: userError } = await userClient.auth.getUser();
-  if (userError || !user) return json({ error: "unauthorized" }, 401);
+  if (userError || !user) return json({ error: 'unauthorized' }, 401);
 
-  const body = await req.json().catch(() => null);
+  const body = await req.json().catch(() => null) as Record<string, any> | null;
   const action = body?.action as string | undefined;
   const bookingId = body?.booking_id as string | undefined;
-  if (!action || !bookingId) return json({ error: "action_and_booking_id_required" }, 400);
+  if (!action || !bookingId) return json({ error: 'action_and_booking_id_required' }, 400);
 
-  const { data: booking, error: bookingError } = await adminClient
-    .from("bookings")
-    .select("*, partners!inner(id,user_id,full_name,verification_status,active)")
-    .eq("id", bookingId)
-    .maybeSingle();
-  if (bookingError || !booking) return json({ error: "booking_not_found" }, 404);
+  const { data: booking, error: bookingError } = await adminClient.from('bookings').select('*, partners!inner(id,user_id,full_name,verification_status,active)').eq('id', bookingId).maybeSingle();
+  if (bookingError || !booking) return json({ error: 'booking_not_found' }, 404);
 
   const isCustomer = booking.customer_id === user.id;
   const isPartner = booking.partners?.user_id === user.id;
-  const { data: profile } = await adminClient.from("user_profiles").select("role").eq("id", user.id).maybeSingle();
-  const isAdmin = profile?.role === "admin";
-
-  if (!isCustomer && !isPartner && !isAdmin) return json({ error: "forbidden" }, 403);
+  const { data: profile } = await adminClient.from('user_profiles').select('role').eq('id', user.id).maybeSingle();
+  const isAdmin = profile?.role === 'admin';
+  if (!isCustomer && !isPartner && !isAdmin) return json({ error: 'forbidden' }, 403);
 
   const now = new Date();
-  const notify = async (userId: string, type: string, title: string, message: string) => {
-    await adminClient.from("notifications").insert({ user_id: userId, type, title, body: message, booking_id: bookingId });
+  const iso = now.toISOString();
+  const partnerUserId = booking.partners?.user_id as string;
+  const fail = (message: string, status = 409) => json({ error: message }, status);
+  const notify = async (userId: string, type: string, title: string, message: string, data: Record<string, any> = {}, priority = 'normal') => {
+    await adminClient.from('notifications').insert({ user_id: userId, type, title, body: message, booking_id: bookingId, data, priority });
   };
-  const audit = async (actionName: string, reason: string | null, beforeData: unknown, afterData: unknown) => {
-    await adminClient.from("audit_logs").insert({ actor_user_id: user.id, action: actionName, entity_type: "booking", entity_id: bookingId, reason, before_data: beforeData, after_data: afterData });
+  const audit = async (name: string, reason: string | null, beforeData: unknown, afterData: unknown) => {
+    await adminClient.from('audit_logs').insert({ actor_user_id: user.id, action: name, entity_type: 'booking', entity_id: bookingId, reason, before_data: beforeData, after_data: afterData });
+  };
+  const createRefund = async (amount: number, percent: number, reason: string) => {
+    if (amount <= 0) return null;
+    const { data: refund, error } = await adminClient.from('refunds').upsert({ booking_id: bookingId, requested_by: user.id, amount, refund_percent: percent, reason, status: 'pending' }, { onConflict: 'booking_id,reason' }).select().maybeSingle();
+    if (error) throw error;
+    await adminClient.from('financial_ledger').insert({ booking_id: bookingId, user_id: booking.customer_id, entry_type: 'refund_requested', direction: 'credit', amount, status: 'pending', metadata: { refund_percent: percent, reason } });
+    return refund;
+  };
+  const ensurePayout = async () => {
+    const gross = Math.round(Number(booking.total_amount || 0) * 100) / 100;
+    const commission = Math.round(gross * 0.15 * 100) / 100;
+    const net = Math.round((gross - commission) * 100) / 100;
+    const eligibleAt = new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString();
+    const { data: payout, error } = await adminClient.from('payouts').upsert({ booking_id: bookingId, partner_id: booking.partner_id, gross_amount: gross, commission_amount: commission, net_amount: net, status: 'not_eligible', eligible_at: eligibleAt, updated_at: iso }, { onConflict: 'booking_id' }).select().maybeSingle();
+    if (error) throw error;
+    await adminClient.from('bookings').update({ payout_status: 'locked', updated_at: iso }).eq('id', bookingId);
+    return payout;
   };
 
-  if (action === "accept") {
-    if (!isPartner && !isAdmin) return json({ error: "partner_or_admin_required" }, 403);
-    if (booking.status !== "requested") return json({ error: "booking_not_requested" }, 409);
-    if (!isAdmin && booking.partners?.user_id !== user.id) return json({ error: "not_assigned_partner" }, 403);
-    if (booking.partner_response_deadline && new Date(booking.partner_response_deadline) <= now) return json({ error: "response_window_expired" }, 409);
-
-    const { data: updated, error } = await adminClient.from("bookings").update({
-      status: "accepted", accepted_at: now.toISOString(), updated_at: now.toISOString()
-    }).eq("id", bookingId).eq("status", "requested").select().maybeSingle();
-    if (error || !updated) return json({ error: "accept_failed" }, 409);
-    await adminClient.from("chat_threads").upsert({ booking_id: bookingId }, { onConflict: "booking_id" });
-    await notify(booking.customer_id, "booking_accepted", "Booking accepted", "Your partner accepted the booking request.");
-    await audit("booking.accept", null, booking, updated);
+  if (action === 'accept') {
+    if (!isPartner && !isAdmin) return fail('partner_or_admin_required', 403);
+    if (booking.status !== 'requested') return fail('booking_not_requested');
+    if (!isAdmin && partnerUserId !== user.id) return fail('not_assigned_partner', 403);
+    if (booking.partner_response_deadline && new Date(booking.partner_response_deadline) <= now) return fail('response_window_expired');
+    const { data: updated, error } = await adminClient.from('bookings').update({ status: 'confirmed', accepted_at: iso, payment_status: 'held', updated_at: iso }).eq('id', bookingId).eq('status', 'requested').select().maybeSingle();
+    if (error || !updated) return fail('accept_failed');
+    await adminClient.from('chat_threads').upsert({ booking_id: bookingId }, { onConflict: 'booking_id' });
+    await notify(booking.customer_id, 'booking_confirmed', 'Booking confirmed', 'Your partner accepted the booking request and the booking is now confirmed.');
+    await notify(partnerUserId, 'booking_confirmed', 'Booking confirmed', 'You accepted the booking. Please be ready at the scheduled time.');
+    await audit('booking.accept', null, booking, updated);
     return json({ ok: true, booking: updated });
   }
 
-  if (action === "reject") {
-    if (!isPartner && !isAdmin) return json({ error: "partner_or_admin_required" }, 403);
-    if (booking.status !== "requested") return json({ error: "booking_not_requested" }, 409);
-    const { data: updated, error } = await adminClient.from("bookings").update({
-      status: "rejected", rejected_at: now.toISOString(), updated_at: now.toISOString()
-    }).eq("id", bookingId).eq("status", "requested").select().maybeSingle();
-    if (error || !updated) return json({ error: "reject_failed" }, 409);
-
-    const refundable = Number(booking.total_amount || 0);
-    if (refundable > 0) {
-      await adminClient.from("refunds").insert({ booking_id: bookingId, requested_by: user.id, amount: refundable, reason: "partner_rejection", status: "pending" });
-      await adminClient.from("financial_ledger").insert({ booking_id: bookingId, user_id: booking.customer_id, entry_type: "refund_requested", direction: "credit", amount: refundable, status: "pending", metadata: { reason: "partner_rejection" } });
-    }
-    await notify(booking.customer_id, "booking_rejected", "Booking rejected", "The partner rejected the booking request. Any eligible refund is now queued for processing.");
-    await audit("booking.reject", null, booking, updated);
-    return json({ ok: true, booking: updated, refund_queued: refundable > 0 });
+  if (action === 'reject') {
+    if (!isPartner && !isAdmin) return fail('partner_or_admin_required', 403);
+    if (booking.status !== 'requested') return fail('booking_not_requested');
+    if (!isAdmin && partnerUserId !== user.id) return fail('not_assigned_partner', 403);
+    const { data: updated, error } = await adminClient.from('bookings').update({ status: 'rejected', rejected_at: iso, payment_status: 'held', updated_at: iso }).eq('id', bookingId).eq('status', 'requested').select().maybeSingle();
+    if (error || !updated) return fail('reject_failed');
+    const amount = Math.round(Number(booking.total_amount || 0) * 100) / 100;
+    await createRefund(amount, 100, 'partner_rejection');
+    await notify(booking.customer_id, 'booking_rejected', 'Booking rejected', 'The partner rejected the booking. A full refund has been queued for processing.', { refund_percent: 100 }, 'high');
+    await audit('booking.reject', null, booking, updated);
+    return json({ ok: true, booking: updated, refund_percent: 100, refund_amount: amount, refund_status: amount > 0 ? 'pending' : 'not_required' });
   }
 
-  if (action === "cancel") {
-    if (!isCustomer && !isPartner && !isAdmin) return json({ error: "participant_or_admin_required" }, 403);
-    if (!["requested", "accepted", "confirmed"].includes(booking.status)) return json({ error: "booking_not_cancellable" }, 409);
-
-    const cancelledBy = isAdmin ? "admin" : isPartner ? "partner" : "customer";
-    const patch = { status: "cancelled", cancelled_at: now.toISOString(), cancelled_by: user.id, cancellation_reason: body?.reason ?? cancelledBy, updated_at: now.toISOString() };
-    const { data: updated, error } = await adminClient.from("bookings").update(patch).eq("id", bookingId).select().maybeSingle();
-    if (error || !updated) return json({ error: "cancel_failed" }, 409);
-
-    // Refund percentage is calculated here only as policy state; actual provider refund is deliberately not claimed.
-    let refundPercent = 0;
-    if (booking.status === "requested" || cancelledBy === "partner" || cancelledBy === "admin") refundPercent = 100;
-    else if (cancelledBy === "customer" && booking.booking_date && booking.booking_time) {
-      const starts = new Date(`${booking.booking_date}T${String(booking.booking_time).slice(0, 8)}`);
-      const hours = (starts.getTime() - now.getTime()) / 3600000;
-      refundPercent = hours >= 24 ? 100 : hours >= 12 ? 75 : hours >= 6 ? 50 : 0;
-    }
+  if (action === 'cancel') {
+    if (![ 'requested', 'accepted', 'confirmed' ].includes(booking.status)) return fail('booking_not_cancellable');
+    const cancelledBy = isAdmin ? 'admin' : isPartner ? 'partner' : 'customer';
+    const { data: updated, error } = await adminClient.from('bookings').update({ status: 'cancelled', cancelled_at: iso, cancelled_by: user.id, cancellation_reason: body?.reason ?? cancelledBy, updated_at: iso }).eq('id', bookingId).select().maybeSingle();
+    if (error || !updated) return fail('cancel_failed');
+    const { data: percentData, error: percentError } = await adminClient.rpc('bap_refund_percent', { p_booking_status: booking.status, p_cancelled_by: cancelledBy, p_booking_date: booking.booking_date, p_booking_time: booking.booking_time, p_now: iso });
+    if (percentError) return fail('refund_policy_calculation_failed', 500);
+    const refundPercent = Number(percentData || 0);
     const refundAmount = Math.round(Number(booking.total_amount || 0) * refundPercent) / 100;
-    if (refundAmount > 0) {
-      await adminClient.from("refunds").insert({ booking_id: bookingId, requested_by: user.id, amount: refundAmount, reason: `cancellation_${cancelledBy}_${refundPercent}pct`, status: "pending" });
-      await adminClient.from("financial_ledger").insert({ booking_id: bookingId, user_id: booking.customer_id, entry_type: "refund_requested", direction: "credit", amount: refundAmount, status: "pending", metadata: { refund_percent: refundPercent, cancelled_by: cancelledBy } });
-    }
-    const otherUser = isCustomer ? booking.partners.user_id : booking.customer_id;
-    await notify(otherUser, "booking_cancelled", "Booking cancelled", `The booking was cancelled. Refund policy result: ${refundPercent}% eligible, subject to provider processing.`);
-    await audit("booking.cancel", body?.reason ?? cancelledBy, booking, updated);
-    return json({ ok: true, booking: updated, refund_percent: refundPercent, refund_amount: refundAmount, refund_status: refundAmount > 0 ? "pending" : "not_eligible" });
+    if (refundAmount > 0) await createRefund(refundAmount, refundPercent, `cancellation_${cancelledBy}_${refundPercent}pct`);
+    await adminClient.from('bookings').update({ payment_status: refundAmount > 0 ? 'held' : 'received', payout_status: cancelledBy === 'partner' ? 'locked' : booking.payout_status, updated_at: iso }).eq('id', bookingId);
+    const otherUser = isCustomer ? partnerUserId : booking.customer_id;
+    await notify(otherUser, 'booking_cancelled', 'Booking cancelled', `The booking was cancelled. Refund eligibility: ${refundPercent}%.`, { refund_percent: refundPercent }, 'high');
+    await audit('booking.cancel', body?.reason ?? cancelledBy, booking, updated);
+    return json({ ok: true, booking: updated, refund_percent: refundPercent, refund_amount: refundAmount, refund_status: refundAmount > 0 ? 'pending' : 'not_eligible' });
   }
 
-  return json({ error: "unsupported_action" }, 400);
+  if (action === 'mark_arrived') {
+    if (!isPartner || partnerUserId !== user.id) return fail('partner_required', 403);
+    if (!['confirmed','accepted'].includes(booking.status)) return fail('booking_not_active');
+    const { data: updated, error } = await adminClient.from('bookings').update({ arrived_at: iso, started_at: booking.started_at ?? iso, updated_at: iso }).eq('id', bookingId).select().maybeSingle();
+    if (error || !updated) return fail('arrival_update_failed');
+    await notify(booking.customer_id, 'partner_arrived', 'Partner arrived', 'Your partner marked arrival for the booking.');
+    await audit('booking.arrived', null, booking, updated);
+    return json({ ok: true, booking: updated });
+  }
+
+  if (action === 'report_late') {
+    if (!isCustomer && !isPartner && !isAdmin) return fail('forbidden', 403);
+    const { data: updated, error } = await adminClient.from('bookings').update({ late_arrival_at: iso, issue_reported: true, issue_category: 'late_arrival', updated_at: iso }).eq('id', bookingId).select().maybeSingle();
+    if (error || !updated) return fail('late_report_failed');
+    await notify(isCustomer ? partnerUserId : booking.customer_id, 'late_arrival_reported', 'Late arrival reported', 'A late-arrival issue was reported for this booking.', {}, 'high');
+    await audit('booking.late_arrival', body?.reason ?? null, booking, updated);
+    return json({ ok: true, booking: updated });
+  }
+
+  if (action === 'report_no_show') {
+    if (!isCustomer && !isPartner && !isAdmin) return fail('forbidden', 403);
+    const startsAt = booking.booking_date && booking.booking_time ? new Date(`${booking.booking_date}T${String(booking.booking_time).slice(0,8)}`) : null;
+    if (startsAt && now.getTime() < startsAt.getTime() + 15 * 60 * 1000 && !isAdmin) return fail('grace_period_not_elapsed');
+    const reporterIsCustomer = isCustomer;
+    const field = reporterIsCustomer ? { customer_no_show_at: iso } : { partner_no_show_at: iso };
+    const { data: updated, error } = await adminClient.from('bookings').update({ ...field, status: 'disputed', issue_reported: true, issue_category: 'no_show', payout_status: 'on_hold', updated_at: iso }).eq('id', bookingId).select().maybeSingle();
+    if (error || !updated) return fail('no_show_report_failed');
+    const reportedUser = reporterIsCustomer ? partnerUserId : booking.customer_id;
+    const { data: complaint, error: complaintError } = await adminClient.from('complaints').insert({ booking_id: bookingId, reporter_user_id: user.id, reported_user_id: reportedUser, category: 'No-show', description: body?.reason || (reporterIsCustomer ? 'Partner no-show' : 'Customer no-show'), severity: 'serious', payout_hold: true }).select().maybeSingle();
+    if (complaintError) return fail('complaint_creation_failed', 500);
+    if (reporterIsCustomer) {
+      const amount = Math.round(Number(booking.total_amount || 0) * 100) / 100;
+      await createRefund(amount, 100, 'partner_no_show');
+      await notify(booking.customer_id, 'partner_no_show_reported', 'Partner no-show reported', 'A partner no-show was reported. A full refund has been queued, subject to final review.', { refund_percent: 100 }, 'high');
+    } else {
+      await notify(partnerUserId, 'customer_no_show_reported', 'Customer no-show reported', 'A customer no-show was reported. Admin review will determine final payout.', {}, 'high');
+    }
+    await audit('booking.no_show', body?.reason ?? null, booking, updated);
+    return json({ ok: true, booking: updated, complaint_id: complaint?.id });
+  }
+
+  if (action === 'request_change') {
+    if (!isCustomer && !isPartner) return fail('participant_required', 403);
+    if (!['confirmed','accepted'].includes(booking.status)) return fail('booking_not_changeable');
+    const requestedDuration = body?.requested_duration == null ? booking.duration_hours : Number(body.requested_duration);
+    if (!Number.isInteger(requestedDuration) || requestedDuration < 1) return fail('invalid_duration', 400);
+    const { data: row, error } = await adminClient.from('booking_change_requests').insert({ booking_id: bookingId, requested_by: user.id, requested_date: body?.requested_date ?? booking.booking_date, requested_time: body?.requested_time ?? booking.booking_time, requested_duration: requestedDuration, requested_location: body?.requested_location ?? booking.meeting_location, note: body?.note ?? null }).select().single();
+    if (error) return fail(error.message, 400);
+    const otherUser = isCustomer ? partnerUserId : booking.customer_id;
+    await notify(otherUser, 'booking_change_requested', 'Booking change requested', 'A participant requested a change to the booking.', { change_request_id: row.id });
+    return json({ ok: true, change_request: row });
+  }
+
+  if (action === 'respond_change') {
+    const requestId = body?.change_request_id;
+    if (!requestId) return fail('change_request_id_required', 400);
+    const { data: cr } = await adminClient.from('booking_change_requests').select('*').eq('id', requestId).eq('booking_id', bookingId).maybeSingle();
+    if (!cr) return fail('change_request_not_found', 404);
+    if (cr.status !== 'pending') return fail('change_request_not_pending');
+    const accepting = body?.decision === 'accept';
+    if (cr.requested_by === user.id || (!isPartner && !isAdmin)) return fail('response_forbidden', 403);
+    if (accepting && Number(cr.requested_duration) !== Number(booking.duration_hours || 1)) return fail('duration_change_requires_payment_integration');
+    const { data: updatedCr, error } = await adminClient.from('booking_change_requests').update({ status: accepting ? 'accepted' : 'rejected', responded_by: user.id, responded_at: iso }).eq('id', requestId).eq('status','pending').select().maybeSingle();
+    if (error || !updatedCr) return fail('change_response_failed');
+    if (accepting) await adminClient.from('bookings').update({ booking_date: cr.requested_date, booking_time: cr.requested_time, meeting_location: cr.requested_location, updated_at: iso }).eq('id', bookingId);
+    await notify(cr.requested_by, accepting ? 'booking_change_accepted' : 'booking_change_rejected', accepting ? 'Booking change accepted' : 'Booking change rejected', accepting ? 'Your requested booking change was accepted.' : 'Your requested booking change was rejected.', { change_request_id: requestId });
+    return json({ ok: true, change_request: updatedCr });
+  }
+
+  if (action === 'request_extension') {
+    if (!isCustomer && !isPartner) return fail('participant_required', 403);
+    if (!['confirmed','accepted'].includes(booking.status)) return fail('booking_not_extendable');
+    const extraDuration = Number(body?.extra_duration || 0);
+    const extraAmount = Number(body?.extra_amount || 0);
+    if (!Number.isInteger(extraDuration) || extraDuration < 1 || !Number.isFinite(extraAmount) || extraAmount < 0) return fail('invalid_extension', 400);
+    const { data: ext, error } = await adminClient.from('booking_extensions').insert({ booking_id: bookingId, requested_by: user.id, extra_duration: extraDuration, extra_amount: extraAmount }).select().single();
+    if (error) return fail(error.message, 400);
+    const otherUser = isCustomer ? partnerUserId : booking.customer_id;
+    await notify(otherUser, 'booking_extension_requested', 'Booking extension requested', 'A participant requested extra booking time. Additional payment is required before activation.', { extension_id: ext.id });
+    return json({ ok: true, extension: ext, payment_required: true });
+  }
+
+  if (action === 'respond_extension') {
+    const extensionId = body?.extension_id;
+    if (!extensionId) return fail('extension_id_required', 400);
+    const { data: ext } = await adminClient.from('booking_extensions').select('*').eq('id', extensionId).eq('booking_id', bookingId).maybeSingle();
+    if (!ext) return fail('extension_not_found', 404);
+    if (ext.status !== 'pending') return fail('extension_not_pending');
+    if (!isPartner && !isAdmin) return fail('partner_or_admin_required', 403);
+    const accepting = body?.decision === 'accept';
+    const { data: updatedExt, error } = await adminClient.from('booking_extensions').update({ status: accepting ? 'accepted' : 'rejected', responded_at: iso }).eq('id', extensionId).eq('status','pending').select().maybeSingle();
+    if (error || !updatedExt) return fail('extension_response_failed');
+    await notify(ext.requested_by, accepting ? 'booking_extension_accepted' : 'booking_extension_rejected', accepting ? 'Extension accepted' : 'Extension rejected', accepting ? 'The extension was accepted. Payment is still required before activation.' : 'The extension was rejected.', { extension_id: extensionId });
+    return json({ ok: true, extension: updatedExt, payment_required: accepting });
+  }
+
+  if (action === 'customer_meeting_ok') {
+    if (!isCustomer) return fail('customer_required', 403);
+    if (!['confirmed','accepted'].includes(booking.status)) return fail('booking_not_in_completion_window');
+    if (!booking.started_at) return fail('booking_not_started');
+    const start = booking.booking_date && booking.booking_time ? new Date(`${booking.booking_date}T${String(booking.booking_time).slice(0,8)}`) : new Date(booking.started_at);
+    const endAt = new Date(start.getTime() + Number(booking.duration_hours || 1) * 3600000);
+    const deadline = new Date(endAt.getTime() + 3600000);
+    const { data: updated, error } = await adminClient.from('bookings').update({ customer_meeting_ok: true, completion_confirmation_deadline: deadline.toISOString(), updated_at: iso }).eq('id', bookingId).select().maybeSingle();
+    if (error || !updated) return fail('meeting_ok_failed');
+    if (now >= endAt) {
+      const { data: completed, error: completeError } = await adminClient.from('bookings').update({ status: 'completed', completed_at: iso, payment_status: 'held', payout_status: 'locked', updated_at: iso }).eq('id', bookingId).eq('status','confirmed').select().maybeSingle();
+      if (completeError || !completed) return fail('completion_failed');
+      await ensurePayout();
+      await notify(partnerUserId, 'booking_completed', 'Booking completed', 'The customer confirmed the meeting. Payout is scheduled according to the platform payout window.');
+      return json({ ok: true, booking: completed, completed: true });
+    }
+    await notify(partnerUserId, 'meeting_ok', 'Customer confirmation received', 'The customer marked Meeting OK. Completion will finalize after the scheduled end time.');
+    return json({ ok: true, booking: updated, completed: false, completion_deadline: deadline.toISOString() });
+  }
+
+  if (action === 'complete') {
+    if (!isPartner && !isAdmin) return fail('partner_or_admin_required', 403);
+    if (!['confirmed','accepted'].includes(booking.status)) return fail('booking_not_completable');
+    if (!booking.started_at && !isAdmin) return fail('booking_not_started');
+    const start = booking.booking_date && booking.booking_time ? new Date(`${booking.booking_date}T${String(booking.booking_time).slice(0,8)}`) : new Date(booking.started_at || iso);
+    const endAt = new Date(start.getTime() + Number(booking.duration_hours || 1) * 3600000);
+    if (!isAdmin && now < endAt) return fail('scheduled_end_not_reached');
+    const { data: completed, error } = await adminClient.from('bookings').update({ status: 'completed', completed_at: iso, completion_confirmation_deadline: new Date(endAt.getTime()+3600000).toISOString(), payout_status: 'locked', updated_at: iso }).eq('id', bookingId).in('status',['confirmed','accepted']).select().maybeSingle();
+    if (error || !completed) return fail('completion_failed');
+    const payout = await ensurePayout();
+    await notify(booking.customer_id, 'booking_completed', 'Booking completed', 'The booking has been completed. You have a confirmation window to report an issue.');
+    await audit('booking.complete', null, booking, completed);
+    return json({ ok: true, booking: completed, payout });
+  }
+
+  if (action === 'report_issue') {
+    if (!isCustomer && !isPartner && !isAdmin) return fail('forbidden', 403);
+    const category = String(body?.category || 'Other');
+    const description = String(body?.description || 'Issue reported for booking');
+    const { data: updated, error } = await adminClient.from('bookings').update({ issue_reported: true, issue_category: category, issue_reason: description, status: booking.status === 'completed' ? 'disputed' : booking.status, payout_status: 'on_hold', updated_at: iso }).eq('id', bookingId).select().maybeSingle();
+    if (error || !updated) return fail('issue_report_failed');
+    const reportedUser = isCustomer ? partnerUserId : booking.customer_id;
+    const { data: complaint, error: complaintError } = await adminClient.from('complaints').insert({ booking_id: bookingId, reporter_user_id: user.id, reported_user_id: reportedUser, category, description, severity: body?.severity || 'normal', evidence: Array.isArray(body?.evidence) ? body.evidence : [], payout_hold: true }).select().maybeSingle();
+    if (complaintError) return fail('complaint_creation_failed', 500);
+    await notify(reportedUser, 'complaint_opened', 'Booking issue reported', 'A complaint/issue has been opened for this booking and may affect payout processing.', { complaint_id: complaint?.id }, 'high');
+    await audit('booking.issue_reported', category, booking, updated);
+    return json({ ok: true, booking: updated, complaint_id: complaint?.id });
+  }
+
+  if (action === 'block_user') {
+    const blockedUserId = isCustomer ? partnerUserId : isPartner ? booking.customer_id : body?.blocked_user_id;
+    if (!blockedUserId || blockedUserId === user.id) return fail('invalid_block_target', 400);
+    const { data: block, error } = await adminClient.from('blocked_users').upsert({ blocker_user_id: user.id, blocked_user_id: blockedUserId, reason: body?.reason || null }, { onConflict: 'blocker_user_id,blocked_user_id' }).select().maybeSingle();
+    if (error) return fail(error.message, 400);
+    return json({ ok: true, block });
+  }
+
+  if (action === 'admin_finalize_refund') {
+    if (!isAdmin) return fail('admin_required', 403);
+    const refundId = body?.refund_id;
+    if (!refundId) return fail('refund_id_required', 400);
+    const targetStatus = body?.status === 'succeeded' ? 'succeeded' : body?.status === 'cancelled' ? 'cancelled' : 'processing';
+    const { data: refund, error } = await adminClient.from('refunds').update({ status: targetStatus, processed_at: targetStatus === 'succeeded' ? iso : null, provider: body?.provider || null, provider_reference: body?.provider_reference || null, failure_reason: body?.failure_reason || null }).eq('id', refundId).select().maybeSingle();
+    if (error || !refund) return fail('refund_update_failed');
+    if (targetStatus === 'succeeded') await adminClient.from('bookings').update({ payment_status: 'refunded', updated_at: iso }).eq('id', refund.booking_id);
+    return json({ ok: true, refund });
+  }
+
+  return json({ error: 'unsupported_action' }, 400);
 });
