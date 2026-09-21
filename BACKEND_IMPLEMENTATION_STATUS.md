@@ -35,9 +35,9 @@ Private storage buckets remain in place and RLS remains enabled. A private `chat
 - Customer Meeting OK completion now safely handles both confirmed and accepted booking states.
 
 ## Edge Functions
-`booking-actions` is ACTIVE, JWT protected, version 3.
+`booking-actions` is ACTIVE, JWT protected, version 6.
 
-`booking-create` is ACTIVE, JWT protected, and is the frontend booking-request boundary. It validates customer role, partner status/service/rate, duration, datetime, pricing, idempotency, creates the requested booking, records the demo payment/ledger entry, and creates notifications/audit records.
+`booking-create` is ACTIVE, JWT protected, and is the frontend booking-request boundary. It validates customer role, partner status/service/rate, duration, datetime, pricing, idempotency, creates the requested booking, creates the pending payment transaction/ledger boundary, and creates notifications/audit records.
 
 ## Frontend live integration
 The existing `index.html` loads `bap-live-backend.js` after the existing demo scripts so the live adapter is the final handler.
@@ -63,9 +63,9 @@ The existing demo/localStorage layer remains as a compatibility layer; the live 
 - final India-qualified legal review of policies
 
 ## Payment-dependent work intentionally deferred
-- real payment gateway + signed webhooks
-- provider refund execution
+- Razorpay merchant credentials/onboarding and production transaction testing
 - real partner bank/UPI payout settlement
+- extension/change additional-payment flow
 
 Important: the project is not being labeled fully production-live until provider integrations and full E2E verification are completed.
 
@@ -89,3 +89,4 @@ Important: the project is not being labeled fully production-live until provider
 - Customer live booking UI now opens Razorpay Checkout, verifies payment server-side, and exposes Pay Now for pending bookings.
 - Razorpay credentials are intentionally not stored in source; payment functions remain disabled until Supabase secrets are configured.
 - No production business data was modified.
+\n\n## 2026-09-21 Refund-center hardening\n- Admin Refund Center now reads the real `refunds` table instead of a non-existent booking refund-status field.\n- Refund processing is routed to the protected `payment-refund` Edge Function; Razorpay secrets remain server-side.\n- Pending refund cases can be cancelled through the protected admin refund action.\n- No production business data was modified.\n
