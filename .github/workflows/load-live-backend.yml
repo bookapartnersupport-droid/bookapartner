@@ -14,15 +14,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Place live backend script last
+      - name: Place live backend and UI guard last
         run: |
           python - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          tag = '<script src="bap-live-backend.js"></script>'
-          s = s.replace(tag, '')
-          s = s.rstrip() + '\n' + tag + '\n'
+          for tag in [
+              '<script src="bap-live-backend.js"></script>',
+              '<script src="bap-live-ui-guard.js"></script>'
+          ]:
+              s = s.replace(tag, '')
+          s = s.rstrip() + '\n<script src="bap-live-backend.js"></script>\n<script src="bap-live-ui-guard.js"></script>\n'
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -32,8 +35,8 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then
-            echo "Live backend script is already last."
+            echo "Live backend and UI guard are already last."
             exit 0
           fi
-          git commit -m "Load live Supabase adapter after demo scripts"
+          git commit -m "Force live payment UI over legacy prototype flow"
           git push
