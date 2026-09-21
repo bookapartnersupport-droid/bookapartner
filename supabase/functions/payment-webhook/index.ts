@@ -3,36 +3,56 @@ const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 async function hmac(m:string,s:string){const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(s),{name:"HMAC",hash:"SHA-256"},false,["sign"]);const x=await crypto.subtle.sign("HMAC",k,new TextEncoder().encode(m));return [...new Uint8Array(x)].map(v=>v.toString(16).padStart(2,"0")).join("");}
 function safe(a:string,b:string){if(a.length!==b.length)return false;let x=0;for(let i=0;i<a.length;i++)x|=a.charCodeAt(i)^b.charCodeAt(i);return x===0;}
+async function ensureCaptureArtifacts(admin:any,tx:any,paymentId:string,orderId:string){
+  if(!paymentId)return;
+  const ledger=await admin.from("financial_ledger").insert({booking_id:tx.booking_id,user_id:tx.customer_id,entry_type:"booking_payment_captured",direction:"debit",amount:Number(tx.amount),currency:tx.currency||"INR",status:"held",provider:"razorpay",provider_reference:paymentId,metadata:{order_id:orderId}});
+  if(ledger.error&&ledger.error.code!=="23505")throw new Error("financial_ledger_write_failed");
+  const note=await admin.from("notifications").insert({user_id:tx.customer_id,type:"payment_captured",title:"Payment successful",body:"Your booking payment was received and is now held for the booking.",booking_id:tx.booking_id,data:{payment_id:paymentId,order_id:orderId},priority:"normal"});
+  if(note.error&&note.error.code!=="23505")throw new Error("payment_notification_write_failed");
+}
 Deno.serve(async(req)=>{
-if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});if(req.method!=="POST")return json({error:"method_not_allowed"},405);
-const secret=Deno.env.get("RAZORPAY_WEBHOOK_SECRET");if(!secret)return json({error:"webhook_not_configured"},503);
-const raw=await req.text(),sig=req.headers.get("X-Razorpay-Signature")||"",valid=safe(await hmac(raw,secret),sig),url=Deno.env.get("SUPABASE_URL")!,service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,admin=createClient(url,service);
-let p:any;try{p=JSON.parse(raw)}catch{return json({error:"invalid_json"},400);}
-const eventId=req.headers.get("X-Razorpay-Event-Id")||await hmac(raw,secret),eventType=String(p?.event||"");if(!valid)return json({error:"invalid_webhook_signature"},400);
-let eventRow:any=null;
-const ins=await admin.from("payment_webhook_events").insert({provider:"razorpay",event_id:eventId,event_type:eventType,signature_valid:true,processed:false,payload:p}).select("id").maybeSingle();
-if(ins.error){
-  if(ins.error.code!=="23505")return json({error:"webhook_event_store_failed"},500);
-  const existing=await admin.from("payment_webhook_events").select("id,processed,error_message").eq("provider","razorpay").eq("event_id",eventId).maybeSingle();
-  if(existing.error||!existing.data)return json({error:"webhook_event_lookup_failed"},500);
-  if(existing.data.processed)return json({ok:true,duplicate:true});
-  eventRow=existing.data;
-}else eventRow=ins.data;
-try{
-const entity=p?.payload?.payment?.entity||p?.payload?.order?.entity||null,orderId=entity?.order_id||null,paymentId=entity?.id&&String(entity.id).startsWith("pay_")?entity.id:null;
-let tx=null;
-if(orderId)tx=(await admin.from("payment_transactions").select("*").eq("provider","razorpay").eq("provider_order_id",orderId).maybeSingle()).data;
-if(!tx&&paymentId)tx=(await admin.from("payment_transactions").select("*").eq("provider","razorpay").eq("provider_payment_id",paymentId).maybeSingle()).data;
-if(tx&&(eventType==="payment.captured"||eventType==="order.paid")){
-  if(Number(entity?.amount)!==Math.round(Number(tx.amount)*100))throw new Error("webhook_amount_mismatch");
-  await admin.from("payment_transactions").update({status:"captured",provider_payment_id:paymentId||tx.provider_payment_id,provider_reference:paymentId||tx.provider_reference,metadata:{...(tx.metadata||{}),webhook_event:eventType}}).eq("id",tx.id);
-  await admin.from("bookings").update({payment_status:"held",updated_at:new Date().toISOString()}).eq("id",tx.booking_id).in("payment_status",["pending"]);
-}
-if(tx&&eventType==="payment.failed"&&tx.status!=="captured")await admin.from("payment_transactions").update({status:"failed",metadata:{...(tx.metadata||{}),webhook_event:eventType,error:entity?.error_description||null}}).eq("id",tx.id);
-await admin.from("payment_webhook_events").update({processed:true,processed_at:new Date().toISOString(),error_message:null}).eq("id",eventRow.id);
-return json({ok:true});
-}catch(e){
-await admin.from("payment_webhook_events").update({processed:false,error_message:String((e as any)?.message||e)}).eq("id",eventRow.id);
-return json({error:"webhook_processing_failed"},500);
-}
+ if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});
+ if(req.method!=="POST")return json({error:"method_not_allowed"},405);
+ const secret=Deno.env.get("RAZORPAY_WEBHOOK_SECRET");if(!secret)return json({error:"webhook_not_configured"},503);
+ const raw=await req.text(),sig=req.headers.get("X-Razorpay-Signature")||"",valid=safe(await hmac(raw,secret),sig);
+ if(!valid)return json({error:"invalid_webhook_signature"},400);
+ const url=Deno.env.get("SUPABASE_URL")!,service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,admin=createClient(url,service);
+ let p:any;try{p=JSON.parse(raw)}catch{return json({error:"invalid_json"},400);}
+ const eventId=req.headers.get("X-Razorpay-Event-Id")||await hmac(raw,secret),eventType=String(p?.event||"");
+ let eventRow:any=null;
+ const ins=await admin.from("payment_webhook_events").insert({provider:"razorpay",event_id:eventId,event_type:eventType,signature_valid:true,processed:false,payload:p}).select("id").maybeSingle();
+ if(ins.error){
+   if(ins.error.code!=="23505")return json({error:"webhook_event_store_failed"},500);
+   const existing=await admin.from("payment_webhook_events").select("id,processed,error_message").eq("provider","razorpay").eq("event_id",eventId).maybeSingle();
+   if(existing.error||!existing.data)return json({error:"webhook_event_lookup_failed"},500);
+   if(existing.data.processed)return json({ok:true,duplicate:true});
+   eventRow=existing.data;
+ }else eventRow=ins.data;
+ try{
+   const entity=p?.payload?.payment?.entity||p?.payload?.order?.entity||null;
+   const orderId=entity?.order_id||entity?.id||null;
+   const paymentId=entity?.id&&String(entity.id).startsWith("pay_")?entity.id:null;
+   let tx:any=null;
+   if(orderId)tx=(await admin.from("payment_transactions").select("*").eq("provider","razorpay").eq("provider_order_id",orderId).maybeSingle()).data;
+   if(!tx&&paymentId)tx=(await admin.from("payment_transactions").select("*").eq("provider","razorpay").eq("provider_payment_id",paymentId).maybeSingle()).data;
+   if(tx&&(eventType==="payment.captured"||eventType==="order.paid")){
+     if(eventType==="payment.captured"&&Number(entity?.amount)!==Math.round(Number(tx.amount)*100))throw new Error("webhook_amount_mismatch");
+     if(paymentId&&tx.provider_payment_id&&tx.provider_payment_id!==paymentId)throw new Error("payment_id_conflict");
+     const upd=await admin.from("payment_transactions").update({status:"captured",provider_payment_id:paymentId||tx.provider_payment_id,provider_reference:paymentId||tx.provider_reference,metadata:{...(tx.metadata||{}),webhook_event:eventType}}).eq("id",tx.id).select("id").maybeSingle();
+     if(upd.error)throw new Error("payment_transaction_update_failed");
+     const bk=await admin.from("bookings").update({payment_status:"held",updated_at:new Date().toISOString()}).eq("id",tx.booking_id).in("payment_status",["pending","received"]).select("id").maybeSingle();
+     if(bk.error)throw new Error("booking_payment_state_update_failed");
+     await ensureCaptureArtifacts(admin,tx,paymentId||tx.provider_payment_id,tx.provider_order_id);
+   }
+   if(tx&&eventType==="payment.failed"&&tx.status!=="captured"){
+     const upd=await admin.from("payment_transactions").update({status:"failed",metadata:{...(tx.metadata||{}),webhook_event:eventType,error:entity?.error_description||null}}).eq("id",tx.id).neq("status","captured");
+     if(upd.error)throw new Error("payment_failed_state_update_failed");
+   }
+   const done=await admin.from("payment_webhook_events").update({processed:true,processed_at:new Date().toISOString(),error_message:null}).eq("id",eventRow.id);
+   if(done.error)throw new Error("webhook_event_finalize_failed");
+   return json({ok:true});
+ }catch(e){
+   await admin.from("payment_webhook_events").update({processed:false,error_message:String((e as any)?.message||e)}).eq("id",eventRow.id);
+   return json({error:"webhook_processing_failed"},500);
+ }
 });
