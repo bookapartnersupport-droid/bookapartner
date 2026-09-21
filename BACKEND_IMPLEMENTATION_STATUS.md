@@ -1,6 +1,6 @@
 # Book A Partner — Backend Implementation Status
 
-Updated: 2026-09-18
+Updated: 2026-09-21
 
 ## Source of truth
 `BOOK_A_PARTNER_MASTER_HANDOFF.md` remains the canonical product/backend specification.
@@ -76,4 +76,16 @@ Important: the project is not being labeled fully production-live until provider
 - Extension requests can now be answered by the other participant; acceptance remains payment-gated.
 - Customer/partner booking UI now exposes pending change/extension response actions.
 - Live Notifications and My Complaints panels added to the customer booking area.
+- No production business data was modified.
+
+
+## 2026-09-21 Payment gateway preparation
+- booking-create upgraded to remove demo payment and require Razorpay readiness before creating a payable booking.
+- payment-create-order ACTIVE — server-side Razorpay Orders API boundary.
+- payment-verify ACTIVE — server-side checkout signature and backend payment verification.
+- payment-webhook ACTIVE and JWT-disabled for provider callbacks — HMAC verification and idempotent event storage.
+- payment-refund ACTIVE — admin-only provider refund execution for captured payments.
+- Partner acceptance is blocked until bookings.payment_status is held.
+- Customer live booking UI now opens Razorpay Checkout, verifies payment server-side, and exposes Pay Now for pending bookings.
+- Razorpay credentials are intentionally not stored in source; payment functions remain disabled until Supabase secrets are configured.
 - No production business data was modified.
