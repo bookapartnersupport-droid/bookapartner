@@ -17,7 +17,7 @@
       document.querySelectorAll('*').forEach(function(el){
         if(el.children.length===0 && el.textContent){
           var t=el.textContent.trim();
-          if(/Prototype mode\. Real payment gateway, OTP and live distance-based transport calculation will be connected in the backend stage\./i.test(t)){
+          if(/Prototype mode\./i.test(t)){
             el.textContent='🔒 Secure payment. Payment gateway is connected to the live booking backend.';
           }
           if(/^Demo Payment$/i.test(t)) el.textContent='Secure Payment';
