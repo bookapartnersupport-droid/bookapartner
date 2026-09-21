@@ -30,7 +30,7 @@ Private storage buckets remain in place and RLS remains enabled. A private `chat
 - Foreign-key indexes and Realtime publication for communication/booking-support tables.
 - Booking overlap helper checks the full requested duration against existing requested/accepted/confirmed bookings.
 - Booking insert validation enforces 1–24 hour duration and a minimum 5-minute future booking time.
-- `booking-actions` v3 now creates a durable complaint when late arrival is reported.
+- `booking-actions Edge Function: ACTIVE v4 — participant response-direction hardening for change/extension requests.now creates a durable complaint when late arrival is reported.
 - Account deletion blocker lookup now uses a direct partner-id lookup instead of unsupported nested PostgREST syntax.
 - Customer Meeting OK completion now safely handles both confirmed and accepted booking states.
 
@@ -68,3 +68,12 @@ The existing demo/localStorage layer remains as a compatibility layer; the live 
 - real partner bank/UPI payout settlement
 
 Important: the project is not being labeled fully production-live until provider integrations and full E2E verification are completed.
+
+
+## 2026-09-21 Frontend lifecycle batch
+- booking-actions upgraded to ACTIVE v4.
+- Change requests can now be answered by the other booking participant (customer or partner); requester cannot self-approve.
+- Extension requests can now be answered by the other participant; acceptance remains payment-gated.
+- Customer/partner booking UI now exposes pending change/extension response actions.
+- Live Notifications and My Complaints panels added to the customer booking area.
+- No production business data was modified.
