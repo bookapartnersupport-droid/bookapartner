@@ -15,15 +15,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Place live backend and UI guard last with cache-busting
+        env:
+          GITHUB_SHA: ${{ github.sha }}
         run: |
           python - <<'PY'
           from pathlib import Path
+          import os
           import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
           s = re.sub(r'<script\s+src=["\']bap-live-backend\.js(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
           s = re.sub(r'<script\s+src=["\']bap-live-ui-guard\.js(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
-          s = s.rstrip() + f'\n<script src="bap-live-backend.js?v={GITHUB_SHA[:12]{'}'}"></script>\n<script src="bap-live-ui-guard.js?v={GITHUB_SHA[:12]{'}'}"></script>\n'
+          version = os.environ['GITHUB_SHA'][:12]
+          s = s.rstrip() + f'\n<script src="bap-live-backend.js?v={version}"></script>\n<script src="bap-live-ui-guard.js?v={version}"></script>\n'
           p.write_text(s, encoding='utf-8')
           PY
 
