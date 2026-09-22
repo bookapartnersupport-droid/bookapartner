@@ -47,7 +47,7 @@
 
       /* Never expose legacy localStorage/demo partner data in Partner Account.
          The live Supabase dashboard is the only partner-side source of truth. */
-      var legacyProfile=document.getElementById('partnerProfileCard');
+      try{localStorage.removeItem('bap_partner_profile');localStorage.removeItem('bap_partner_profiles');}catch(e){}\n      var legacyProfile=document.getElementById('partnerProfileCard');
       var legacyRequests=document.getElementById('partnerRequests');
       if(legacyProfile && !legacyProfile.dataset.bapLiveDashboardReady){
         legacyProfile.dataset.bapLiveDashboardReady='1';
@@ -128,13 +128,14 @@
           var safeSelfieType=['image/jpeg','image/png','image/webp'].indexOf(selfie.type)>=0?selfie.type:''; if(!safeSelfieType){await c.storage.from('partner-photos').remove([photoPath]);throw new Error('Selfie must be JPG, PNG or WEBP. Please choose a JPG/PNG selfie from your phone.');} var up2=await c.storage.from('partner-selfies').upload(selfiePath,selfie,{upsert:false,contentType:safeSelfieType});
           if(up2.error){await c.storage.from('partner-photos').remove([photoPath]);throw new Error('Selfie upload failed: '+(up2.error.message||String(up2.error)));}
 
-          var ins=await c.from('partner_applications').insert({
-            user_id:s.user.id,full_name:name,age:Math.round(age),gender,mobile,
-            city:'Gurgaon NCR',area,services:[service],hourly_rate:rate,
-            availability,profile_photo_path:photoPath,selfie_path:selfiePath,
-            verification_status:'pending',verification_call_completed:false,
-            terms_accepted:true,safety_accepted:true
-          }).select('id,verification_status').single();
+          var existing=await c.from('partner_applications').select('id,verification_status').eq('user_id',s.user.id).in('verification_status',['pending','under_review']).limit(1).maybeSingle();
+          if(existing.error)throw existing.error;
+          if(existing.data){alert('Your live partner application is already under review.');if(typeof window.go==='function')window.go('partnerDashboard');setTimeout(renderOnlyLivePartnerDashboard,50);return;}
+          var ins=await c.rpc('bap_submit_partner_application',{
+            p_full_name:name,p_age:Math.round(age),p_gender:gender,p_mobile:mobile,p_city:'Gurgaon NCR',p_area:area,
+            p_services:[service],p_hourly_rate:rate,p_availability:availability,p_profile_photo_path:photoPath,
+            p_selfie_path:selfiePath,p_terms_accepted:true,p_safety_accepted:true
+          });
           if(ins.error){
             await c.storage.from('partner-photos').remove([photoPath]);
             await c.storage.from('partner-selfies').remove([selfiePath]);
