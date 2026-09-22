@@ -7616,6 +7616,16 @@ initGooglePlaces();
   </div>
 </div>
 
+<script>
+(function(){
+  try{
+    var p=new URLSearchParams(window.location.search);
+    if(p.get('partner')==='1'){
+      setTimeout(function(){if(typeof window.go==='function')window.go('partnerRecruit');},250);
+    }
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
 <script>
