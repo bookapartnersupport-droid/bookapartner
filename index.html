@@ -3379,183 +3379,106 @@ input,select,textarea{
   id="join"
   class="screen"
 >
+  <div class="card formCard" style="overflow:hidden">
 
-  <div class="card formCard">
+    <div style="background:linear-gradient(135deg,#5420b5,#8b35e8);color:#fff;border-radius:18px;padding:22px;margin:-2px -2px 20px">
+      <div style="font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;opacity:.9">
+        🚀 Partner Recruitment — Gurgaon NCR
+      </div>
+      <h2 style="margin:7px 0 6px;color:#fff;font-size:30px">
+        Join Book A Partner & Start Earning
+      </h2>
+      <p style="margin:0;line-height:1.55;opacity:.94">
+        <b>₹0 joining fee</b> • <b>₹0 partner processing fee during the initial launch</b>.
+        Set your own hourly price and receive booking opportunities after approval.
+      </p>
+    </div>
 
-    <h2>
-      Start Earning
-    </h2>
+    <div class="row" style="margin-bottom:18px">
+      <div class="notice" style="margin:0">
+        <b>💰 You set your price</b><br>
+        Choose your hourly rate for the services you offer.
+      </div>
+      <div class="notice" style="margin:0">
+        <b>🛡️ Verified platform</b><br>
+        Profile + selfie verification before going Live.
+      </div>
+    </div>
+
+    <div class="sectionBlock" style="margin-bottom:18px">
+      <h3 style="margin-bottom:8px">How joining works</h3>
+      <p class="muted" style="margin:6px 0">1. Create a Partner account → 2. Submit your profile → 3. Verification → 4. Get approved → 5. Receive customer booking requests.</p>
+    </div>
 
     <p class="muted">
-      Create your partner profile. Verification and real OTP will be connected
-      in the backend stage.
+      We are currently onboarding partners in Gurgaon NCR before the customer launch.
+      Earnings depend on actual bookings and the applicable platform terms.
     </p>
 
     <div class="form">
 
-      <label>
-        Full name
-      </label>
-
-      <input
-        id="partnerName"
-        placeholder="Your name"
-      >
+      <label>Full name</label>
+      <input id="partnerName" placeholder="Your name">
 
       <div class="row">
-
         <div>
-
-          <label>
-            Age
-          </label>
-
-          <input
-            id="partnerAge"
-            type="number"
-            min="18"
-            max="80"
-            placeholder="18+"
-          >
-
+          <label>Age</label>
+          <input id="partnerAge" type="number" min="18" max="80" placeholder="18+">
         </div>
-
         <div>
-
-          <label>
-            Mobile number
-          </label>
-
-          <input
-            id="partnerMobile"
-            type="tel"
-            inputmode="numeric"
-            maxlength="10"
-            placeholder="10 digit mobile"
-          >
-
+          <label>Mobile number</label>
+          <input id="partnerMobile" type="tel" inputmode="numeric" maxlength="10" placeholder="10 digit mobile">
         </div>
-
       </div>
 
-      <label>
-        City / Area
-      </label>
+      <label>City / Area</label>
+      <input id="partnerArea" placeholder="e.g. Golf Course Road, Sohna Road, DLF Phase 1">
 
-      <input
-        id="partnerArea"
-        placeholder="e.g. Gurgaon NCR"
-      >
+      <label>Profile photo</label>
+      <input id="partnerPhoto" type="file" accept="image/*">
 
-      <label>
-        Profile photo
-      </label>
-
-      <input
-        id="partnerPhoto"
-        type="file"
-        accept="image/*"
-      >
-
-      <label>
-        Service
-      </label>
-
+      <label>Service</label>
       <select id="partnerService">
-
-        <option>
-          Movie Partner
-        </option>
-
-        <option>
-          Shopping Partner
-        </option>
-
-        <option>
-          Coffee & Conversation
-        </option>
-
-        <option>
-          Event Partner
-        </option>
-
-        <option>
-          Travel Partner
-        </option>
-
-        <option>
-          Assistance Partner
-        </option>
-
+        <option>Movie Partner</option>
+        <option>Shopping Partner</option>
+        <option>Coffee & Conversation</option>
+        <option>Event Partner</option>
+        <option>Travel Partner</option>
+        <option>Assistance Partner</option>
       </select>
 
       <div class="row">
-
         <div>
-
-          <label>
-            Hourly price (₹)
-          </label>
-
-          <input
-            id="partnerRate"
-            type="number"
-            min="1"
-            placeholder="e.g. 899"
-          >
-
+          <label>Hourly price (₹)</label>
+          <input id="partnerRate" type="number" min="1" placeholder="e.g. 899">
         </div>
-
         <div>
-
-          <label>
-            Availability
-          </label>
-
+          <label>Availability</label>
           <select id="partnerAvailability">
-
-            <option>
-              Available
-            </option>
-
-            <option>
-              Not available
-            </option>
-
+            <option>Available</option>
+            <option>Not available</option>
           </select>
-
         </div>
-
       </div>
 
-      <label>
-        Selfie for verification
-      </label>
-
-      <input
-        id="partnerSelfie"
-        type="file"
-        accept="image/*"
-      >
+      <label>Selfie for verification</label>
+      <input id="partnerSelfie" type="file" accept="image/*">
 
       <div class="notice">
-
-        🛡️ Verification checklist:
-        profile photo + selfie + age + mobile + service details.
-
+        🛡️ <b>Verification:</b> Profile photo + selfie + age + mobile + service details.
+        Your verification information is used for partner review.
       </div>
 
-      <button
-        class="pink full"
-        onclick="partnerApply()"
-      >
-        Create Partner Profile
+      <button class="pink full" onclick="partnerApply()">
+        🚀 Submit Partner Application — ₹0 Fee
       </button>
 
+      <p class="muted" style="text-align:center;font-size:11px;margin-top:10px">
+        By submitting, you agree to the Partner Agreement and safety/conduct policy.
+      </p>
     </div>
 
   </div>
-
 </section>
 
 <section
