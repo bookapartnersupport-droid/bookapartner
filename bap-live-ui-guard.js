@@ -49,7 +49,8 @@
 
       /* Never expose legacy localStorage/demo partner data in Partner Account.
          The live Supabase dashboard is the only partner-side source of truth. */
-      try{localStorage.removeItem('bap_partner_profile');localStorage.removeItem('bap_partner_profiles');}catch(e){}\n      var legacyProfile=document.getElementById('partnerProfileCard');
+      try{localStorage.removeItem('bap_partner_profile');localStorage.removeItem('bap_partner_profiles');}catch(e){}
+      var legacyProfile=document.getElementById('partnerProfileCard');
       var legacyRequests=document.getElementById('partnerRequests');
       if(legacyProfile && !legacyProfile.dataset.bapLiveDashboardReady){
         legacyProfile.dataset.bapLiveDashboardReady='1';
