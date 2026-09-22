@@ -1714,6 +1714,8 @@ input,select,textarea{
           id:r.data.user.id,email:e,name:n,role:'partner',loggedIn:true
         }));
 
+        if(typeof window.updateLoginNav==='function') window.updateLoginNav();
+
         close();
         if(typeof window.go==='function') window.go('join');
         else location.href=location.pathname+'?partner=1';
@@ -7357,26 +7359,48 @@ function isCustomerLoggedIn(){
   }
 }
 
+function getBapCurrentUser(){
+  try{
+    return JSON.parse(localStorage.getItem('bap_current_user') || 'null');
+  }catch(e){
+    return null;
+  }
+}
+
+function isPartnerLoggedIn(){
+  const user = getBapCurrentUser();
+  return !!(user && user.loggedIn === true && (user.role === 'partner' || user.role === 'admin'));
+}
+
 function handleAccountClick(){
 
-  if(!isCustomerLoggedIn()){
-    openLogin();
+  if(isPartnerLoggedIn()){
+    if(typeof go === 'function') go('partnerDashboard');
     return;
   }
 
-  openAccountMenu();
+  if(isCustomerLoggedIn()){
+    openAccountMenu();
+    return;
+  }
+
+  openLogin();
 }
 
 function updateLoginNav(){
 
   const btn = document.getElementById('loginNavBtn');
-
   if(!btn) return;
 
-  if(isCustomerLoggedIn()){
+  if(isPartnerLoggedIn()){
+    btn.textContent = 'Partner Account';
+    btn.title = 'Open Partner Dashboard';
+  }else if(isCustomerLoggedIn()){
     btn.textContent = 'My Account';
+    btn.title = 'Open Customer Account';
   }else{
     btn.textContent = 'Login';
+    btn.title = 'Login';
   }
 }
 
