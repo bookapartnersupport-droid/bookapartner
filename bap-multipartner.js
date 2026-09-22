@@ -5310,13 +5310,18 @@
             'partnerApply'
           )
         ){
+          /*
+            The live Supabase adapter owns partnerApply in production.
+            Do not let this legacy capture-phase interceptor swallow the
+            click before the live handler can run.
+          */
+          if(window.__BAP_LIVE_PARTNER_APPLY_GUARD){
+            return;
+          }
 
           event.preventDefault();
-
           event.stopImmediatePropagation();
-
           realPartnerApply();
-
           return false;
         }
 
