@@ -20,6 +20,10 @@
   }
   function patch(){
     try{
+      /* Disable the legacy capture-phase partner application interceptor. */
+      window.__BAP_LIVE_PARTNER_APPLY_GUARD=true;
+      var legacyFields=document.getElementById('bapRealPartnerAccountFields');
+      if(legacyFields) legacyFields.remove();
       if(!oldGo && typeof window.go==='function') oldGo=window.go;
       if(oldGo && !window.go.__bapAuthGuard){
         var wrappedGo=function(id){
