@@ -4527,6 +4527,9 @@
   }
 
   function installPartnerFields(){
+    /* Production live adapter owns the partner onboarding UI. Do not inject
+       the legacy email/password block while the live Supabase flow is active. */
+    if(window.__BAP_LIVE_PARTNER_APPLY_GUARD)return false;
 
     const join =
       document.getElementById('join');
