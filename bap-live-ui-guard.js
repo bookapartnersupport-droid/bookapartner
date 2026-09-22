@@ -67,15 +67,35 @@
       /* Replace the legacy localStorage partner application with the real
          Supabase onboarding flow. */
       async function liveApi(){
-        for(var i=0;i<30;i++){
-          if(window.BAP_live &&
-             typeof window.BAP_live.session==='function' &&
-             typeof window.BAP_live.client==='function'){
-            return window.BAP_live;
+        function ready(){
+          return window.BAP_live &&
+            typeof window.BAP_live.session==='function' &&
+            typeof window.BAP_live.client==='function';
+        }
+        if(ready())return window.BAP_live;
+
+        /* Self-heal stale Pages/browser caches: if the backend adapter did not
+           initialize, load the same-origin script again with a fresh cache key. */
+        try{
+          var loader=document.querySelector('script[data-bap-live-retry]');
+          if(!loader){
+            loader=document.createElement('script');
+            loader.src='bap-live-backend.js?retry='+Date.now();
+            loader.async=false;
+            loader.setAttribute('data-bap-live-retry','1');
+            await new Promise(function(resolve,reject){
+              loader.onload=resolve;
+              loader.onerror=function(){reject(new Error('Live backend script could not be loaded. Check your internet connection and try again.'));};
+              document.head.appendChild(loader);
+            });
           }
+        }catch(e){throw e;}
+
+        for(var i=0;i<40;i++){
+          if(ready())return window.BAP_live;
           await new Promise(function(resolve){setTimeout(resolve,200);});
         }
-        throw new Error('Live partner system is still loading. Please refresh the page once and try again.');
+        throw new Error('Live backend loaded but did not initialize. Please hard-refresh the page once.');
       }
 
       async function renderOnlyLivePartnerDashboard(){
