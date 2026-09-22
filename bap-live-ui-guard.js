@@ -202,7 +202,7 @@
           var terms=document.getElementById('partnerTerms')?.checked;
           var safety=document.getElementById('partnerSafety')?.checked;
 
-          if(!name||age<18||!/^\\d{10}$/.test(mobile)||!area||!gender||!service||!Number.isFinite(rate)||rate<=0||!photo||!selfie||!terms||!safety){
+          if(!name||age<18||!/^[0-9]{10}$/.test(mobile)||!area||!gender||!service||!Number.isFinite(rate)||rate<=0||!photo||!selfie||!terms||!safety){
             throw new Error('Please complete all partner details, upload profile photo + selfie, and accept both agreements.');
           }
           if(photo.size>5*1024*1024||selfie.size>5*1024*1024)throw new Error('Each image must be 5 MB or smaller.');
