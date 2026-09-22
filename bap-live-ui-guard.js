@@ -74,10 +74,10 @@
           var photoPath=base+'-profile.'+(photo.name.split('.').pop()||'jpg').toLowerCase();
           var selfiePath=base+'-selfie.'+(selfie.name.split('.').pop()||'jpg').toLowerCase();
 
-          var up1=await c.storage.from('partner-photos').upload(photoPath,photo,{upsert:false,contentType:photo.type});
-          if(up1.error)throw up1.error;
-          var up2=await c.storage.from('partner-selfies').upload(selfiePath,selfie,{upsert:false,contentType:selfie.type});
-          if(up2.error){await c.storage.from('partner-photos').remove([photoPath]);throw up2.error;}
+          var safePhotoType=['image/jpeg','image/png','image/webp'].indexOf(photo.type)>=0?photo.type:''; if(!safePhotoType)throw new Error('Profile photo must be JPG, PNG or WEBP. Please choose a JPG/PNG photo from your phone.'); var up1=await c.storage.from('partner-photos').upload(photoPath,photo,{upsert:false,contentType:safePhotoType});
+          if(up1.error)throw new Error('Profile photo upload failed: '+(up1.error.message||String(up1.error)));
+          var safeSelfieType=['image/jpeg','image/png','image/webp'].indexOf(selfie.type)>=0?selfie.type:''; if(!safeSelfieType){await c.storage.from('partner-photos').remove([photoPath]);throw new Error('Selfie must be JPG, PNG or WEBP. Please choose a JPG/PNG selfie from your phone.');} var up2=await c.storage.from('partner-selfies').upload(selfiePath,selfie,{upsert:false,contentType:safeSelfieType});
+          if(up2.error){await c.storage.from('partner-photos').remove([photoPath]);throw new Error('Selfie upload failed: '+(up2.error.message||String(up2.error)));}
 
           var ins=await c.from('partner_applications').insert({
             user_id:s.user.id,full_name:name,age:Math.round(age),gender,mobile,
@@ -89,7 +89,7 @@
           if(ins.error){
             await c.storage.from('partner-photos').remove([photoPath]);
             await c.storage.from('partner-selfies').remove([selfiePath]);
-            throw ins.error;
+            throw new Error('Could not save application: '+(ins.error.message||String(ins.error)));
           }
           alert('Partner application submitted successfully. Our team will review your profile and contact you for verification.');
           if(typeof window.go==='function')window.go('partnerDashboard');
