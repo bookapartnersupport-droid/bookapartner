@@ -31,12 +31,28 @@
             hasSession().then(function(ok){if(ok) oldGo('book'); else showLogin();});
             return;
           }
+          if(id==='partnerDashboard'){
+            oldGo.apply(this,arguments);
+            setTimeout(renderOnlyLivePartnerDashboard,0);
+            setTimeout(renderOnlyLivePartnerDashboard,250);
+            setTimeout(renderOnlyLivePartnerDashboard,1000);
+            return;
+          }
           return oldGo.apply(this,arguments);
         };
         wrappedGo.__bapAuthGuard=true;
         window.go=wrappedGo;
       }
       ensurePartnerLaunchFields();
+
+      /* Never expose legacy localStorage/demo partner data in Partner Account.
+         The live Supabase dashboard is the only partner-side source of truth. */
+      var legacyProfile=document.getElementById('partnerProfileCard');
+      var legacyRequests=document.getElementById('partnerRequests');
+      if(legacyProfile && !legacyProfile.dataset.bapLiveDashboardReady){
+        legacyProfile.dataset.bapLiveDashboardReady='1';
+      }
+
       window.goToPayment=livePay;
       window.confirmDemoPayment=livePay;
       window.selectPartner=function(name){
@@ -47,11 +63,40 @@
 
       /* Replace the legacy localStorage partner application with the real
          Supabase onboarding flow. */
+      async function liveApi(){
+        for(var i=0;i<30;i++){
+          if(window.BAP_live &&
+             typeof window.BAP_live.session==='function' &&
+             typeof window.BAP_live.client==='function'){
+            return window.BAP_live;
+          }
+          await new Promise(function(resolve){setTimeout(resolve,200);});
+        }
+        throw new Error('Live partner system is still loading. Please refresh the page once and try again.');
+      }
+
+      async function renderOnlyLivePartnerDashboard(){
+        var api;
+        try{
+          api=await liveApi();
+          if(typeof api.renderPartnerLive==='function'){
+            await api.renderPartnerLive();
+          }
+        }catch(e){
+          var profile=document.getElementById('partnerProfileCard');
+          var req=document.getElementById('partnerRequests');
+          if(profile) profile.innerHTML='<b>Live partner dashboard could not load.</b><p>'+String(e&&e.message||e)+'</p>';
+          if(req) req.innerHTML='';
+          console.error('BAP live partner dashboard:',e);
+        }
+      }
+
       window.partnerApply=async function(){
         try{
-          var s=await window.BAP_live.session();
+          var api=await liveApi();
+          var s=await api.session();
           if(!s){showLogin();return;}
-          var c=await window.BAP_live.client();
+          var c=await api.client();
           var roleRow=await c.from('user_profiles').select('role').eq('id',s.user.id).maybeSingle();
           if(roleRow.error)throw roleRow.error;
           if(roleRow.data?.role!=='partner'&&roleRow.data?.role!=='admin'){
@@ -97,6 +142,7 @@
           }
           alert('Partner application submitted successfully. Our team will review your profile and contact you for verification.');
           if(typeof window.go==='function')window.go('partnerDashboard');
+          setTimeout(renderOnlyLivePartnerDashboard,50);
         }catch(e){alert(e?.message||String(e));}
       };
 
