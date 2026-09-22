@@ -7627,6 +7627,42 @@ initGooglePlaces();
 })();
 </script>
 </body>
+<script>
+(function(){
+  function partnerAuth(mode){
+    if(typeof window.openLivePartnerAuth==='function'){window.openLivePartnerAuth(mode);return;}
+    var m=document.getElementById('bapRecruitAuth');
+    if(!m){
+      m=document.createElement('div');m.id='bapRecruitAuth';m.style='position:fixed;inset:0;background:#0009;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px';
+      m.innerHTML='<div style="background:#fff;width:min(440px,100%);border-radius:20px;padding:22px"><button onclick="document.getElementById(\'bapRecruitAuth\').remove()" style="float:right;border:0;background:#eee;border-radius:8px;padding:7px 11px;font-size:20px">×</button><h2>Partner Account</h2><p id="bapRAmsg" class="muted">Create your partner account to continue.</p><label>Full Name</label><input id="bapRAname" style="width:100%;height:46px;margin:5px 0 10px;padding:10px"><label>Email</label><input id="bapRAemail" type="email" style="width:100%;height:46px;margin:5px 0 10px;padding:10px"><label>Password</label><input id="bapRApass" type="password" placeholder="Minimum 8 characters" style="width:100%;height:46px;margin:5px 0 14px;padding:10px"><button id="bapRAbtn" class="pink full">Create Partner Account</button><button id="bapRAswitch" style="width:100%;border:0;background:none;margin-top:10px;color:#7029e8;font-weight:800">Already have an account? Login</button></div>';
+      document.body.appendChild(m);
+    }
+    var signup=mode!=='login',name=document.getElementById('bapRAname'),email=document.getElementById('bapRAemail'),pass=document.getElementById('bapRApass'),btn=document.getElementById('bapRAbtn'),msg=document.getElementById('bapRAmsg'),sw=document.getElementById('bapRAswitch');
+    name.style.display=signup?'block':'none';name.previousElementSibling.style.display=signup?'block':'none';btn.textContent=signup?'Create Partner Account':'Login';msg.textContent=signup?'Create your partner account to continue.':'Login with your partner account.';sw.textContent=signup?'Already have an account? Login':'Need an account? Sign up';
+    sw.onclick=function(){partnerAuth(signup?'login':'signup');};
+    btn.onclick=async function(){
+      btn.disabled=true;btn.textContent=signup?'Creating Account...':'Logging in...';msg.textContent='';
+      try{
+        if(!window.supabase){await new Promise(function(ok,no){var x=document.createElement('script');x.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';x.onload=ok;x.onerror=no;document.head.appendChild(x);});}
+        var c=window.supabase.createClient('https://wmawmdwjjbvlqsugthhe.supabase.co','sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}),r;
+        if(signup){
+          var n=name.value.trim(),e=email.value.trim(),p=pass.value;if(!n)throw Error('Full name is required.');if(!/^\\S+@\\S+\\.\\S+$/.test(e))throw Error('Enter a valid email.');if(p.length<8)throw Error('Password must be at least 8 characters.');
+          r=await c.auth.signUp({email:e,password:p,options:{data:{role:'partner',full_name:n}}});if(r.error)throw r.error;if(!r.data.session)throw Error('Email confirmation is enabled. Please verify your email first.');
+          var pr=await c.from('user_profiles').upsert({id:r.data.user.id,full_name:n,city:'Gurgaon NCR',role:'partner'},{onConflict:'id'});if(pr.error)throw pr.error;
+          localStorage.setItem('bap_current_user',JSON.stringify({id:r.data.user.id,email:e,name:n,role:'partner',loggedIn:true}));m.remove();if(typeof window.go==='function')window.go('join');
+        }else{
+          var e2=email.value.trim(),p2=pass.value;if(!/^\\S+@\\S+\\.\\S+$/.test(e2))throw Error('Enter a valid email.');
+          r=await c.auth.signInWithPassword({email:e2,password:p2});if(r.error)throw r.error;var pr2=await c.from('user_profiles').select('role,full_name,phone,city').eq('id',r.data.user.id).maybeSingle();if(pr2.error)throw pr2.error;var role=pr2.data?.role||'customer';if(role!=='partner'&&role!=='admin')throw Error('This email is not a Partner account.');
+          localStorage.setItem('bap_current_user',JSON.stringify({id:r.data.user.id,email:e2,name:pr2.data?.full_name||'',role,loggedIn:true}));m.remove();if(typeof window.go==='function')window.go('partnerDashboard');
+        }
+      }catch(e){msg.textContent=e.message||String(e);msg.style.color='#dc2626';}
+      btn.disabled=false;btn.textContent=signup?'Create Partner Account':'Login';
+    };
+  }
+  window.openPartnerSignup=function(){partnerAuth('signup');};
+  window.openPartnerLogin=function(){partnerAuth('login');};
+})();
+</script>
 </html>
 <script>
 (function(){
