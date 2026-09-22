@@ -14,18 +14,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Place live backend and UI guard last
+      - name: Place live backend and UI guard last with cache-busting
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          for tag in [
-              '<script src="bap-live-backend.js"></script>',
-              '<script src="bap-live-ui-guard.js"></script>'
-          ]:
-              s = s.replace(tag, '')
-          s = s.rstrip() + '\n<script src="bap-live-backend.js"></script>\n<script src="bap-live-ui-guard.js"></script>\n'
+          s = re.sub(r'<script\s+src=["\']bap-live-backend\.js(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
+          s = re.sub(r'<script\s+src=["\']bap-live-ui-guard\.js(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
+          s = s.rstrip() + f'\n<script src="bap-live-backend.js?v={GITHUB_SHA[:12]{'}'}"></script>\n<script src="bap-live-ui-guard.js?v={GITHUB_SHA[:12]{'}'}"></script>\n'
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -35,8 +33,8 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then
-            echo "Live backend and UI guard are already last."
+            echo "Live backend and UI guard are already current."
             exit 0
           fi
-          git commit -m "Force live payment UI over legacy prototype flow"
+          git commit -m "Refresh live adapter cache version"
           git push
