@@ -95,7 +95,72 @@
           if(ready())return window.BAP_live;
           await new Promise(function(resolve){setTimeout(resolve,200);});
         }
-        throw new Error('Live backend loaded but did not initialize. Please hard-refresh the page once.');
+
+        /* Last-resort live adapter for GitHub Pages. If the large backend
+           adapter is blocked by a stale browser/CDN cache or a script error,
+           partner onboarding must still be able to talk directly to the
+           existing Supabase project. This path uses only the publishable key
+           and remains protected by Supabase Auth + RLS. */
+        if(!window.__BAP_DIRECT_LIVE_LOADING){
+          window.__BAP_DIRECT_LIVE_LOADING=true;
+          await new Promise(function(resolve,reject){
+            if(window.supabase?.createClient){resolve();return;}
+            var s=document.createElement('script');
+            s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            s.async=true;
+            s.onload=resolve;
+            s.onerror=function(){reject(new Error('Supabase client could not be loaded. Check the internet connection and reload once.'));};
+            document.head.appendChild(s);
+          });
+        }
+        if(window.supabase?.createClient){
+          var directClient=window.supabase.createClient(
+            'https://wmawmdwjjbvlqsugthhe.supabase.co',
+            'sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI'
+          );
+          async function directSession(){
+            var r=await directClient.auth.getSession();
+            if(r.error||!r.data?.session)return null;
+            var u=await directClient.auth.getUser(r.data.session.access_token);
+            if(u.error||!u.data?.user)return null;
+            return r.data.session;
+          }
+          function directEsc(v){
+            return String(v??'').replace(/[&<>"]/g,function(x){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[x];});
+          }
+          async function directRenderPartner(){
+            var profile=document.getElementById('partnerProfileCard');
+            var req=document.getElementById('partnerRequests');
+            var s=await directSession();
+            if(!s){
+              if(profile)profile.innerHTML='<b>Partner login required.</b><p>Please sign in with your Partner account.</p>';
+              if(req)req.innerHTML='';
+              return;
+            }
+            var p=await directClient.from('partners').select('*').eq('user_id',s.user.id).maybeSingle();
+            if(p.error)throw p.error;
+            if(!p.data){
+              var a=await directClient.from('partner_applications').select('verification_status,full_name,services,hourly_rate,created_at').eq('user_id',s.user.id).order('created_at',{ascending:false}).limit(1).maybeSingle();
+              if(a.error)throw a.error;
+              if(a.data){
+                if(profile)profile.innerHTML='<b>'+directEsc(a.data.full_name)+'</b><p>Application status: <strong>'+directEsc(a.data.verification_status)+'</strong></p><p>₹'+directEsc(a.data.hourly_rate)+'/hour</p>';
+              }else if(profile){
+                profile.innerHTML='<b>Partner onboarding not submitted.</b><p>Complete the Partner Application to enter live verification.</p>';
+              }
+              if(req)req.innerHTML='';
+              return;
+            }
+            if(profile)profile.innerHTML='<b>'+directEsc(p.data.full_name)+'</b> <span class="pill verified">✓ '+directEsc(p.data.verification_status)+'</span><p>'+directEsc(p.data.area||p.data.city||'')+' • ₹'+directEsc(p.data.hourly_rate)+'/hour</p>';
+            if(req)req.innerHTML='<p class="muted">Live partner dashboard connected. Booking requests will appear here.</p>';
+          }
+          window.BAP_live={
+            client:function(){return Promise.resolve(directClient);},
+            session:directSession,
+            renderPartnerLive:directRenderPartner
+          };
+          return window.BAP_live;
+        }
+        throw new Error('Supabase client could not be initialized.');
       }
 
       async function renderOnlyLivePartnerDashboard(){
