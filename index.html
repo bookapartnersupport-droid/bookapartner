@@ -1626,6 +1626,165 @@ input,select,textarea{
 </style> 
   <script src="bap-categories.js"></script> 
   <script src="bap-multipartner.js"></script>
+<script>
+(function(){
+  if(window.bapOpenPartnerAuth) return;
+
+  var SUPABASE_URL='https://wmawmdwjjbvlqsugthhe.supabase.co';
+  var SUPABASE_KEY='sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI';
+
+  function loadSupabase(){
+    if(window.supabase && window.supabase.createClient) return Promise.resolve();
+    return new Promise(function(resolve,reject){
+      var existing=document.querySelector('script[data-bap-supabase]');
+      if(existing){
+        existing.addEventListener('load',resolve,{once:true});
+        existing.addEventListener('error',reject,{once:true});
+        return;
+      }
+      var sc=document.createElement('script');
+      sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+      sc.async=true;
+      sc.setAttribute('data-bap-supabase','1');
+      sc.onload=resolve;
+      sc.onerror=function(){reject(new Error('Could not load secure signup service. Please check your internet connection.'));};
+      document.head.appendChild(sc);
+    });
+  }
+
+  function close(){
+    var x=document.getElementById('bapPartnerAuthModal');
+    if(x) x.remove();
+  }
+
+  function setMsg(text,error){
+    var m=document.getElementById('bapPartnerAuthMsg');
+    if(m){
+      m.textContent=text||'';
+      m.style.color=error?'#dc2626':'#475569';
+    }
+  }
+
+  async function submit(mode){
+    var btn=document.getElementById('bapPartnerAuthSubmit');
+    var name=document.getElementById('bapPartnerAuthName');
+    var email=document.getElementById('bapPartnerAuthEmail');
+    var pass=document.getElementById('bapPartnerAuthPassword');
+
+    if(!btn) return;
+    btn.disabled=true;
+    btn.textContent=mode==='signup'?'Creating account...':'Signing in...';
+    setMsg('Connecting securely...',false);
+
+    try{
+      await loadSupabase();
+      var client=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+        auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+      });
+
+      var e=(email.value||'').trim().toLowerCase();
+      var p=pass.value||'';
+
+      if(!/^\S+@\S+\.\S+$/.test(e)) throw new Error('Please enter a valid Gmail/email address.');
+      if(p.length<8) throw new Error('Password must be at least 8 characters.');
+
+      if(mode==='signup'){
+        var n=(name.value||'').trim();
+        if(!n) throw new Error('Please enter your full name.');
+
+        var r=await client.auth.signUp({
+          email:e,
+          password:p,
+          options:{data:{role:'partner',full_name:n}}
+        });
+        if(r.error) throw r.error;
+
+        if(!r.data || !r.data.user) throw new Error('Account could not be created. Please try again.');
+        if(!r.data.session) throw new Error('Email confirmation is enabled. Please verify your email, then login.');
+
+        var profile=await client.from('user_profiles').upsert({
+          id:r.data.user.id,
+          full_name:n,
+          city:'Gurgaon NCR',
+          role:'partner'
+        },{onConflict:'id'});
+        if(profile.error) throw profile.error;
+
+        localStorage.setItem('bap_current_user',JSON.stringify({
+          id:r.data.user.id,email:e,name:n,role:'partner',loggedIn:true
+        }));
+
+        close();
+        if(typeof window.go==='function') window.go('join');
+        else location.href=location.pathname+'?partner=1';
+        return;
+      }
+
+      var login=await client.auth.signInWithPassword({email:e,password:p});
+      if(login.error) throw login.error;
+
+      var prof=await client.from('user_profiles')
+        .select('role,full_name,phone,city')
+        .eq('id',login.data.user.id)
+        .maybeSingle();
+      if(prof.error) throw prof.error;
+
+      var role=(prof.data && prof.data.role)||'customer';
+      if(role!=='partner' && role!=='admin'){
+        await client.auth.signOut();
+        throw new Error('This email is not registered as a Partner account.');
+      }
+
+      localStorage.setItem('bap_current_user',JSON.stringify({
+        id:login.data.user.id,
+        email:e,
+        name:(prof.data&&prof.data.full_name)||'',
+        role:role,
+        loggedIn:true
+      }));
+
+      close();
+      if(typeof window.go==='function') window.go('partnerDashboard');
+    }catch(err){
+      setMsg(err && err.message ? err.message : 'Signup/login failed. Please try again.',true);
+      btn.disabled=false;
+      btn.textContent=mode==='signup'?'Create Partner Account':'Login';
+    }
+  }
+
+  window.bapOpenPartnerAuth=function(mode){
+    mode=mode==='login'?'login':'signup';
+    var old=document.getElementById('bapPartnerAuthModal');
+    if(old) old.remove();
+
+    var modal=document.createElement('div');
+    modal.id='bapPartnerAuthModal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.72);z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto;';
+    modal.innerHTML=
+      '<div style="width:min(460px,100%);background:#fff;border-radius:22px;padding:24px;box-shadow:0 25px 70px rgba(0,0,0,.35);position:relative;">'+
+      '<button type="button" id="bapPartnerAuthClose" style="position:absolute;right:14px;top:12px;border:0;background:#f1f5f9;border-radius:10px;width:38px;height:38px;font-size:24px;cursor:pointer;">×</button>'+
+      '<div style="font-size:34px;margin-bottom:5px;">🤝</div>'+
+      '<h2 style="margin:0 0 6px;color:#201642;">'+(mode==='signup'?'Create Partner Account':'Partner Login')+'</h2>'+
+      '<p id="bapPartnerAuthMsg" style="margin:0 0 16px;color:#475569;font-size:13px;line-height:1.5;">'+(mode==='signup'?'Create your account first. Then you can submit your partner application.':'Login with your Partner account.')+'</p>'+
+      (mode==='signup'?'<label style="display:block;font-weight:800;font-size:12px;margin-top:10px;">Full Name</label><input id="bapPartnerAuthName" autocomplete="name" style="width:100%;height:48px;margin-top:5px;padding:0 13px;border:1px solid #cbd5e1;border-radius:11px;font-size:15px;">':'')+
+      '<label style="display:block;font-weight:800;font-size:12px;margin-top:10px;">Email</label>'+
+      '<input id="bapPartnerAuthEmail" type="email" autocomplete="email" inputmode="email" style="width:100%;height:48px;margin-top:5px;padding:0 13px;border:1px solid #cbd5e1;border-radius:11px;font-size:15px;">'+
+      '<label style="display:block;font-weight:800;font-size:12px;margin-top:10px;">Password</label>'+
+      '<input id="bapPartnerAuthPassword" type="password" autocomplete="'+(mode==='signup'?'new-password':'current-password')+'" placeholder="Minimum 8 characters" style="width:100%;height:48px;margin-top:5px;padding:0 13px;border:1px solid #cbd5e1;border-radius:11px;font-size:15px;">'+
+      '<button type="button" id="bapPartnerAuthSubmit" style="width:100%;margin-top:16px;height:50px;border:0;border-radius:12px;background:linear-gradient(135deg,#7029e8,#5220b3);color:#fff;font-size:15px;font-weight:900;cursor:pointer;">'+(mode==='signup'?'Create Partner Account':'Login')+'</button>'+
+      '<button type="button" id="bapPartnerAuthSwitch" style="width:100%;margin-top:10px;border:0;background:transparent;color:#7029e8;font-weight:800;cursor:pointer;">'+(mode==='signup'?'Already have an account? Login':'Need a Partner account? Sign up')+'</button>'+
+      '</div>';
+
+    document.body.appendChild(modal);
+    document.getElementById('bapPartnerAuthClose').onclick=close;
+    document.getElementById('bapPartnerAuthSubmit').onclick=function(){submit(mode);};
+    document.getElementById('bapPartnerAuthSwitch').onclick=function(){window.bapOpenPartnerAuth(mode==='signup'?'login':'signup');};
+    modal.addEventListener('click',function(e){if(e.target===modal) close();});
+    var first=document.getElementById(mode==='signup'?'bapPartnerAuthName':'bapPartnerAuthEmail');
+    if(first) setTimeout(function(){first.focus();},50);
+  };
+})();
+</script>
 </head>
 
 <body>
@@ -3383,10 +3542,10 @@ input,select,textarea{
       <p style="font-size:16px;line-height:1.6;margin:0 auto 20px;max-width:600px">
         Book A Partner ke saath partner ke roop mein join karein. <b>₹0 joining fee</b> aur initial launch period mein <b>₹0 partner processing fee</b>.
       </p>
-      <button class="pink" style="width:100%;max-width:420px;font-size:17px;padding:15px" onclick="openPartnerSignup()">
+      <button class="pink" style="width:100%;max-width:420px;font-size:17px;padding:15px" onclick="bapOpenPartnerAuth('signup')">
         🚀 SIGN UP & JOIN
       </button>
-      <button style="display:block;width:100%;max-width:420px;margin:10px auto 0;background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;padding:12px;border-radius:12px;font-weight:800" onclick="openPartnerLogin()">
+      <button style="display:block;width:100%;max-width:420px;margin:10px auto 0;background:transparent;border:1px solid rgba(255,255,255,.5);color:#fff;padding:12px;border-radius:12px;font-weight:800" onclick="bapOpenPartnerAuth('login')">
         Already registered? Login
       </button>
     </div>
