@@ -32,7 +32,9 @@
             return;
           }
           if(id==='partnerDashboard'){
-            oldGo.apply(this,arguments);
+            document.querySelectorAll('.screen').forEach(function(x){x.classList.remove('active');});
+            var dash=document.getElementById('partnerDashboard');
+            if(dash)dash.classList.add('active');
             setTimeout(renderOnlyLivePartnerDashboard,0);
             setTimeout(renderOnlyLivePartnerDashboard,250);
             setTimeout(renderOnlyLivePartnerDashboard,1000);
