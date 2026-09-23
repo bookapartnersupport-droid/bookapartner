@@ -185,58 +185,48 @@
 
       window.partnerApply=async function(){
         try{
-          var api=await liveApi();
-          var s=await api.session();
-          if(!s){showLogin();return;}
-          var c=await api.client();
-          var roleRow=await c.from('user_profiles').select('role').eq('id',s.user.id).maybeSingle();
-          if(roleRow.error)throw roleRow.error;
-          if(roleRow.data?.role!=='partner'&&roleRow.data?.role!=='admin'){
-            throw new Error('Create/login with a Partner account first.');
-          }
-
           function val(id){return document.getElementById(id)?.value?.trim()||'';}
           var name=val('partnerName'), age=Number(document.getElementById('partnerAge')?.value||0);
           var mobile=val('partnerMobile'), area=val('partnerArea');
           var service=val('partnerService'), rate=Number(document.getElementById('partnerRate')?.value||0);
-          var availability=val('partnerAvailability');
-          var gender=val('partnerGender');
+          var availability=val('partnerAvailability')||'Available', gender=val('partnerGender');
           var photo=document.getElementById('partnerPhoto')?.files?.[0];
           var selfie=document.getElementById('partnerSelfie')?.files?.[0];
-          var terms=document.getElementById('partnerTerms')?.checked;
-          var safety=document.getElementById('partnerSafety')?.checked;
+          var terms=!!document.getElementById('partnerTerms')?.checked;
+          var safety=!!document.getElementById('partnerSafety')?.checked;
 
-          if(!name||age<18||!/^[0-9]{10}$/.test(mobile)||!area||!gender||!service||!Number.isFinite(rate)||rate<=0||!photo||!selfie||!terms||!safety){
+          if(!name||age<18||age>80||!/^[6-9]\\d{9}$/.test(mobile)||!area||!gender||!service||!Number.isFinite(rate)||rate<=0||!photo||!selfie||!terms||!safety){
             throw new Error('Please complete all partner details, upload profile photo + selfie, and accept both agreements.');
           }
           if(photo.size>5*1024*1024||selfie.size>5*1024*1024)throw new Error('Each image must be 5 MB or smaller.');
+          var fd=new FormData();
+          fd.append('full_name',name); fd.append('age',String(Math.round(age))); fd.append('mobile',mobile);
+          fd.append('area',area); fd.append('gender',gender); fd.append('service',service);
+          fd.append('hourly_rate',String(rate)); fd.append('availability',availability);
+          fd.append('terms','true'); fd.append('safety','true');
+          fd.append('profile_photo',photo); fd.append('selfie',selfie);
 
-          var stamp=Date.now(),base=s.user.id+'/'+stamp;
-          var photoPath=base+'-profile.'+(photo.name.split('.').pop()||'jpg').toLowerCase();
-          var selfiePath=base+'-selfie.'+(selfie.name.split('.').pop()||'jpg').toLowerCase();
-
-          var safePhotoType=['image/jpeg','image/png','image/webp'].indexOf(photo.type)>=0?photo.type:''; if(!safePhotoType)throw new Error('Profile photo must be JPG, PNG or WEBP. Please choose a JPG/PNG photo from your phone.'); var up1=await c.storage.from('partner-photos').upload(photoPath,photo,{upsert:false,contentType:safePhotoType});
-          if(up1.error)throw new Error('Profile photo upload failed: '+(up1.error.message||String(up1.error)));
-          var safeSelfieType=['image/jpeg','image/png','image/webp'].indexOf(selfie.type)>=0?selfie.type:''; if(!safeSelfieType){await c.storage.from('partner-photos').remove([photoPath]);throw new Error('Selfie must be JPG, PNG or WEBP. Please choose a JPG/PNG selfie from your phone.');} var up2=await c.storage.from('partner-selfies').upload(selfiePath,selfie,{upsert:false,contentType:safeSelfieType});
-          if(up2.error){await c.storage.from('partner-photos').remove([photoPath]);throw new Error('Selfie upload failed: '+(up2.error.message||String(up2.error)));}
-
-          var existing=await c.from('partner_applications').select('id,verification_status').eq('user_id',s.user.id).in('verification_status',['pending','under_review']).limit(1).maybeSingle();
-          if(existing.error)throw existing.error;
-          if(existing.data){alert('Your live partner application is already under review.');if(typeof window.go==='function')window.go('partnerDashboard');setTimeout(renderOnlyLivePartnerDashboard,50);return;}
-          var ins=await c.rpc('bap_submit_partner_application',{
-            p_full_name:name,p_age:Math.round(age),p_gender:gender,p_mobile:mobile,p_city:'Gurgaon NCR',p_area:area,
-            p_services:[service],p_hourly_rate:rate,p_availability:availability,p_profile_photo_path:photoPath,
-            p_selfie_path:selfiePath,p_terms_accepted:true,p_safety_accepted:true
+          var btn=document.querySelector('#join button[onclick="partnerApply()"]');
+          if(btn){btn.disabled=true;btn.textContent='Submitting Application…';}
+          var res=await fetch('https://wmawmdwjjbvlqsugthhe.supabase.co/functions/v1/partner-public-apply',{
+            method:'POST',
+            headers:{apikey:'sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI'},
+            body:fd
           });
-          if(ins.error){
-            await c.storage.from('partner-photos').remove([photoPath]);
-            await c.storage.from('partner-selfies').remove([selfiePath]);
-            throw new Error('Could not save application: '+(ins.error.message||String(ins.error)));
-          }
+          var data=await res.json().catch(function(){return{};});
+          if(!res.ok||!data.ok)throw new Error(data.error||'Could not submit partner application.');
+          localStorage.setItem('bap_partner_application_id',data.application_id||'');
+          localStorage.setItem('bap_partner_application_status','pending');
           alert('Partner application submitted successfully. Our team will review your profile and contact you for verification.');
-          if(typeof window.go==='function')window.go('partnerDashboard');
-          setTimeout(renderOnlyLivePartnerDashboard,50);
-        }catch(e){alert(e?.message||String(e));}
+          var form=document.querySelector('#join .form');
+          if(form)form.reset();
+        }catch(e){
+          console.error('BAP partner application:',e);
+          alert(e?.message||String(e));
+        }finally{
+          var btn=document.querySelector('#join button[onclick="partnerApply()"]');
+          if(btn){btn.disabled=false;btn.textContent='🚀 Submit Partner Application — ₹0 Fee';}
+        }
       };
 
       function ensurePartnerLaunchFields(){
