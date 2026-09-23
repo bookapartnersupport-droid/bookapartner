@@ -58,7 +58,7 @@ ensureDuration();
 var d=Number(document.getElementById('bapDuration')?.value||1),pr=price(p.hourly_rate,d),loc=document.getElementById('location')?.value?.trim()||'';
 liveSelected={partner:p,service:document.getElementById('service').value,date:document.getElementById('date').value,time:document.getElementById('time').value,location:loc,area:document.getElementById('area').value||p.area||'Gurgaon NCR',duration:d,price:pr};
 var sum=document.getElementById('bookingSummary');
-if(sum)sum.innerHTML='<div class="summary"><b>'+esc(p.full_name)+'</b> <span class="pill verified">✓ VERIFIED</span><p>'+esc(liveSelected.service)+'</p><p>📅 '+esc(liveSelected.date||'Select date')+' • 🕐 '+esc(liveSelected.time||'Select time')+'</p><p>📍 '+esc(liveSelected.location)+'</p><p>Duration: '+d+' hour(s)</p><p><strong>₹'+pr.total+'</strong> <span class="muted">('+pr.discountPercent+'% duration discount)</span></p><p class="muted">Secure payment is required before the partner can accept the booking. Payment is held according to the platform booking policy.</p></div>';
+if(sum)sum.innerHTML='<div class="summary"><b>'+esc(p.full_name)+'</b> <span class="pill verified">✓ VERIFIED</span><p>⭐ '+esc(Number(p.rating||0).toFixed(1))+' / 5 ('+esc(p.review_count||0)+' reviews)</p><p>'+esc(liveSelected.service)+'</p><p>📅 '+esc(liveSelected.date||'Select date')+' • 🕐 '+esc(liveSelected.time||'Select time')+'</p><p>📍 '+esc(liveSelected.location)+'</p><p>Duration: '+d+' hour(s)</p><p><strong>₹'+pr.total+'</strong> <span class="muted">('+pr.discountPercent+'% duration discount)</span></p><p class="muted">Secure payment is required before the partner can accept the booking. Payment is held according to the platform booking policy.</p></div>';
 if(typeof window.go==='function')window.go('details');
 }catch(e){alert(e.message||String(e));}}
   async function createBookingLive(){
@@ -78,7 +78,7 @@ if(!liveSelected){
   var d=Number(document.getElementById('bapDuration')?.value||1),rate=storedRate;
   if(!rate){var rateText=(document.querySelector('#bookingSummary .summary strong')||document.querySelector('#bookingSummary strong'))?.textContent||'';rate=Number((rateText.match(/[0-9]+(?:\\.[0-9]+)?/)||['0'])[0]);}
   if(!rate)throw new Error('Partner rate is missing. Please go back and select the partner again.');
-  var p={id:storedPartnerId,full_name:partnerName,hourly_rate:rate,area:document.getElementById('area')?.value||'Gurgaon NCR'};
+  var p={id:storedPartnerId,full_name:partnerName,hourly_rate:rate,rating:Number(localStorage.getItem('bap_selected_partner_rating')||0),review_count:Number(localStorage.getItem('bap_selected_partner_reviews')||0),area:document.getElementById('area')?.value||'Gurgaon NCR'};
   var pr=price(rate,d);
   liveSelected={partner:p,service,date,time,location,area:document.getElementById('area')?.value||p.area||'Gurgaon NCR',duration:d,price:pr};
 }
