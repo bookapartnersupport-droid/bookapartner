@@ -274,6 +274,13 @@
   document.addEventListener('click',function(e){
     var el=e.target&&e.target.closest?e.target.closest('button'):null;
     if(!el)return;
+    var label=(el.textContent||'').trim();
+    if(label==='Start Earning' || label.indexOf('🤝 Start Earning')===0){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if(typeof window.go==='function') window.go('join');
+      return;
+    }
     var t=(el.textContent||'').trim();
     if(t==='Confirm & Pay'||t==='Continue to Payment'||t==='Pay & Confirm Booking') livePay(e);
   },true);
