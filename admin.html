@@ -48,5 +48,10 @@ function renderRaw(){const names=['applications','partners','customers','booking
 async function refreshAndRender(){try{await refreshAll();render();msg('Data refreshed.','success')}catch(e){msg(e.message||'Refresh failed')}}
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{currentTab=b.dataset.tab;render()}));
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();loginMsg('');const btn=e.submitter;if(btn)btn.disabled=true;try{const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error)throw error;if(!data?.session)throw new Error('Login succeeded but no active session was returned.');await start(data.session)}catch(err){loginMsg(err.message||'Admin login failed.')}finally{if(btn)btn.disabled=false}});
-$('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'||event==='INITIAL_SESSION')start(session)});start();
+$('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
+// IMPORTANT: Supabase documents a deadlock risk when async Supabase calls are made directly inside onAuthStateChange.
+// Keep the auth callback synchronous and defer application work to the next event-loop turn.
+db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'||event==='INITIAL_SESSION'){setTimeout(()=>start(session),0)}});
+// Initial session check runs outside the auth-state callback.
+db.auth.getSession().then(({data})=>start(data?.session||null)).catch(e=>loginMsg(e.message||'Unable to initialize Admin login.'));
 </script></body></html>
