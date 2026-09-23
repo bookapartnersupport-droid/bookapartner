@@ -27,7 +27,8 @@ jobs:
               p = Path(filename)
               s = p.read_text(encoding='utf-8')
               for name in ['bap-live-backend.js','bap-live-ui-guard.js','bap-force-search.js','bap-razorpay-methods.js']:
-                  s = re.sub(r'<script\s+src=["\\']' + re.escape(name) + r'(?:\?[^"\\']*)?["\\']\s*></script>', '', s, flags=re.I)
+                  pattern = r"<script\s+src=[\"']" + re.escape(name) + r"(?:\?[^\"']*)?[\"']\s*></script>"
+                  s = re.sub(pattern, '', s, flags=re.I)
               s = s.rstrip() + f'\n<script src="bap-live-backend.js?v={version}"></script>\n<script src="bap-live-ui-guard.js?v={version}"></script>\n<script src="bap-force-search.js?v={version}"></script>\n<script src="bap-razorpay-methods.js?v={version}"></script>\n'
               p.write_text(s, encoding='utf-8')
           PY
@@ -41,5 +42,5 @@ jobs:
             echo "Live scripts are already current."
             exit 0
           fi
-          git commit -m "Load Razorpay UPI method override last"
+          git commit -m "Load Razorpay UPI override last"
           git push
