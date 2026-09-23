@@ -22,20 +22,21 @@ jobs:
           from pathlib import Path
           import os
           import re
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-          for name in ['bap-live-backend.js','bap-live-ui-guard.js','bap-force-search.js']:
-              s = re.sub(r'<script\s+src=["\']' + re.escape(name) + r'(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
           version = os.environ['GITHUB_SHA'][:12]
-          s = s.rstrip() + f'\n<script src="bap-live-backend.js?v={version}"></script>\n<script src="bap-live-ui-guard.js?v={version}"></script>\n<script src="bap-force-search.js?v={version}"></script>\n'
-          p.write_text(s, encoding='utf-8')
+          for filename in ['index.html','fresh.html']:
+              p = Path(filename)
+              s = p.read_text(encoding='utf-8')
+              for name in ['bap-live-backend.js','bap-live-ui-guard.js','bap-force-search.js']:
+                  s = re.sub(r'<script\s+src=["\']' + re.escape(name) + r'(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
+              s = s.rstrip() + f'\n<script src="bap-live-backend.js?v={version}"></script>\n<script src="bap-live-ui-guard.js?v={version}"></script>\n<script src="bap-force-search.js?v={version}"></script>\n'
+              p.write_text(s, encoding='utf-8')
           PY
 
       - name: Commit injection
         run: |
           git config user.name "book-a-partner-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add index.html
+          git add index.html fresh.html
           if git diff --cached --quiet; then
             echo "Live backend, UI guard, and search override are already current."
             exit 0
