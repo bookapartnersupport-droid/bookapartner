@@ -3323,7 +3323,7 @@ input,select,textarea{
 
       <button
         class="pink full"
-        onclick="findPartners()"
+        onclick="bapFinalFind()"
       >
         Find Available Partners
       </button>
@@ -7616,7 +7616,32 @@ initGooglePlaces();
   }catch(e){}
 })();
 </script>
-</body>
+<script>
+(function(){
+window.bapFinalFind=async function(){
+var out=document.getElementById('results');
+if(out)out.innerHTML='<div class="card"><b>Searching live partners…</b></div>';
+try{
+var service=(document.getElementById('service')||{}).value||'';
+var age=(document.getElementById('age')||{}).value||'';
+var gender=(document.getElementById('customerGenderPreference')||{}).value||'';
+var minAge=null,maxAge=null;
+if(age==='21–25'){minAge=21;maxAge=25;}else if(age==='26–30'){minAge=26;maxAge=30;}else if(age==='31–35'){minAge=31;maxAge=35;}else if(age==='36–45'){minAge=36;maxAge=45;}else if(age==='46+'){minAge=46;}
+if(!service)throw Error('Service is not selected.');
+if(!window.supabase||!window.supabase.createClient)throw Error('Supabase library is not loaded.');
+var c=window.supabase.createClient('https://wmawmdwjjbvlqsugthhe.supabase.co','sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+var sess=await c.auth.getSession();
+if(!sess.data||!sess.data.session)throw Error('Customer session is missing. Please login again.');
+var r=await c.rpc('bap_search_available_partners',{p_service:service,p_gender:gender||null,p_min_age:minAge,p_max_age:maxAge});
+if(r.error)throw Error((r.error.message||'RPC failed')+' [code '+(r.error.code||'unknown')+']');
+var rows=r.data||[];
+if(!out)return;
+if(!rows.length){out.innerHTML='<div class="card">Live search completed: no approved partner matched these filters.</div>';return;}
+out.innerHTML=rows.map(function(p){return '<div class="card" style="margin-bottom:14px"><h3>'+String(p.full_name||'Partner').replace(/[&<>]/g,'')+' <span class="pill verified">✓ VERIFIED</span></h3><p>'+String((p.services||[]).join(', '))+'</p><p>Age: '+(p.age??'—')+' • '+String(p.gender||'—')+'</p><p>📍 '+String(p.area||p.city||'Gurgaon NCR')+'</p><p><strong>₹'+String(p.hourly_rate??'—')+'/hour</strong></p></div>';}).join('');
+}catch(e){console.error('BAP FINAL SEARCH ERROR',e);if(out)out.innerHTML='<div class="card" style="border:2px solid #dc2626"><b>Live search error:</b><br>'+String(e.message||e).replace(/[&<>]/g,'')+'</div>';}
+};
+})();
+</script></body>
 <script>
 (function(){
   function partnerAuth(mode){
