@@ -40,6 +40,10 @@
             setTimeout(renderOnlyLivePartnerDashboard,1000);
             return;
           }
+          if(id==='admin'){
+            window.location.href='admin.html';
+            return;
+          }
           return oldGo.apply(this,arguments);
         };
         wrappedGo.__bapAuthGuard=true;
@@ -49,7 +53,7 @@
 
       /* Never expose legacy localStorage/demo partner data in Partner Account.
          The live Supabase dashboard is the only partner-side source of truth. */
-      try{localStorage.removeItem('bap_partner_profile');localStorage.removeItem('bap_partner_profiles');}catch(e){}
+      try{localStorage.removeItem('bap_bookings');localStorage.removeItem('bap_partner_profile');localStorage.removeItem('bap_partner_profiles');}catch(e){}
       var legacyProfile=document.getElementById('partnerProfileCard');
       var legacyRequests=document.getElementById('partnerRequests');
       if(legacyProfile && !legacyProfile.dataset.bapLiveDashboardReady){
