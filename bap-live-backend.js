@@ -72,11 +72,15 @@ if(!liveSelected){
   var nameEl=document.querySelector('#bookingSummary .summary b')||document.querySelector('#bookingSummary b');
   var partnerName=nameEl?.textContent?.trim()||'';
   if(!service||!date||!time||!location||!partnerName)throw new Error('Please select the partner, date, time and meeting location again.');
-  var c=await client(),lr=await c.from('partners').select('id,user_id,full_name,age,gender,city,area,services,hourly_rate,availability,rating,review_count,verification_status,active').eq('active',true).eq('verification_status','approved').ilike('full_name',partnerName).limit(1).maybeSingle();
-  if(lr.error)throw lr.error;
-  if(!lr.data)throw new Error('This partner is not available in the live system. Please go back and select a live verified partner.');
-  var d=Number(document.getElementById('bapDuration')?.value||1),pr=price(lr.data.hourly_rate,d);
-  liveSelected={partner:lr.data,service,date,time,location,area:document.getElementById('area')?.value||lr.data.area||'Gurgaon NCR',duration:d,price:pr};
+  var storedPartnerId=localStorage.getItem('bap_selected_partner_id')||'';
+  var storedRate=Number(localStorage.getItem('bap_selected_partner_rate')||0);
+  if(!storedPartnerId)throw new Error('Partner selection expired. Please go back and select the partner again.');
+  var d=Number(document.getElementById('bapDuration')?.value||1),rate=storedRate;
+  if(!rate){var rateText=(document.querySelector('#bookingSummary .summary strong')||document.querySelector('#bookingSummary strong'))?.textContent||'';rate=Number((rateText.match(/[0-9]+(?:\\.[0-9]+)?/)||['0'])[0]);}
+  if(!rate)throw new Error('Partner rate is missing. Please go back and select the partner again.');
+  var p={id:storedPartnerId,full_name:partnerName,hourly_rate:rate,area:document.getElementById('area')?.value||'Gurgaon NCR'};
+  var pr=price(rate,d);
+  liveSelected={partner:p,service,date,time,location,area:document.getElementById('area')?.value||p.area||'Gurgaon NCR',duration:d,price:pr};
 }
 if(!liveSelected.date||!liveSelected.time||!liveSelected.location){alert('Please select date, time and meeting location.');return;}
 var res=await fetch(EDGE_CREATE,{method:'POST',headers:{Authorization:'Bearer '+s.access_token,apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({partner_id:liveSelected.partner.id,service:liveSelected.service,city:'Gurgaon NCR',area:liveSelected.area,meeting_location:liveSelected.location,booking_date:liveSelected.date,booking_time:liveSelected.time,duration_hours:liveSelected.duration,partner_rate:Number(liveSelected.partner.hourly_rate),transport_charge:0,idempotency_key:'book_'+s.user.id+'_'+crypto.randomUUID()})});
