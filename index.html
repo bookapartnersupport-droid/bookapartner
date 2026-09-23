@@ -7653,6 +7653,33 @@ initGooglePlaces();
   window.openPartnerLogin=function(){partnerAuth('login');};
 })();
 </script>
+
+<script>
+(function(){
+  async function directFindPartners(){
+    const results=document.getElementById('results');
+    if(results) results.innerHTML='<div class="card">Searching live partners…</div>';
+    try{
+      const svc=document.getElementById('service')?.value||'';
+      const age=document.getElementById('age')?.value||'';
+      const gender=document.getElementById('customerGenderPreference')?.value||'';
+      const minAge=age==='21–25'?21:age==='26–30'?26:age==='31–35'?31:age==='36–45'?36:age==='46+'?46:null;
+      const maxAge=age==='21–25'?25:age==='26–30'?30:age==='31–35'?35:age==='36–45'?45:null;
+      if(!svc){if(results)results.innerHTML='<div class="card">Please select a service.</div>';return;}
+      if(!window.supabase?.createClient)throw new Error('Supabase client is not loaded.');
+      const c=window.supabase.createClient('https://wmawmdwjjbvlqsugthhe.supabase.co','sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+      const ss=await c.auth.getSession();
+      if(!ss.data?.session)throw new Error('Please login first.');
+      const r=await c.rpc('bap_search_available_partners',{p_service:svc,p_gender:gender||null,p_min_age:minAge,p_max_age:maxAge});
+      if(r.error)throw r.error;
+      const rows=r.data||[];
+      if(!results)return;
+      results.innerHTML=rows.length?rows.map(p=>'<div class="card" style="margin-bottom:12px"><h3 style="margin:0 0 6px">'+String(p.full_name||'Partner').replace(/[&<>]/g,'')+' <span class="pill verified">✓ VERIFIED</span></h3><div>'+String(p.services?.join(', ')||svc)+'</div><div>Age: '+(p.age??'—')+' • '+(p.gender||'—')+'</div><div>📍 '+(p.area||p.city||'Gurgaon NCR')+'</div><div style="margin-top:8px;font-weight:800">₹'+(p.hourly_rate??'—')+'/hour</div></div>').join(''):'<div class="card">No approved partners match these filters right now.</div>';
+    }catch(e){console.error('Direct live partner search failed:',e);if(results)results.innerHTML='<div class="card">Search failed: '+String(e.message||e).replace(/[&<>]/g,'')+'</div>';}
+  }
+  window.findPartners=directFindPartners;
+})();
+</script>
 </html>
 <script src="bap-live-backend.js?v=821abbd5113b"></script>
 <script src="bap-live-ui-guard.js?v=821abbd5113b"></script>
