@@ -14,7 +14,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Place live backend and UI guard last with cache-busting
+      - name: Place live backend, UI guard, and final search override last
         env:
           GITHUB_SHA: ${{ github.sha }}
         run: |
@@ -24,10 +24,10 @@ jobs:
           import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          s = re.sub(r'<script\s+src=["\']bap-live-backend\.js(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
-          s = re.sub(r'<script\s+src=["\']bap-live-ui-guard\.js(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
+          for name in ['bap-live-backend.js','bap-live-ui-guard.js','bap-force-search.js']:
+              s = re.sub(r'<script\s+src=["\']' + re.escape(name) + r'(?:\?[^"\']*)?["\']\s*></script>', '', s, flags=re.I)
           version = os.environ['GITHUB_SHA'][:12]
-          s = s.rstrip() + f'\n<script src="bap-live-backend.js?v={version}"></script>\n<script src="bap-live-ui-guard.js?v={version}"></script>\n'
+          s = s.rstrip() + f'\n<script src="bap-live-backend.js?v={version}"></script>\n<script src="bap-live-ui-guard.js?v={version}"></script>\n<script src="bap-force-search.js?v={version}"></script>\n'
           p.write_text(s, encoding='utf-8')
           PY
 
@@ -37,8 +37,8 @@ jobs:
           git config user.email "actions@users.noreply.github.com"
           git add index.html
           if git diff --cached --quiet; then
-            echo "Live backend and UI guard are already current."
+            echo "Live backend, UI guard, and search override are already current."
             exit 0
           fi
-          git commit -m "Refresh live adapter cache version"
+          git commit -m "Keep final partner search override last"
           git push
