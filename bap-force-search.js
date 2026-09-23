@@ -23,7 +23,7 @@
       var rows=q.data||[];
       if(!results)return;
       results.innerHTML=rows.length?rows.map(function(p){
-        return '<div class="card" style="margin-bottom:14px"><h3>'+String(p.full_name||'Partner').replace(/[&<>]/g,'')+' <span class="pill verified">✓ VERIFIED</span></h3><p>'+String((p.services||[]).join(', '))+'</p><p>Age: '+(p.age??'—')+' • '+String(p.gender||'—')+'</p><p>📍 '+String(p.area||p.city||'Gurgaon NCR')+'</p><p><strong>₹'+String(p.hourly_rate??'—')+'/hour</strong></p></div>';
+        return '<div class="card" style="margin-bottom:14px"><h3>'+String(p.full_name||'Partner').replace(/[&<>]/g,'')+' <span class="pill verified">✓ VERIFIED</span></h3><p>'+String((p.services||[]).join(', '))+'</p><p>Age: '+(p.age??'—')+' • '+String(p.gender||'—')+'</p><p>📍 '+String(p.area||p.city||'Gurgaon NCR')+'</p><p><strong>₹'+String(p.hourly_rate??'—')+'/hour</strong></p><button type="button" class="pink full" style="margin-top:12px" data-bap-partner-id="'+String(p.id)+'">Request Booking</button></div>';
       }).join(''):'<div class="card">Live search completed: no approved partner matched these filters.</div>';
     }catch(e){
       console.error('BAP FINAL SEARCH ERROR',e);
@@ -40,6 +40,14 @@
       e.preventDefault();
       e.stopImmediatePropagation();
       runLiveSearch();
+      return;
+    }
+    var partnerId=b.getAttribute('data-bap-partner-id');
+    if(partnerId){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if(typeof window.BAP_liveSelectPartner==='function') window.BAP_liveSelectPartner(partnerId);
+      else alert('Live booking module is still loading. Please try again.');
     }
   },true);
 })();
