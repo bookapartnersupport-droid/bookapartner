@@ -56,7 +56,7 @@ var p=(r.data||[])[0];
 if(!p)throw new Error('Partner is no longer available.');
 ensureDuration();
 var d=Number(document.getElementById('bapDuration')?.value||1),pr=price(p.hourly_rate,d),loc=document.getElementById('location')?.value?.trim()||'';
-liveSelected={partner:p,service:document.getElementById('service').value,date:document.getElementById('date').value,time:document.getElementById('time').value,location:loc,area:document.getElementById('area').value||p.area||'Gurgaon NCR',duration:d,price:pr};
+liveSelected={partner:p,service:document.getElementById('service').value,date:document.getElementById('date').value,time:document.getElementById('time').value,location:loc,area:document.getElementById('area').value||p.area||'Gurgaon NCR',duration:d,price:pr};window.BAP_selectedPartner=p;
 var sum=document.getElementById('bookingSummary');
 if(sum)sum.innerHTML='<div class="summary"><b>'+esc(p.full_name)+'</b> <span class="pill verified">✓ VERIFIED</span><p>⭐ '+esc(Number(p.rating||0).toFixed(1))+' / 5 ('+esc(p.review_count||0)+' reviews)</p><p>'+esc(liveSelected.service)+'</p><p>📅 '+esc(liveSelected.date||'Select date')+' • 🕐 '+esc(liveSelected.time||'Select time')+'</p><p>📍 '+esc(liveSelected.location)+'</p><p>Duration: '+d+' hour(s)</p><p><strong>₹'+pr.total+'</strong> <span class="muted">('+pr.discountPercent+'% duration discount)</span></p><p class="muted">Secure payment is required before the partner can accept the booking. Payment is held according to the platform booking policy.</p></div>';
 if(typeof window.go==='function')window.go('details');
@@ -66,6 +66,13 @@ try{
 var s=await requireSession('customer');
 /* Recover the legacy review screen into a real live selection. This also makes
    the payment button enforce customer login instead of silently doing nothing. */
+if(!liveSelected && window.BAP_selectedPartner){
+  var serviceEl=document.getElementById('service'),dateEl=document.getElementById('date'),timeEl=document.getElementById('time'),locEl=document.getElementById('location');
+  var service=serviceEl?.value||'',date=dateEl?.value||'',time=timeEl?.value||'',location=locEl?.value?.trim()||'';
+  var p=window.BAP_selectedPartner;
+  var d=Number(document.getElementById('bapDuration')?.value||1),pr=price(Number(p.hourly_rate||0),d);
+  liveSelected={partner:p,service,date,time,location,area:document.getElementById('area')?.value||p.area||'Gurgaon NCR',duration:d,price:pr};
+}
 if(!liveSelected){
   var serviceEl=document.getElementById('service'),dateEl=document.getElementById('date'),timeEl=document.getElementById('time'),locEl=document.getElementById('location');
   var service=serviceEl?.value||'',date=dateEl?.value||'',time=timeEl?.value||'',location=locEl?.value?.trim()||'';
