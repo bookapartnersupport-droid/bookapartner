@@ -226,7 +226,7 @@
     if(label==='Start Earning' || label.indexOf('🤝 Start Earning')===0){
       e.preventDefault();
       e.stopImmediatePropagation();
-      if(typeof window.openLivePartnerAuth==='function') window.openLivePartnerAuth('signup'); else if(typeof window.go==='function') window.go('join');
+      if(typeof window.openLivePartnerAuth==='function') window.openLivePartnerAuth('signup'); else if(typeof window.openLivePartnerAuth==='function') window.openLivePartnerAuth('signup'); else if(typeof window.go==='function') window.go('join');
       return;
     }
     var t=(el.textContent||'').trim();
