@@ -3635,20 +3635,31 @@ input,select,textarea{
       </div>
 
       <label>City / Area</label>
-      <input id="partnerArea" placeholder="e.g. Golf Course Road, Sohna Road, DLF Phase 1">
+      <input id="partnerArea" placeholder="e.g. Sector 69, Golf Course Road, DLF Phase 1">
+
+      <div class="row">
+        <div>
+          <label>Gender</label>
+          <select id="partnerGender">
+            <option value="">Select gender</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label>Service</label>
+          <select id="partnerService">
+            <option>Rental Coffee Partner</option>
+            <option>Rental Movie Partner</option>
+            <option>Rental Shopping Partner</option>
+            <option>Rental Medical Assistance Partner</option>
+          </select>
+        </div>
+      </div>
 
       <label>Profile photo</label>
       <input id="partnerPhoto" type="file" accept="image/jpeg,image/png,image/webp">
-
-      <label>Service</label>
-      <select id="partnerService">
-        <option>Movie Partner</option>
-        <option>Shopping Partner</option>
-        <option>Coffee & Conversation</option>
-        <option>Event Partner</option>
-        <option>Travel Partner</option>
-        <option>Assistance Partner</option>
-      </select>
 
       <div class="row">
         <div>
@@ -3671,6 +3682,15 @@ input,select,textarea{
         🛡️ <b>Verification:</b> Profile photo + selfie + age + mobile + service details.
         Your verification information is used for partner review.
       </div>
+
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px">
+        <input id="partnerTerms" type="checkbox" style="width:auto;margin-top:3px">
+        <span>I agree to the Partner Agreement and platform Terms.</span>
+      </label>
+      <label style="display:flex;gap:8px;align-items:flex-start;margin-top:8px">
+        <input id="partnerSafety" type="checkbox" style="width:auto;margin-top:3px">
+        <span>I agree to the safety, conduct and verification policy.</span>
+      </label>
 
       <button class="pink full" onclick="partnerApply()">
         🚀 Submit Partner Application — ₹0 Fee
@@ -5354,143 +5374,85 @@ function sendMessage(){
 PARTNER APPLICATION
 ==========================================================
 */
-function readFileAsDataURL(file){
+functasync function partnerApply(){
+  const n=document.getElementById('partnerName')?.value.trim()||'';
+  const age=Number(document.getElementById('partnerAge')?.value||0);
+  const m=document.getElementById('partnerMobile')?.value.trim()||'';
+  const area=document.getElementById('partnerArea')?.value.trim()||'';
+  const gender=document.getElementById('partnerGender')?.value||'';
+  const service=document.getElementById('partnerService')?.value||'';
+  const rate=Number(document.getElementById('partnerRate')?.value||0);
+  const availability=document.getElementById('partnerAvailability')?.value||'';
+  const photo=document.getElementById('partnerPhoto')?.files?.[0];
+  const selfie=document.getElementById('partnerSelfie')?.files?.[0];
+  const terms=!!document.getElementById('partnerTerms')?.checked;
+  const safety=!!document.getElementById('partnerSafety')?.checked;
 
-  return new Promise(
-    (resolve,reject) => {
-
-      const reader =
-        new FileReader();
-
-      reader.onload = () => {
-        resolve(reader.result);
-      };
-
-      reader.onerror = () => {
-        reject(reader.error);
-      };
-
-      reader.readAsDataURL(file);
-
-    }
-  );
-
-}
-async function partnerApply(){
-
-  const n =
-    document
-      .getElementById('partnerName')
-      .value
-      .trim();
-
-  const age =
-    Number(
-      document
-        .getElementById('partnerAge')
-        .value
-    );
-
-  const m =
-    document
-      .getElementById('partnerMobile')
-      .value
-      .trim();
-
-  const area =
-    document
-      .getElementById('partnerArea')
-      .value
-      .trim();
-
-  const service =
-    document
-      .getElementById('partnerService')
-      .value;
-
-  const rate =
-    Number(
-      document
-        .getElementById('partnerRate')
-        .value
-    );
-
-  const availability =
-    document
-      .getElementById(
-        'partnerAvailability'
-      )
-      .value;
-
-  const photo =
-    document
-      .getElementById(
-        'partnerPhoto'
-      )
-      .files[0];
-
-  const selfie =
-    document
-      .getElementById(
-        'partnerSelfie'
-      )
-      .files[0];
-    
- if(
-
-    !n ||
-    !Number.isFinite(age) ||
-    age < 18 ||
-    m.length !== 10 ||
-    !area ||
-    !Number.isFinite(rate) ||
-    rate <= 0 ||
-    !photo ||
-    !selfie
-
-  ){
-
-    alert(
-      'Please complete all partner details, including profile photo and selfie.'
-    );
-
+  if(!n||!Number.isFinite(age)||age<18||!/^[6-9]\\d{9}$/.test(m)||!area||!gender||!service||!Number.isFinite(rate)||rate<=0||!photo||!selfie||!terms||!safety){
+    alert('Please complete all partner details, including gender, profile photo, selfie and both agreements.');
     return;
-
   }
-    const photoData =
-  await readFileAsDataURL(photo);
 
-const selfieData =
-  await readFileAsDataURL(selfie);
-  const partner = {
+  const btn=document.querySelector('button[onclick="partnerApply()"]');
+  if(btn){btn.disabled=true;btn.textContent='Submitting Application…';}
 
-    name:n,
+  try{
+    if(!window.supabase?.createClient) throw new Error('Secure connection is still loading. Please wait 2 seconds and try again.');
+    const c=window.supabase.createClient(
+      'https://wmawmdwjjbvlqsugthhe.supabase.co',
+      'sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',
+      {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
+    );
+    const ss=await c.auth.getSession();
+    if(!ss.data?.session) throw new Error('Please create/login to your Partner account first.');
 
-    age,
+    const uid=ss.data.session.user.id;
+    const ext=(f)=>((f.name||'').match(/\\.[a-z0-9]+$/i)||[''])[0].toLowerCase()||'.jpg';
+    const photoPath=uid+'/'+crypto.randomUUID()+ext(photo);
+    const selfiePath=uid+'/'+crypto.randomUUID()+ext(selfie);
 
-    mobile:m,
+    const up1=await c.storage.from('partner-photos').upload(photoPath,photo,{contentType:photo.type||'image/jpeg',upsert:false});
+    if(up1.error) throw new Error('Profile photo upload failed: '+up1.error.message);
+    try{
+      const up2=await c.storage.from('partner-selfies').upload(selfiePath,selfie,{contentType:selfie.type||'image/jpeg',upsert:false});
+      if(up2.error) throw new Error('Selfie upload failed: '+up2.error.message);
 
-    area,
+      const rpc=await c.rpc('bap_submit_partner_application',{
+        p_full_name:n,
+        p_age:age,
+        p_gender:gender,
+        p_mobile:m,
+        p_city:'Gurgaon NCR',
+        p_area:area,
+        p_services:[service],
+        p_hourly_rate:rate,
+        p_availability:availability,
+        p_experience:null,
+        p_qualification:null,
+        p_profile_photo_path:photoPath,
+        p_selfie_path:selfiePath,
+        p_proof_path:null,
+        p_terms_accepted:terms,
+        p_safety_accepted:safety
+      });
+      if(rpc.error) throw new Error(rpc.error.message||'Application submission failed.');
 
-    service,
+      localStorage.setItem('bap_partner_application_id',rpc.data?.id||'');
+      localStorage.setItem('bap_partner_application_status','pending');
 
-    rate,
-
-    availability,
-
-    verification:
-      'Pending Review',
-
-    verificationNote:
-      'Photo + selfie submitted for admin review',
-
-   photoName:
-  photo.name,
-
-photoData:
-  photoData,
-
-selfieName:
+      alert('Partner application submitted successfully. Admin will review your profile photo and selfie before approval.');
+      if(typeof window.go==='function')window.go('partnerDashboard');
+    }catch(e){
+      await c.storage.from('partner-photos').remove([photoPath]).catch(()=>{});
+      throw e;
+    }
+  }catch(e){
+    console.error('Partner application submission failed:',e);
+    alert(e.message||String(e));
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🚀 Submit Partner Application — ₹0 Fee';}
+  }
+}e:
   selfie.name,
 
 selfieData:
