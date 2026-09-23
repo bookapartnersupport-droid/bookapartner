@@ -48,6 +48,7 @@
       localStorage.setItem('bap_selected_partner_rate',b.getAttribute('data-bap-partner-rate')||'');
       localStorage.setItem('bap_selected_partner_rating',b.getAttribute('data-bap-partner-rating')||'0');
       localStorage.setItem('bap_selected_partner_reviews',b.getAttribute('data-bap-partner-reviews')||'0');
+      window.BAP_selectedPartnerId=partnerId;
       e.preventDefault();
       e.stopImmediatePropagation();
       if(typeof window.BAP_liveSelectPartner==='function') window.BAP_liveSelectPartner(partnerId);
