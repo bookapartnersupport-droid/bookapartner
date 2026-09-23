@@ -7355,31 +7355,6 @@ function openCustomerProfile(){
           "
         >
 
-        <label
-          class="profileLabel"
-          style="margin-top:16px;"
-        >
-          Email
-        </label>
-
-        <input
-          id="customerProfileEmail"
-          type="email"
-          placeholder="Enter your email"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            height:50px;
-            padding:0 14px;
-            border:1px solid #cbd5e1;
-            border-radius:12px;
-            background:#fff;
-            color:#334155;
-            font-size:15px;
-            outline:none;
-          "
-        >
-
         <button
           class="loginPrimary"
           style="margin-top:20px;"
@@ -7423,16 +7398,8 @@ function loadCustomerProfile(){
       'customerProfileName'
     );
 
-    const emailField = document.getElementById(
-      'customerProfileEmail'
-    );
-
     if(nameField){
       nameField.value = user.name || '';
-    }
-
-    if(emailField){
-      emailField.value = user.email || '';
     }
 
   }catch(e){
@@ -7444,11 +7411,6 @@ function saveCustomerProfile(){
 
   const name = document
     .getElementById('customerProfileName')
-    .value
-    .trim();
-
-  const email = document
-    .getElementById('customerProfileEmail')
     .value
     .trim();
 
@@ -7485,7 +7447,6 @@ function saveCustomerProfile(){
   }
 
   user.name = name;
-  user.email = email;
 
   localStorage.setItem(
     'bap_current_user',
