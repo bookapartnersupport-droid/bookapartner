@@ -183,52 +183,6 @@
         }
       }
 
-      window.partnerApply=async function(){
-        try{
-          function val(id){return document.getElementById(id)?.value?.trim()||'';}
-          var name=val('partnerName'), age=Number(document.getElementById('partnerAge')?.value||0);
-          var mobile=val('partnerMobile'), area=val('partnerArea');
-          var service=val('partnerService'), rate=Number(document.getElementById('partnerRate')?.value||0);
-          var availability=val('partnerAvailability')||'Available', gender=val('partnerGender');
-          var photo=document.getElementById('partnerPhoto')?.files?.[0];
-          var selfie=document.getElementById('partnerSelfie')?.files?.[0];
-          var terms=!!document.getElementById('partnerTerms')?.checked;
-          var safety=!!document.getElementById('partnerSafety')?.checked;
-
-          if(!name||age<18||age>80||!/^[6-9]\\d{9}$/.test(mobile)||!area||!gender||!service||!Number.isFinite(rate)||rate<=0||!photo||!selfie||!terms||!safety){
-            throw new Error('Please complete all partner details, upload profile photo + selfie, and accept both agreements.');
-          }
-          if(photo.size>5*1024*1024||selfie.size>5*1024*1024)throw new Error('Each image must be 5 MB or smaller.');
-          var fd=new FormData();
-          fd.append('full_name',name); fd.append('age',String(Math.round(age))); fd.append('mobile',mobile);
-          fd.append('area',area); fd.append('gender',gender); fd.append('service',service);
-          fd.append('hourly_rate',String(rate)); fd.append('availability',availability);
-          fd.append('terms','true'); fd.append('safety','true');
-          fd.append('profile_photo',photo); fd.append('selfie',selfie);
-
-          var btn=document.querySelector('#join button[onclick="partnerApply()"]');
-          if(btn){btn.disabled=true;btn.textContent='Submitting Application…';}
-          var res=await fetch('https://wmawmdwjjbvlqsugthhe.supabase.co/functions/v1/partner-public-apply',{
-            method:'POST',
-            headers:{apikey:'sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI'},
-            body:fd
-          });
-          var data=await res.json().catch(function(){return{};});
-          if(!res.ok||!data.ok)throw new Error(data.error||'Could not submit partner application.');
-          localStorage.setItem('bap_partner_application_id',data.application_id||'');
-          localStorage.setItem('bap_partner_application_status','pending');
-          alert('Partner application submitted successfully. Our team will review your profile and contact you for verification.');
-          var form=document.querySelector('#join .form');
-          if(form)form.reset();
-        }catch(e){
-          console.error('BAP partner application:',e);
-          alert(e?.message||String(e));
-        }finally{
-          var btn=document.querySelector('#join button[onclick="partnerApply()"]');
-          if(btn){btn.disabled=false;btn.textContent='🚀 Submit Partner Application — ₹0 Fee';}
-        }
-      };
-
       function ensurePartnerLaunchFields(){
         var age=document.getElementById('partnerAge');
         if(!age||document.getElementById('partnerGender'))return;
@@ -272,7 +226,7 @@
     if(label==='Start Earning' || label.indexOf('🤝 Start Earning')===0){
       e.preventDefault();
       e.stopImmediatePropagation();
-      if(typeof window.go==='function') window.go('join');
+      if(typeof window.openLivePartnerAuth==='function') window.openLivePartnerAuth('signup'); else if(typeof window.go==='function') window.go('join');
       return;
     }
     var t=(el.textContent||'').trim();
