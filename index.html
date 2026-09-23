@@ -5278,220 +5278,22 @@ BOOKINGS
 */
 
 function renderBookings(){
-
-
-
-  const allBookings =
-    JSON.parse(
-      localStorage.getItem(
-        'bap_bookings'
-      ) ||
-      '[]'
-    );
-
-  let currentUser = null;
-
-  try{
-    currentUser =
-      JSON.parse(
-        localStorage.getItem(
-          'bap_current_user'
-        ) ||
-        'null'
-      );
-  }catch(e){
-    currentUser = null;
-  }
-
-  const list = allBookings;
-
-  const el =
-    document.getElementById(
-      'bookingList'
-    );
-
-
-  if(!list.length){
-
-    el.innerHTML =
-
-      "<p class='muted'>" +
-      "No bookings yet. Start by choosing a service." +
-      "</p>" +
-
-      "<button class='pink' onclick=\"go('book')\">" +
-      "Find a Partner" +
-      "</button>";
-
+  // Live backend is the source of truth. Do not render legacy local/demo
+  // bookings here; those old records are only prototype data.
+  if(window.BAP_live && typeof window.BAP_live.renderCustomerBookings==='function'){
+    window.BAP_live.renderCustomerBookings().catch(function(e){
+      const el=document.getElementById('bookingList');
+      if(el) el.innerHTML="<p class='muted'>Unable to load live bookings: "+String(e.message||e)+"</p>";
+    });
     return;
-
   }
 
-  el.innerHTML =
-    list.map(
-
-      b => {
-
-        const badgeClass =
-          b.status === 'Confirmed'
-          ? 'available'
-          : '';
-
-        let actions = '';
-
-        if(
-          b.status === 'Confirmed'
-        ){
-
-          if(
-            b.customerDecision === 'OK'
-          ){
-
-            actions =
-
-              "<span class='pill available'>" +
-              "✓ CUSTOMER APPROVED" +
-              "</span> " +
-
-              "<button class='dark' onclick=\"go('chat')\">" +
-              "Open Chat" +
-              "</button> " +
-               "<button class='light' onclick=\"customerReportIssue('" +
-b.id +
-"')\">" +
-"Report an Issue" +
-"</button>" +
-              "<button class='pink' onclick=\"go('meetingOtp')\">" +
-              "Meeting OTP" +
-              "</button>";
-
-          }
-
-          else if(
-            b.customerDecision === 'Issue'
-          ){
-
-            actions =
-
-              "<span class='pill' style='background:#fff1f2;color:#b42318'>" +
-              "⚠ PAYMENT ON HOLD — ISSUE REPORTED" +
-              "</span>";
-
-          }
-
-          else{
-
-            actions =
-
-              "<button class='green' onclick=\"customerApprove('" +
-              b.id +
-              "')\">" +
-
-              "✓ Meeting OK" +
-
-              "</button> " +
-
-              "<button class='light' onclick=\"customerReportIssue('" +
-              b.id +
-              "')\">" +
-
-              "Report an Issue" +
-
-              "</button> " +
-
-              "<button class='dark' onclick=\"go('chat')\">" +
-
-              "Open Chat" +
-
-              "</button> " +
-
-              "<button class='pink' onclick=\"go('meetingOtp')\">" +
-
-              "Meeting OTP" +
-
-              "</button>";
-
-          }
-
-        }
-
-        else{
-
-          actions =
-
-            "<button class='light' disabled>" +
-            "Chat locked" +
-            "</button>";
-
-        }
-
-        const paymentLine =
-          b.paymentStatus
-          ? `<span class="pill">${b.paymentStatus}</span>`
-          : '';
-
-        const payoutLine =
-          b.payoutStatus
-          ? `<span class="pill">${b.payoutStatus}</span>`
-          : '';
-
-        return `
-
-          <div
-            class="card"
-            style="margin-top:10px"
-          >
-
-            <b>
-              Booking #${b.id}
-            </b>
-
-            <span class="pill ${badgeClass}">
-              ${b.status}
-            </span>
-
-            ${paymentLine}
-
-            ${payoutLine}
-
-            <p>
-              ${b.service} • ${b.name}
-            </p>
-
-            <p class="muted">
-
-              📅
-              ${b.date || 'Pending'}
-
-              • 🕐
-              ${b.time || 'Pending'}
-
-              <br>
-
-              📍
-              ${b.location}
-
-            </p>
-
-            <div class="transportBox">
-
-              🚗
-              ${b.transportPolicy ||
-              '10 km free; beyond 10 km maximum ₹150'}
-
-            </div>
-
-            ${actions}
-
-          </div>
-
-        `;
-
-      }
-
-    ).join('');
-
+  const el=document.getElementById('bookingList');
+  if(el){
+    el.innerHTML="<p class='muted'>Loading live bookings...</p>";
+  }
 }
+
 
 
 /*
@@ -7297,13 +7099,12 @@ function backToPhone(){
   },100);
 }
 
-function verifyLoginOTP(){
-
+async function verifyLoginOTP(){
   const phone = document.getElementById('loginPhone').value.trim();
   const otp = document.getElementById('loginOtp').value.trim();
   const message = document.getElementById('loginMessage');
 
-  if(!/^\d{6}$/.test(otp)){
+  if(!/^\\d{6}$/.test(otp)){
     message.style.color = '#dc2626';
     message.textContent = 'Please enter the 6-digit OTP.';
     return;
@@ -7315,29 +7116,67 @@ function verifyLoginOTP(){
     return;
   }
 
-  const loginUser = {
-    phone: phone,
-    role: 'customer',
-    loggedIn: true,
-    loginTime: new Date().toISOString()
-  };
+  message.style.color = '#64748b';
+  message.textContent = 'Creating secure live session...';
 
-  localStorage.setItem(
-    'bap_current_user',
-    JSON.stringify(loginUser)
-  );
-   updateLoginNav();
-  message.style.color = '#16a34a';
-  message.textContent = 'Login successful!';
-
-  setTimeout(() => {
-    closeLogin();
-
-    alert(
-      'Welcome to Book A Partner!\n\n' +
-      'You are now logged in as Customer.'
+  try{
+    const res = await fetch(
+      'https://wmawmdwjjbvlqsugthhe.supabase.co/functions/v1/customer-demo-auth',
+      {
+        method:'POST',
+        headers:{
+          'apikey':'sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',
+          'Content-Type':'application/json'
+        },
+        body:JSON.stringify({phone,otp})
+      }
     );
-  },500);
+
+    const body = await res.json().catch(()=>({}));
+    if(!res.ok || !body.session){
+      throw new Error(body.error || 'Live customer login failed.');
+    }
+
+    // Persist the real Supabase Auth session so all live RLS-protected
+    // customer queries use the authenticated customer identity.
+    if(window.supabase && window.supabase.createClient){
+      const liveClient = window.supabase.createClient(
+        'https://wmawmdwjjbvlqsugthhe.supabase.co',
+        'sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',
+        {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
+      );
+      const sr = await liveClient.auth.setSession({
+        access_token:body.session.access_token,
+        refresh_token:body.session.refresh_token
+      });
+      if(sr.error) throw sr.error;
+    }
+
+    const loginUser = {
+      id: body.session.user?.id || '',
+      phone: phone,
+      role: 'customer',
+      loggedIn: true,
+      loginTime: new Date().toISOString()
+    };
+
+    localStorage.setItem('bap_current_user',JSON.stringify(loginUser));
+    updateLoginNav();
+    message.style.color = '#16a34a';
+    message.textContent = 'Login successful!';
+
+    setTimeout(()=>{
+      closeLogin();
+      alert('Welcome to Book A Partner!\\n\\nYou are now logged in as Customer.');
+      if(typeof window.BAP_live?.renderCustomerBookings==='function'){
+        window.BAP_live.renderCustomerBookings().catch(()=>{});
+      }
+    },400);
+  }catch(e){
+    console.error('Live customer OTP login failed:',e);
+    message.style.color = '#dc2626';
+    message.textContent = e.message || 'Live login failed. Please try again.';
+  }
 }
 /* =========================
    CUSTOMER ACCOUNT
