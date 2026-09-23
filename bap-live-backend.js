@@ -47,7 +47,20 @@
       if(e.message!=='Please login first.')alert(e.message||String(e));
     }
   }
-  async function selectPartnerLive(id){try{await requireSession('customer');var c=await client(),r=await c.from('partners').select('id,user_id,full_name,age,gender,city,area,services,hourly_rate,availability,rating,review_count,verification_status,active').eq('id',id).eq('active',true).eq('verification_status','approved').maybeSingle();if(r.error)throw r.error;if(!r.data)throw new Error('Partner is no longer available.');var p=r.data;ensureDuration();var d=Number(document.getElementById('bapDuration')?.value||1),pr=price(p.hourly_rate,d),loc=document.getElementById('location')?.value?.trim()||'';liveSelected={partner:p,service:document.getElementById('service').value,date:document.getElementById('date').value,time:document.getElementById('time').value,location:loc,area:document.getElementById('area').value||p.area||'Gurgaon NCR',duration:d,price:pr};var sum=document.getElementById('bookingSummary');if(sum)sum.innerHTML='<div class="summary"><b>'+esc(p.full_name)+'</b> <span class="pill verified">✓ VERIFIED</span><p>'+esc(liveSelected.service)+'</p><p>📅 '+esc(liveSelected.date||'Select date')+' • 🕐 '+esc(liveSelected.time||'Select time')+'</p><p>📍 '+esc(liveSelected.location)+'</p><p>Duration: '+d+' hour(s)</p><p><strong>₹'+pr.total+'</strong> <span class="muted">('+pr.discountPercent+'% duration discount)</span></p><p class="muted">Secure payment is required before the partner can accept the booking. Payment is held according to the platform booking policy.</p></div>';if(typeof window.go==='function')window.go('details');}catch(e){alert(e.message||String(e));}}
+  async function selectPartnerLive(id){try{
+await requireSession('customer');
+var c=await client();
+var r=await c.rpc('bap_get_available_partner',{p_partner_id:id});
+if(r.error)throw r.error;
+var p=(r.data||[])[0];
+if(!p)throw new Error('Partner is no longer available.');
+ensureDuration();
+var d=Number(document.getElementById('bapDuration')?.value||1),pr=price(p.hourly_rate,d),loc=document.getElementById('location')?.value?.trim()||'';
+liveSelected={partner:p,service:document.getElementById('service').value,date:document.getElementById('date').value,time:document.getElementById('time').value,location:loc,area:document.getElementById('area').value||p.area||'Gurgaon NCR',duration:d,price:pr};
+var sum=document.getElementById('bookingSummary');
+if(sum)sum.innerHTML='<div class="summary"><b>'+esc(p.full_name)+'</b> <span class="pill verified">✓ VERIFIED</span><p>'+esc(liveSelected.service)+'</p><p>📅 '+esc(liveSelected.date||'Select date')+' • 🕐 '+esc(liveSelected.time||'Select time')+'</p><p>📍 '+esc(liveSelected.location)+'</p><p>Duration: '+d+' hour(s)</p><p><strong>₹'+pr.total+'</strong> <span class="muted">('+pr.discountPercent+'% duration discount)</span></p><p class="muted">Secure payment is required before the partner can accept the booking. Payment is held according to the platform booking policy.</p></div>';
+if(typeof window.go==='function')window.go('details');
+}catch(e){alert(e.message||String(e));}}
   async function createBookingLive(){
 try{
 var s=await requireSession('customer');
