@@ -5374,7 +5374,7 @@ function sendMessage(){
 PARTNER APPLICATION
 ==========================================================
 */
-functasync function partnerApply(){
+async function partnerApply(){
   const n=document.getElementById('partnerName')?.value.trim()||'';
   const age=Number(document.getElementById('partnerAge')?.value||0);
   const m=document.getElementById('partnerMobile')?.value.trim()||'';
@@ -5387,92 +5387,31 @@ functasync function partnerApply(){
   const selfie=document.getElementById('partnerSelfie')?.files?.[0];
   const terms=!!document.getElementById('partnerTerms')?.checked;
   const safety=!!document.getElementById('partnerSafety')?.checked;
-
-  if(!n||!Number.isFinite(age)||age<18||!/^[6-9]\\d{9}$/.test(m)||!area||!gender||!service||!Number.isFinite(rate)||rate<=0||!photo||!selfie||!terms||!safety){
-    alert('Please complete all partner details, including gender, profile photo, selfie and both agreements.');
-    return;
-  }
-
+  if(!n||!Number.isFinite(age)||age<18||!/^[6-9]\d{9}$/.test(m)||!area||!gender||!service||!Number.isFinite(rate)||rate<=0||!photo||!selfie||!terms||!safety){alert('Please complete all partner details, including gender, profile photo, selfie and both agreements.');return;}
   const btn=document.querySelector('button[onclick="partnerApply()"]');
   if(btn){btn.disabled=true;btn.textContent='Submitting Application…';}
-
   try{
     if(!window.supabase?.createClient) throw new Error('Secure connection is still loading. Please wait 2 seconds and try again.');
-    const c=window.supabase.createClient(
-      'https://wmawmdwjjbvlqsugthhe.supabase.co',
-      'sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',
-      {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}
-    );
+    const c=window.supabase.createClient('https://wmawmdwjjbvlqsugthhe.supabase.co','sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
     const ss=await c.auth.getSession();
     if(!ss.data?.session) throw new Error('Please create/login to your Partner account first.');
-
     const uid=ss.data.session.user.id;
-    const ext=(f)=>((f.name||'').match(/\\.[a-z0-9]+$/i)||[''])[0].toLowerCase()||'.jpg';
-    const photoPath=uid+'/'+crypto.randomUUID()+ext(photo);
-    const selfiePath=uid+'/'+crypto.randomUUID()+ext(selfie);
-
+    const ext=(f)=>((f.name||'').match(/\.[a-z0-9]+$/i)||[''])[0].toLowerCase()||'.jpg';
+    const photoPath=uid+'/'+crypto.randomUUID()+ext(photo), selfiePath=uid+'/'+crypto.randomUUID()+ext(selfie);
     const up1=await c.storage.from('partner-photos').upload(photoPath,photo,{contentType:photo.type||'image/jpeg',upsert:false});
     if(up1.error) throw new Error('Profile photo upload failed: '+up1.error.message);
     try{
       const up2=await c.storage.from('partner-selfies').upload(selfiePath,selfie,{contentType:selfie.type||'image/jpeg',upsert:false});
       if(up2.error) throw new Error('Selfie upload failed: '+up2.error.message);
-
-      const rpc=await c.rpc('bap_submit_partner_application',{
-        p_full_name:n,
-        p_age:age,
-        p_gender:gender,
-        p_mobile:m,
-        p_city:'Gurgaon NCR',
-        p_area:area,
-        p_services:[service],
-        p_hourly_rate:rate,
-        p_availability:availability,
-        p_experience:null,
-        p_qualification:null,
-        p_profile_photo_path:photoPath,
-        p_selfie_path:selfiePath,
-        p_proof_path:null,
-        p_terms_accepted:terms,
-        p_safety_accepted:safety
-      });
+      const rpc=await c.rpc('bap_submit_partner_application',{p_full_name:n,p_age:age,p_gender:gender,p_mobile:m,p_city:'Gurgaon NCR',p_area:area,p_services:[service],p_hourly_rate:rate,p_availability:availability,p_experience:null,p_qualification:null,p_profile_photo_path:photoPath,p_selfie_path:selfiePath,p_proof_path:null,p_terms_accepted:terms,p_safety_accepted:safety});
       if(rpc.error) throw new Error(rpc.error.message||'Application submission failed.');
-
-      localStorage.setItem('bap_partner_application_id',rpc.data?.id||'');
-      localStorage.setItem('bap_partner_application_status','pending');
-
+      localStorage.setItem('bap_partner_application_id',rpc.data?.id||'');localStorage.setItem('bap_partner_application_status','pending');
       alert('Partner application submitted successfully. Admin will review your profile photo and selfie before approval.');
-      if(typeof window.go==='function')window.go('partnerDashboard');
-    }catch(e){
-      await c.storage.from('partner-photos').remove([photoPath]).catch(()=>{});
-      throw e;
-    }
-  }catch(e){
-    console.error('Partner application submission failed:',e);
-    alert(e.message||String(e));
-  }finally{
-    if(btn){btn.disabled=false;btn.textContent='🚀 Submit Partner Application — ₹0 Fee';}
-  }
-}e:
-  selfie.name,
-
-selfieData:
-  selfieData
-
-  };
-
-  localStorage.setItem(
-    'bap_partner_profile',
-    JSON.stringify(partner)
-  );
-
-  alert(
-    'Partner application saved for demo. Real mobile OTP, identity verification and admin approval will be connected in the backend stage.'
-  );
-
-  go('partnerDashboard');
-
+      if(typeof window.go==='function') window.go('partnerDashboard');
+    }catch(e){await c.storage.from('partner-photos').remove([photoPath]).catch(()=>{});throw e;}
+  }catch(e){console.error('Partner application submission failed:',e);alert(e.message||String(e));}
+  finally{if(btn){btn.disabled=false;btn.textContent='🚀 Submit Partner Application — ₹0 Fee';}}
 }
-
 
 /*
 ==========================================================
