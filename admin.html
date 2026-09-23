@@ -126,16 +126,14 @@ function findApplication(id){return cache.applications.find(a=>String(a.id)===St
 async function signedObjectUrl(bucket,path){
  if(!path)return null;
  const session=getStoredSession();if(!session?.access_token)return null;
- const r=await fetch(SUPABASE_URL+'/storage/v1/object/sign/'+encodeURIComponent(bucket)+'/'+path.split('/').map(encodeURIComponent).join('/'),{
+ const r=await fetch(SUPABASE_URL+'/functions/v1/admin-storage-url',{
   method:'POST',
   headers:authHeaders(session.access_token),
-  body:JSON.stringify({expiresIn:3600})
+  body:JSON.stringify({bucket:bucket,path:path})
  });
  let j={};try{j=await r.json()}catch{}
- if(!r.ok)throw new Error(j?.message||j?.error||'Could not create signed image URL');
- const signed=j?.signedURL||j?.signedUrl||j?.path||null;
- if(!signed)return null;
- return signed.startsWith('http')?signed:SUPABASE_URL+'/storage/v1'+signed;
+ if(!r.ok)throw new Error(j?.error||j?.message||'Could not create signed image URL');
+ return j.signedUrl||null;
 }
 function setReviewImage(id,url,label){
  const box=$(id);if(!box)return;
