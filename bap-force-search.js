@@ -23,7 +23,7 @@
       var rows=q.data||[];
       if(!results)return;
       results.innerHTML=rows.length?rows.map(function(p){
-        return '<div class="card" style="margin-bottom:14px"><h3>'+String(p.full_name||'Partner').replace(/[&<>]/g,'')+' <span class="pill verified">✓ VERIFIED</span></h3><p>'+String((p.services||[]).join(', '))+'</p><p>Age: '+(p.age??'—')+' • '+String(p.gender||'—')+'</p><p>📍 '+String(p.area||p.city||'Gurgaon NCR')+'</p><p><strong>₹'+String(p.hourly_rate??'—')+'/hour</strong></p><button type="button" class="pink full" style="margin-top:12px" data-bap-partner-id="'+String(p.id)+'" data-bap-partner-rate="'+String(p.hourly_rate??'')+'">Request Booking</button></div>';
+        return '<div class="card" style="margin-bottom:14px"><h3>'+String(p.full_name||'Partner').replace(/[&<>]/g,'')+' <span class="pill verified">✓ VERIFIED</span></h3><p>'+String((p.services||[]).join(', '))+'</p><p>Age: '+(p.age??'—')+' • '+String(p.gender||'—')+'</p><p>📍 '+String(p.area||p.city||'Gurgaon NCR')+'</p><p><strong>₹'+String(p.hourly_rate??'—')+'/hour</strong></p><button type="button" class="pink full" style="margin-top:12px" data-bap-partner-id="'+String(p.id)+'" data-bap-partner-rate="'+String(p.hourly_rate??'')+'" data-bap-partner-rating="'+String(p.rating??0)+'" data-bap-partner-reviews="'+String(p.review_count??0)+'">Request Booking</button></div>';
       }).join(''):'<div class="card">Live search completed: no approved partner matched these filters.</div>';
     }catch(e){
       console.error('BAP FINAL SEARCH ERROR',e);
@@ -46,6 +46,8 @@
     if(partnerId){
       localStorage.setItem('bap_selected_partner_id',partnerId);
       localStorage.setItem('bap_selected_partner_rate',b.getAttribute('data-bap-partner-rate')||'');
+      localStorage.setItem('bap_selected_partner_rating',b.getAttribute('data-bap-partner-rating')||'0');
+      localStorage.setItem('bap_selected_partner_reviews',b.getAttribute('data-bap-partner-reviews')||'0');
       e.preventDefault();
       e.stopImmediatePropagation();
       if(typeof window.BAP_liveSelectPartner==='function') window.BAP_liveSelectPartner(partnerId);
