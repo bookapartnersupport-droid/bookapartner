@@ -2,6 +2,7 @@
 (function(){
   'use strict';
   var oldGo=null;
+  var livePartnerApply=null;
   function showLogin(){
     if(typeof window.openLogin==='function') window.openLogin();
     else if(typeof window.handleAccountClick==='function') window.handleAccountClick();
@@ -20,8 +21,10 @@
   }
   function patch(){
     try{
-      /* Disable the legacy capture-phase partner application interceptor. */
+      /* Disable the legacy partner application flow and preserve the live Supabase submit handler. */
       window.__BAP_LIVE_PARTNER_APPLY_GUARD=true;
+      if(!livePartnerApply && typeof window.partnerApply==='function') livePartnerApply=window.partnerApply;
+      if(livePartnerApply) window.partnerApply=livePartnerApply;
       var legacyFields=document.getElementById('bapRealPartnerAccountFields');
       if(legacyFields) legacyFields.remove();
       if(!oldGo && typeof window.go==='function') oldGo=window.go;
