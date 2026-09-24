@@ -28,6 +28,32 @@
       var legacyFields=document.getElementById('bapRealPartnerAccountFields');
       if(legacyFields) legacyFields.remove();
       if(!oldGo && typeof window.go==='function') oldGo=window.go;
+      async function liveIsAdmin(){
+        try{
+          var api=await liveApi();
+          var s=await api.session();
+          if(!s||!s.user)return false;
+          var c=await api.client();
+          var p=await c.from('user_profiles').select('role').eq('id',s.user.id).maybeSingle();
+          if(p.error)throw p.error;
+          var role=String(p.data&&p.data.role||s.user.user_metadata&&s.user.user_metadata.role||'').toLowerCase();
+          return role==='admin'||role==='super_admin'||role==='operations_admin'||role==='safety_admin'||role==='safety_support_admin'||role==='finance_admin'||String(s.user.email||'').toLowerCase()==='bookapartner.support@gmail.com';
+        }catch(e){
+          console.error('BAP admin access check:',e);
+          return false;
+        }
+      }
+      function setAdminUiVisible(show){
+        document.querySelectorAll('[onclick*="go(\'admin\')"],[onclick*="go(\"admin\")"]').forEach(function(el){
+          el.style.display=show?'':'none';
+          if(!show)el.setAttribute('aria-hidden','true');
+        });
+      }
+      async function refreshAdminUi(){
+        var ok=await liveIsAdmin();
+        setAdminUiVisible(ok);
+        return ok;
+      }
       if(oldGo && !window.go.__bapAuthGuard){
         var wrappedGo=function(id){
           if(id==='book'){
@@ -44,7 +70,13 @@
             return;
           }
           if(id==='admin'){
-            window.location.href='admin.html';
+            liveIsAdmin().then(function(ok){
+              if(ok)window.location.href='admin.html';
+              else{
+                setAdminUiVisible(false);
+                if(typeof oldGo==='function')oldGo('home');
+              }
+            });
             return;
           }
           return oldGo.apply(this,arguments);
@@ -53,6 +85,7 @@
         window.go=wrappedGo;
       }
       ensurePartnerLaunchFields();
+      refreshAdminUi();
 
       /* Never expose legacy localStorage/demo partner data in Partner Account.
          The live Supabase dashboard is the only partner-side source of truth. */
