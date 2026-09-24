@@ -1439,6 +1439,44 @@ input,select,textarea{
   box-shadow:0 25px 70px rgba(15,23,42,.28);
   animation:loginPop .22s ease-out;
 }
+.loginBox:has(#bapLiveAuth){
+  width:min(390px,100%);
+  padding:22px 20px 18px;
+  border-radius:20px;
+}
+.loginBox:has(#bapLiveAuth) .loginIcon{
+  width:48px;
+  height:48px;
+  border-radius:15px;
+  font-size:23px;
+  margin-bottom:10px;
+}
+.loginBox:has(#bapLiveAuth) h2{
+  font-size:24px;
+}
+.loginBox:has(#bapLiveAuth) .loginSub{
+  margin:5px 0 14px;
+}
+.loginBox:has(#bapLiveAuth) label{
+  margin-bottom:5px;
+}
+.loginBox:has(#bapLiveAuth) #bapLiveAuth{
+  margin-top:6px !important;
+}
+.loginBox:has(#bapLiveAuth) #bapLiveAuth > div:first-child{
+  margin-bottom:8px !important;
+}
+.loginBox:has(#bapLiveAuth) #bapLiveAuth select,
+.loginBox:has(#bapLiveAuth) #bapLiveAuth input{
+  height:44px !important;
+  margin:4px 0 7px !important;
+}
+.loginBox:has(#bapLiveAuth) #bapLiveAuth button{
+  min-height:44px;
+}
+.loginBox:has(#bapLiveAuth) #bapAuthSubmit{
+  height:46px !important;
+}
 
 @keyframes loginPop{
   from{
