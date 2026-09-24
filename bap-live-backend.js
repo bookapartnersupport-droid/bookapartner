@@ -67,7 +67,11 @@
     window.handleAccountClick=function(){
       var u=JSON.parse(localStorage.getItem('bap_current_user')||'null');
       if(u?.loggedIn&&u.role==='partner'){
-        if(typeof window.go==='function') window.go('partnerDashboard');
+        if(typeof window.openPartnerAccountMenu==='function'){
+          window.openPartnerAccountMenu();
+        }else if(typeof window.go==='function'){
+          window.go('partnerDashboard');
+        }
         return;
       }
       if(u?.loggedIn&&u.role==='customer'){
