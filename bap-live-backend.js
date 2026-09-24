@@ -240,7 +240,7 @@ req.innerHTML=r.data.map(function(b){var a='';if(b.status==='requested'&&b.payme
     const s=await session();
     if(!s) throw new Error('Please login first.');
     const c=await client();
-    const r=await c.from('user_profiles').select('id,full_name,phone,email,city,role').eq('id',s.user.id).maybeSingle();
+    const r=await c.from('user_profiles').select('id,full_name,phone,city,role').eq('id',s.user.id).maybeSingle();
     if(r.error) throw r.error;
     return r.data||null;
   }
