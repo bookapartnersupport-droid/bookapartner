@@ -44,12 +44,22 @@
         }
       }
       function setAdminUiVisible(show){
-        document.querySelectorAll('[onclick*="go(\'admin\')"],[onclick*="go(\"admin\")"]').forEach(function(el){
+        document.querySelectorAll('[onclick*="go(\'admin\')"],[onclick*="go(\"admin\")"],[data-bap-admin-only="true"]').forEach(function(el){
           el.style.display=show?'':'none';
-          if(!show)el.setAttribute('aria-hidden','true');
+          el.style.pointerEvents=show?'':'none';
+          if(!show)el.setAttribute('aria-hidden','true'); else el.removeAttribute('aria-hidden');
         });
       }
+      function hideAdminUiImmediately(){
+        try{
+          var u=JSON.parse(localStorage.getItem('bap_current_user')||'null');
+          if(!u||!u.loggedIn||!['admin','super_admin','operations_admin','safety_admin','safety_support_admin','finance_admin'].includes(String(u.role||'').toLowerCase())){
+            setAdminUiVisible(false);
+          }
+        }catch(e){setAdminUiVisible(false);}
+      }
       async function refreshAdminUi(){
+        hideAdminUiImmediately();
         var ok=await liveIsAdmin();
         setAdminUiVisible(ok);
         return ok;
@@ -86,6 +96,17 @@
       }
       ensurePartnerLaunchFields();
       refreshAdminUi();
+
+      document.addEventListener('click',function(e){
+        var adminEl=e.target&&e.target.closest?e.target.closest('[data-bap-admin-only="true"],[onclick*="go(\'admin\')"],[onclick*="go(\"admin\")"]'):null;
+        if(!adminEl)return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        liveIsAdmin().then(function(ok){
+          if(ok)window.location.href='admin.html';
+          else setAdminUiVisible(false);
+        });
+      },true);
 
       /* Never expose legacy localStorage/demo partner data in Partner Account.
          The live Supabase dashboard is the only partner-side source of truth. */
