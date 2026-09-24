@@ -6872,12 +6872,89 @@ function isPartnerLoggedIn(){
   return !!(user && user.loggedIn === true && (user.role === 'partner' || user.role === 'admin'));
 }
 
+function openPartnerAccountMenu(){
+
+  const existing = document.getElementById('partnerAccountMenu');
+
+  if(existing){
+    existing.classList.add('show');
+    return;
+  }
+
+  const menu = document.createElement('div');
+
+  menu.id = 'partnerAccountMenu';
+  menu.className = 'accountMenu show';
+
+  menu.innerHTML = `
+    <div class="accountBox">
+
+      <button
+        class="accountClose"
+        onclick="closePartnerAccountMenu()"
+      >
+        ×
+      </button>
+
+      <div class="accountAvatar">🤝</div>
+
+      <h2>Partner Account</h2>
+      <p class="accountSub">Manage your partner account</p>
+
+      <button
+        class="accountOption"
+        onclick="closePartnerAccountMenu(); go('partnerDashboard');"
+      >
+        👤
+        <span>
+          <strong>My Profile</strong>
+          <small>View your partner profile and dashboard</small>
+        </span>
+      </button>
+
+      <button
+        class="accountOption"
+        onclick="closePartnerAccountMenu(); go('bookings');"
+      >
+        📋
+        <span>
+          <strong>My Bookings</strong>
+          <small>View your bookings and status</small>
+        </span>
+      </button>
+
+      <button
+        class="accountOption logoutOption"
+        onclick="closePartnerAccountMenu(); logoutCustomer();"
+      >
+        🚪
+        <span>
+          <strong>Logout</strong>
+          <small>Sign out of your partner account</small>
+        </span>
+      </button>
+
+    </div>
+  `;
+
+  document.body.appendChild(menu);
+}
+
+function closePartnerAccountMenu(){
+
+  const menu = document.getElementById('partnerAccountMenu');
+
+  if(menu){
+    menu.remove();
+  }
+}
+
 function handleAccountClick(){
 
   const user = getBapCurrentUser();
 
   if(user && user.loggedIn === true && user.role === 'partner'){
-    if(typeof go === 'function') go('partnerDashboard');
+    openPartnerAccountMenu();
     return;
   }
 
