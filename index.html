@@ -6872,6 +6872,161 @@ function isPartnerLoggedIn(){
   return !!(user && user.loggedIn === true && (user.role === 'partner' || user.role === 'admin'));
 }
 
+async function openPartnerProfile(){
+
+  const user = getBapCurrentUser();
+
+  if(!user || user.loggedIn !== true || (user.role !== 'partner' && user.role !== 'admin')){
+    return;
+  }
+
+  const old = document.getElementById('partnerProfileModal');
+
+  if(old){
+    old.classList.add('show');
+    return;
+  }
+
+  const modal = document.createElement('div');
+
+  modal.id = 'partnerProfileModal';
+  modal.className = 'accountMenu show';
+
+  modal.innerHTML = `
+    <div class="accountBox">
+
+      <button
+        class="accountClose"
+        onclick="closePartnerProfile()"
+      >
+        ×
+      </button>
+
+      <div class="accountAvatar">👤</div>
+
+      <h2>My Profile</h2>
+      <p class="accountSub">Your partner profile details</p>
+
+      <div id="partnerProfileDetails" style="margin-top:18px;">
+        <p class="muted">Loading your profile...</p>
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  try{
+    if(!window.BAP_live || typeof window.BAP_live.client !== 'function'){
+      throw new Error('Live profile service is still loading. Please try again.');
+    }
+
+    const c = await window.BAP_live.client();
+    const s = await c.auth.getSession();
+
+    if(s.error || !s.data?.session){
+      throw new Error('Partner login session not found. Please login again.');
+    }
+
+    const uid = s.data.session.user.id;
+
+    const profile = await c
+      .from('user_profiles')
+      .select('full_name,phone,city,role')
+      .eq('id',uid)
+      .maybeSingle();
+
+    if(profile.error) throw profile.error;
+
+    const application = await c
+      .from('partner_applications')
+      .select('full_name,age,gender,city,area,services,hourly_rate,availability,verification_status,created_at')
+      .eq('user_id',uid)
+      .order('created_at',{ascending:false})
+      .limit(1)
+      .maybeSingle();
+
+    if(application.error) throw application.error;
+
+    const p = profile.data || {};
+    const a = application.data || {};
+
+    const service = Array.isArray(a.services)
+      ? a.services.join(', ')
+      : (a.services || '—');
+
+    const esc = (v) => String(v ?? '—')
+      .replace(/[&<>'"]/g,function(ch){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch];
+      });
+
+    const details = document.getElementById('partnerProfileDetails');
+
+    if(details){
+      details.innerHTML = `
+        <div style="display:grid;gap:12px;">
+          <div>
+            <label class="profileLabel">Name</label>
+            <div class="summary" style="padding:12px 14px;">${esc(a.full_name || p.full_name)}</div>
+          </div>
+
+          <div>
+            <label class="profileLabel">Mobile Number</label>
+            <div class="summary" style="padding:12px 14px;">${esc(p.phone)}</div>
+          </div>
+
+          <div>
+            <label class="profileLabel">City</label>
+            <div class="summary" style="padding:12px 14px;">${esc(a.city || p.city)}</div>
+          </div>
+
+          <div>
+            <label class="profileLabel">Area</label>
+            <div class="summary" style="padding:12px 14px;">${esc(a.area)}</div>
+          </div>
+
+          <div>
+            <label class="profileLabel">Service</label>
+            <div class="summary" style="padding:12px 14px;">${esc(service)}</div>
+          </div>
+
+          <div>
+            <label class="profileLabel">Hourly Rate</label>
+            <div class="summary" style="padding:12px 14px;">₹${esc(a.hourly_rate)}</div>
+          </div>
+
+          <div>
+            <label class="profileLabel">Availability</label>
+            <div class="summary" style="padding:12px 14px;">${esc(a.availability)}</div>
+          </div>
+
+          <div>
+            <label class="profileLabel">Verification Status</label>
+            <div class="summary" style="padding:12px 14px;">${esc(a.verification_status)}</div>
+          </div>
+        </div>
+      `;
+    }
+  }catch(e){
+    const details = document.getElementById('partnerProfileDetails');
+    if(details){
+      details.innerHTML =
+        '<p style="color:#dc2626;">Unable to load profile: ' +
+        String(e && e.message || e) +
+        '</p>';
+    }
+  }
+}
+
+function closePartnerProfile(){
+
+  const modal = document.getElementById('partnerProfileModal');
+
+  if(modal){
+    modal.remove();
+  }
+}
+
 function openPartnerAccountMenu(){
 
   const existing = document.getElementById('partnerAccountMenu');
@@ -6903,12 +7058,12 @@ function openPartnerAccountMenu(){
 
       <button
         class="accountOption"
-        onclick="closePartnerAccountMenu(); go('partnerDashboard');"
+        onclick="closePartnerAccountMenu(); openPartnerProfile();"
       >
         👤
         <span>
           <strong>My Profile</strong>
-          <small>View your partner profile and dashboard</small>
+          <small>View your partner profile details</small>
         </span>
       </button>
 
