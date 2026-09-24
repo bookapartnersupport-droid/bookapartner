@@ -4130,6 +4130,13 @@ function scrollHomeTo(sectionId){
 
 function startBooking(service){
 
+  const user = getBapCurrentUser();
+
+  if(user && user.loggedIn === true && user.role === 'partner'){
+    alert('You are already logged in as a Partner. Please logout first to use Find a Partner.');
+    return;
+  }
+
   go('book');
 
   document
@@ -6893,7 +6900,7 @@ async function openPartnerProfile(){
   modal.className = 'accountMenu show';
 
   modal.innerHTML = `
-    <div class="accountBox">
+    <div class="accountBox" style="max-height:calc(100vh - 32px);overflow-y:auto;">
 
       <button
         class="accountClose"
@@ -7005,6 +7012,19 @@ async function openPartnerProfile(){
             <div class="summary" style="padding:12px 14px;">${esc(a.verification_status)}</div>
           </div>
         </div>
+
+        <button
+          type="button"
+          class="accountOption"
+          style="margin-top:16px;width:100%;"
+          onclick="closePartnerProfile(); openPartnerAccountMenu();"
+        >
+          ←
+          <span>
+            <strong>Back to Partner Account</strong>
+            <small>Return to your account menu</small>
+          </span>
+        </button>
       `;
     }
   }catch(e){
