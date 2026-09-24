@@ -6874,17 +6874,23 @@ function isPartnerLoggedIn(){
 
 function handleAccountClick(){
 
-  if(isPartnerLoggedIn()){
+  const user = getBapCurrentUser();
+
+  if(user && user.loggedIn === true && user.role === 'partner'){
     if(typeof go === 'function') go('partnerDashboard');
     return;
   }
 
-  if(isCustomerLoggedIn()){
+  if(user && user.loggedIn === true && user.role === 'customer'){
     openAccountMenu();
     return;
   }
 
-  openLogin();
+  if(typeof openLiveCustomerAuth === 'function'){
+    openLiveCustomerAuth('login');
+  }else{
+    openLogin();
+  }
 }
 
 function updateLoginNav(){
@@ -6892,10 +6898,12 @@ function updateLoginNav(){
   const btn = document.getElementById('loginNavBtn');
   if(!btn) return;
 
-  if(isPartnerLoggedIn()){
+  const user = getBapCurrentUser();
+
+  if(user && user.loggedIn === true && user.role === 'partner'){
     btn.textContent = 'Partner Account';
     btn.title = 'Open Partner Dashboard';
-  }else if(isCustomerLoggedIn()){
+  }else if(user && user.loggedIn === true && user.role === 'customer'){
     btn.textContent = 'My Account';
     btn.title = 'Open Customer Account';
   }else{
@@ -6921,7 +6929,8 @@ function closeAccountMenu(){
     menu.classList.remove('show');
   }
 }
-function openCustomerProfile(){
+
+async function openCustomerProfile(){
 
   const oldProfile = document.getElementById('customerProfileModal');
 
@@ -6930,13 +6939,18 @@ function openCustomerProfile(){
     return;
   }
 
-  const user = JSON.parse(
-    localStorage.getItem('bap_current_user') || 'null'
-  );
+  const user = getBapCurrentUser();
 
-  const phone = user && user.phone
-    ? user.phone
-    : '';
+  if(!user || user.loggedIn !== true || user.role !== 'customer'){
+    if(user?.role === 'partner'){
+      if(typeof go === 'function') go('partnerDashboard');
+      return;
+    }
+    if(typeof openLiveCustomerAuth === 'function'){
+      openLiveCustomerAuth('login');
+    }
+    return;
+  }
 
   const modal = document.createElement('div');
 
@@ -6969,18 +6983,21 @@ function openCustomerProfile(){
 
         <input
           id="customerProfilePhone"
-          value="${phone}"
-          readonly
+          type="tel"
+          maxlength="10"
+          inputmode="numeric"
+          placeholder="10-digit mobile"
           style="
             width:100%;
             box-sizing:border-box;
             height:50px;
             padding:0 14px;
-            border:1px solid #e2e8f0;
+            border:1px solid #cbd5e1;
             border-radius:12px;
-            background:#f8fafc;
+            background:#fff;
             color:#334155;
             font-size:15px;
+            outline:none;
           "
         >
 
@@ -7006,6 +7023,30 @@ function openCustomerProfile(){
             color:#334155;
             font-size:15px;
             outline:none;
+          "
+        >
+
+        <label
+          class="profileLabel"
+          style="margin-top:16px;"
+        >
+          Email
+        </label>
+
+        <input
+          id="customerProfileEmail"
+          type="email"
+          readonly
+          style="
+            width:100%;
+            box-sizing:border-box;
+            height:50px;
+            padding:0 14px;
+            border:1px solid #e2e8f0;
+            border-radius:12px;
+            background:#f8fafc;
+            color:#334155;
+            font-size:15px;
           "
         >
 
@@ -7035,36 +7076,44 @@ function openCustomerProfile(){
 
   document.body.appendChild(modal);
 
-  loadCustomerProfile();
-}
+  const nameField = document.getElementById('customerProfileName');
+  const phoneField = document.getElementById('customerProfilePhone');
+  const emailField = document.getElementById('customerProfileEmail');
 
-function loadCustomerProfile(){
+  if(nameField) nameField.value = user.name || '';
+  if(phoneField) phoneField.value = user.phone || '';
+  if(emailField) emailField.value = user.email || '';
 
   try{
+    if(window.BAP_live?.getUserProfile){
+      const profile = await window.BAP_live.getUserProfile();
+      if(profile){
+        if(nameField) nameField.value = profile.full_name || '';
+        if(phoneField) phoneField.value = profile.phone || '';
+        if(emailField) emailField.value = profile.email || user.email || '';
 
-    const user = JSON.parse(
-      localStorage.getItem('bap_current_user') || 'null'
-    );
-
-    if(!user) return;
-
-    const nameField = document.getElementById(
-      'customerProfileName'
-    );
-
-    if(nameField){
-      nameField.value = user.name || '';
+        const current = getBapCurrentUser() || {};
+        current.name = profile.full_name || current.name || '';
+        current.phone = profile.phone || current.phone || '';
+        current.email = profile.email || current.email || '';
+        current.role = profile.role || current.role;
+        localStorage.setItem('bap_current_user', JSON.stringify(current));
+      }
     }
-
   }catch(e){
-    console.error('Profile load error:',e);
+    console.warn('Live profile load failed:',e);
   }
 }
 
-function saveCustomerProfile(){
+async function saveCustomerProfile(){
 
   const name = document
     .getElementById('customerProfileName')
+    .value
+    .trim();
+
+  const phone = document
+    .getElementById('customerProfilePhone')
     .value
     .trim();
 
@@ -7073,42 +7122,39 @@ function saveCustomerProfile(){
   );
 
   if(!name){
-
     message.style.color = '#dc2626';
     message.textContent = 'Please enter your name.';
     return;
   }
 
-  let user;
-
-  try{
-
-    user = JSON.parse(
-      localStorage.getItem('bap_current_user') || 'null'
-    );
-
-  }catch(e){
-
-    user = null;
-
-  }
-
-  if(!user){
-
+  if(!/^[6-9]\\d{9}$/.test(phone)){
     message.style.color = '#dc2626';
-    message.textContent = 'Please login again.';
+    message.textContent = 'Please enter a valid 10-digit mobile number.';
     return;
   }
 
-  user.name = name;
+  try{
+    if(!window.BAP_live?.updateUserProfile){
+      throw new Error('Live profile service is not available. Please refresh and try again.');
+    }
 
-  localStorage.setItem(
-    'bap_current_user',
-    JSON.stringify(user)
-  );
+    const profile = await window.BAP_live.updateUserProfile({
+      full_name:name,
+      phone:phone
+    });
 
-  message.style.color = '#16a34a';
-  message.textContent = 'Profile saved successfully.';
+    const current = getBapCurrentUser() || {};
+    current.name = profile?.full_name || name;
+    current.phone = profile?.phone || phone;
+    localStorage.setItem('bap_current_user', JSON.stringify(current));
+
+    message.style.color = '#16a34a';
+    message.textContent = 'Profile saved successfully.';
+    updateLoginNav();
+  }catch(e){
+    message.style.color = '#dc2626';
+    message.textContent = e.message || 'Profile update failed.';
+  }
 }
 
 function closeCustomerProfile(){
@@ -7121,6 +7167,7 @@ function closeCustomerProfile(){
     modal.remove();
   }
 }
+
 function logoutCustomer(){
 
   localStorage.removeItem('bap_current_user');
@@ -7339,6 +7386,6 @@ initGooglePlaces();
 
 
 <script src="bap-razorpay-methods.js?v=700802d27d61"></script>
-<script src="bap-live-backend.js?v=306e16558a76"></script>
-<script src="bap-live-ui-guard.js?v=306e16558a76"></script>
+<script src="bap-live-backend.js?v=role-profile-20260924"></script>
+<script src="bap-live-ui-guard.js?v=role-profile-20260924"></script>
 <script src="bap-force-search.js?v=306e16558a76"></script>
