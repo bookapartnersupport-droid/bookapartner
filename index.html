@@ -1934,7 +1934,7 @@ input,select,textarea{
     🧑‍💼 Partner Dashboard
   </button>
 
-  <button class="menuItem" onclick="go('admin')">
+  <button class="menuItem" data-bap-admin-only="true" style="display:none" onclick="go('admin')">
     🛡️ Admin / Support Panel
   </button>
 
@@ -3842,6 +3842,8 @@ input,select,textarea{
 
       <a
         href="#"
+        data-bap-admin-only="true"
+        style="display:none"
         onclick="go('admin');return false"
       >
         Support
