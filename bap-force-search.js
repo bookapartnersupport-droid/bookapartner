@@ -23,9 +23,24 @@
       if(q.error) throw new Error((q.error.message||'RPC failed')+' [code '+(q.error.code||'unknown')+']');
       var rows=q.data||[];
       if(!results)return;
-      results.innerHTML=rows.length?rows.map(function(p){
-        return '<div class="card" style="margin-bottom:14px"><h3>'+String(p.full_name||'Partner').replace(/[&<>]/g,'')+' <span class="pill verified">✓ VERIFIED</span></h3><p>'+String((p.services||[]).join(', '))+'</p><p>Age: '+(p.age??'—')+' • '+String(p.gender||'—')+'</p><p>📍 '+String(p.area||p.city||'Gurgaon NCR')+'</p><p><strong>₹'+String(p.hourly_rate??'—')+'/hour</strong></p><button type="button" class="pink full" style="margin-top:12px" data-bap-partner-id="'+String(p.id)+'" data-bap-partner-rate="'+String(p.hourly_rate??'')+'" data-bap-partner-rating="'+String(p.rating??0)+'" data-bap-partner-reviews="'+String(p.review_count??0)+'">Request Booking</button></div>';
-      }).join(''):'<div class="card">Live search completed: no approved partner matched these filters.</div>';
+      var safeText=function(value){return String(value??'').replace(/[&<>"]/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch];});};
+      var cards=await Promise.all(rows.map(async function(p){
+        var imageUrl='';
+        if(p.profile_photo_path){
+          try{
+            var photo=await c.storage.from('partner-photos').createSignedUrl(p.profile_photo_path,3600);
+            if(!photo.error&&photo.data&&photo.data.signedUrl) imageUrl=photo.data.signedUrl;
+            else console.warn('Partner photo could not be signed:',photo.error&&photo.error.message);
+          }catch(photoError){console.warn('Partner photo could not be loaded:',photoError);}
+        }
+        var name=safeText(p.full_name||'Partner');
+        var initial=safeText((p.full_name||'P').trim().charAt(0).toUpperCase()||'P');
+        var avatar=imageUrl
+          ? '<img src="'+safeText(imageUrl)+'" alt="'+name+' profile photo" loading="lazy" style="width:76px;height:76px;object-fit:cover;border-radius:50%;border:2px solid #e5d7ff" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'"><div aria-label="Partner photo unavailable" style="display:none;width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#e8d8ff,#cbdfff);place-items:center;font-size:28px;font-weight:800">'+initial+'</div>'
+          : '<div aria-label="Partner photo unavailable" style="display:grid;width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#e8d8ff,#cbdfff);place-items:center;font-size:28px;font-weight:800">'+initial+'</div>';
+        return '<div class="card" style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">'+avatar+'<div style="min-width:0"><h3 style="margin:0 0 5px">'+name+' <span class="pill verified">✓ VERIFIED</span></h3><div style="color:#667085;font-size:13px">'+safeText(p.city||'')+'</div></div></div><p>'+safeText((p.services||[]).join(', '))+'</p><p>Age: '+safeText(p.age??'—')+' • '+safeText(p.gender||'—')+'</p><p>📍 '+safeText(p.area||p.city||'Gurgaon NCR')+'</p><p><strong>₹'+safeText(p.hourly_rate??'—')+'/hour</strong></p><button type="button" class="pink full" style="margin-top:12px" data-bap-partner-id="'+safeText(p.id)+'" data-bap-partner-rate="'+safeText(p.hourly_rate??'')+'" data-bap-partner-rating="'+safeText(p.rating??0)+'" data-bap-partner-reviews="'+safeText(p.review_count??0)+'">Request Booking</button></div>';
+      }));
+      results.innerHTML=cards.length?cards.join(''):'<div class="card">Live search completed: no approved partner matched these filters.</div>';
     }catch(e){
       console.error('BAP FINAL SEARCH ERROR',e);
       if(results) results.innerHTML='<div class="card" style="border:2px solid #dc2626"><b>Live search error:</b><br>'+String(e.message||e).replace(/[&<>]/g,'')+'</div>';
