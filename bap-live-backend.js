@@ -228,7 +228,7 @@ if(!p.data){
   return;
 }
 profile.innerHTML='<b>'+esc(p.data.full_name)+'</b> <span class="pill verified">✓ '+esc(p.data.verification_status)+'</span><p>'+esc(p.data.area||p.data.city||'')+' • ₹'+esc(p.data.hourly_rate)+'/hour</p><p>Rating: '+esc(p.data.rating||'New')+' ('+esc(p.data.review_count||0)+')</p>';
-var r=await c.from('bookings').select('*,user_profiles:customer_id(full_name,phone)').eq('partner_id',p.data.id).in('payment_status',['held','received']).order('created_at',{ascending:false});
+var r=await c.from('bookings').select('*').eq('partner_id',p.data.id).in('payment_status',['held','received']).order('created_at',{ascending:false});
 if(r.error){req.innerHTML='<p class="muted">'+esc(r.error.message)+'</p>';return;}
 if(!r.data?.length){req.innerHTML='<p class="muted">No live booking requests yet.</p>';return;}
 var ids=r.data.map(function(x){return x.id}),cr=await c.from('booking_change_requests').select('*').in('booking_id',ids).eq('status','pending').neq('requested_by',s.user.id),ex=await c.from('booking_extensions').select('*').in('booking_id',ids).eq('status','pending').neq('requested_by',s.user.id),crm={};(cr.data||[]).forEach(function(x){crm[x.booking_id]=x});var exm={};(ex.data||[]).forEach(function(x){exm[x.booking_id]=x});
