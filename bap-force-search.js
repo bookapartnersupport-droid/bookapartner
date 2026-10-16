@@ -7,6 +7,7 @@
       var service=(document.getElementById('service')||{}).value||'';
       var age=(document.getElementById('age')||{}).value||'';
       var gender=(document.getElementById('customerGenderPreference')||{}).value||'';
+      var city=(document.getElementById('area')||{}).value||'Gurgaon NCR';
       var minAge=null,maxAge=null;
       if(age==='21–25'){minAge=21;maxAge=25;}
       else if(age==='26–30'){minAge=26;maxAge=30;}
@@ -18,7 +19,7 @@
       var c=window.supabase.createClient('https://wmawmdwjjbvlqsugthhe.supabase.co','sb_publishable_mm_Qov_zXz5tUrlifTj_Ww_rD53yRmI',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
       var session=await c.auth.getSession();
       if(!session.data||!session.data.session) throw new Error('Customer session is missing. Please login again.');
-      var q=await c.rpc('bap_search_available_partners',{p_service:service,p_gender:gender||null,p_min_age:minAge,p_max_age:maxAge});
+      var q=await c.rpc('bap_search_available_partners',{p_service:service,p_gender:gender||null,p_min_age:minAge,p_max_age:maxAge,p_city:city});
       if(q.error) throw new Error((q.error.message||'RPC failed')+' [code '+(q.error.code||'unknown')+']');
       var rows=q.data||[];
       if(!results)return;
